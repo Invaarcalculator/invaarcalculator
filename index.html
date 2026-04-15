@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SSPF Wtp-invaar calculator (versie 15-04-2026 - 20:07)</title>
+<title>SSPF Wtp-invaar calculator (versie 15-04-2026 - 22:21)</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -80,7 +80,7 @@
   <div class="hdr-icon">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-5"/></svg>
   </div>
-  <div><h1>SSPF Wtp-invaar calculator <span style="font-weight:400;color:var(--txt2);font-size:13px">(versie 15-04-2026 - 20:07)</span></h1><p>Pensioenberekening na invaren per 1 januari 2027 · Stichting Shell Pensioenfonds</p></div>
+  <div><h1>SSPF Wtp-invaar calculator <span style="font-weight:400;color:var(--txt2);font-size:13px">(versie 15-04-2026 - 22:21)</span></h1><p>Pensioenberekening na invaren per 1 januari 2027 · Stichting Shell Pensioenfonds</p></div>
 </div>
 
 <div class="disc"><strong>Indicatieve berekening.</strong> Gebaseerd op SSPF Wtp-implementatieplan (15 juli 2025) en fondscijfers eind februari 2026. Aan deze berekening kunnen geen rechten worden ontleend.</div>
@@ -152,8 +152,8 @@
       <div class="bij-var">
         <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Variabele bijdrage</div>
         <div style="font-size:18px;font-weight:600;color:var(--blue)" id="v-bij-val">€ 500 mln</div>
-        <input type="range" class="blue" min="0" max="1500" value="500" step="25" id="sl-bij" style="margin-top:5px">
-        <div class="rl"><span>€ 0</span><span>€ 750 mln</span><span>€ 1.500 mln</span></div>
+        <input type="range" class="blue" min="0" max="5000" value="2500" step="25" id="sl-bij" style="margin-top:5px">
+        <div class="rl"><span>€ 0</span><span>€ 2.500 mln</span><span>€ 5.000 mln</span></div>
       </div>
     </div>
   </div>
@@ -308,7 +308,7 @@ function annuity(a,r){let af=0,lx=1;for(let t=0;t<=55;t++){if(a+t>115||lx<0.001)
 function lifeExp(a){let lv=0,lx=1;for(let t=0;t<=55;t++){if(a+t>115||lx<0.001)break;lv+=lx;lx*=(1-gQ(a+t))}return a+lv}
 function ageAdj(a){return a>=88?0.88:a>=86?0.93:a>=85?0.97:1.0}
 function scenF(a){const h=Math.max(0,Math.min(1,(83-a)/13));return{p95:1+0.12+h*0.33,p75:1+0.07+h*0.17,p50:1,p25:1-0.08-h*0.05,p5:1-0.14-h*0.09}}
-let curAge=75,curP=62500,curDr=0,curDisc=2.0,curVarBij=500;
+let curAge=75,curP=62500,curDr=0,curDisc=2.0,curVarBij=2500;
 
 function render(){
   const{dg,vpv}=proj(curDr);
