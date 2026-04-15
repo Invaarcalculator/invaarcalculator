@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSPF Wtp-invaar calculator (versie 15-04-2026 - 20:07)</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#f4f4f2; --card:#fff; --surf:#f0efed; --txt1:#1a1a1a; --txt2:#6b7280;
+    --bdr:rgba(0,0,0,0.10); --bdr2:rgba(0,0,0,0.18);
+    --red:#D4001A; --blue:#1a6db5; --green:#1a8a45; --amber:#C07A00;
+    --r8:8px; --r12:12px;
+  }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:14px; color:var(--txt1); background:var(--bg); min-height:100vh; padding:24px 16px 48px; }
+  .wrap { max-width:880px; margin:0 auto; }
+  .hdr { display:flex; align-items:center; gap:12px; background:var(--card); border:0.5px solid var(--bdr); border-radius:var(--r12); padding:16px 20px; margin-bottom:10px; }
+  .hdr-icon { width:40px; height:40px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .hdr h1 { font-size:16px; font-weight:600; }
+  .hdr p  { font-size:12px; color:var(--txt2); margin-top:2px; }
+  .disc  { background:#fffbeb; border:0.5px solid #fcd34d; border-radius:var(--r8); padding:10px 14px; font-size:12px; color:#92400e; margin-bottom:10px; }
+  .fund-bar { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; background:var(--surf); border:0.5px solid var(--bdr); border-radius:var(--r8); padding:10px 14px; margin-bottom:10px; font-size:12px; }
+  .fb-lbl { color:var(--txt2); } .fb-val { font-weight:600; margin-top:2px; } .fb-val.red { color:var(--red); }
+  .card { background:var(--card); border:0.5px solid var(--bdr); border-radius:var(--r12); padding:18px 20px; }
+  .g2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .g3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  .g4 { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+  .lbl { font-size:11px; color:var(--txt2); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.4px; }
+  .big { font-size:22px; font-weight:600; line-height:1.15; }
+  .sep { height:0.5px; background:var(--bdr); margin:12px 0; }
+  input[type=range] { width:100%; margin:5px 0 0; cursor:pointer; accent-color:var(--red); }
+  input[type=range].blue { accent-color:var(--blue); }
+  .rl { display:flex; justify-content:space-between; font-size:10px; color:var(--txt2); }
+  .metric { background:var(--surf); border-radius:var(--r8); padding:12px; }
+  .metric .v { font-size:17px; font-weight:600; margin-top:3px; } .metric .s { font-size:11px; color:var(--txt2); margin-top:2px; }
+  .proj-box { background:var(--surf); border-radius:var(--r8); padding:9px 11px; font-size:12px; margin-top:7px; }
+  .prow { display:flex; justify-content:space-between; margin-bottom:3px; } .prow:last-child { margin-bottom:0; }
+  .pl { color:var(--txt2); } .pv { font-weight:600; }
+  .warn { background:#fffbeb; border:0.5px solid #fcd34d; border-radius:var(--r8); padding:9px 12px; font-size:12px; color:#92400e; margin-top:8px; }
+  .kap-live-box { background:var(--surf); border-radius:var(--r8); padding:10px 12px; margin-top:8px; }
+  .bij-plan { background:var(--surf); border-radius:var(--r8); padding:11px; border-left:3px solid var(--red); }
+  .bij-var  { background:var(--surf); border-radius:var(--r8); padding:11px; border-left:3px solid var(--blue); }
+  .badge-plan { display:inline-block; background:var(--red);  color:#fff; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; }
+  .badge-var  { display:inline-block; background:var(--blue); color:#fff; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; }
+  .tab-row { display:flex; gap:5px; margin:12px 0 6px; flex-wrap:wrap; }
+  .tab { border:0.5px solid var(--bdr2); border-radius:var(--r8); padding:6px 13px; font-size:12px; cursor:pointer; color:var(--txt2); background:var(--card); }
+  .tab:hover { background:var(--surf); } .tab.on { background:var(--txt1); color:#fff; border-color:var(--txt1); font-weight:600; }
+  .col-plan { border-left:3px solid var(--red);  padding-left:12px; }
+  .col-var  { border-left:3px solid var(--blue); padding-left:12px; }
+  .res-big  { font-size:28px; font-weight:700; line-height:1; }
+  .green { color:var(--green); } .red-c { color:var(--red); } .blue-c { color:var(--blue); } .grey-c { color:var(--txt2); }
+  .cmp-row { display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:5px; }
+  .cmp-bar-bg { flex:1; height:14px; background:var(--surf); border-radius:3px; overflow:hidden; }
+  .cmp-bar { height:100%; border-radius:3px; transition:width .3s; }
+  .cmp-lbl { min-width:80px; text-align:right; font-size:12px; }
+  .swatch { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+  .sc-bar-bg { height:7px; background:var(--surf); border-radius:3px; overflow:hidden; margin-top:3px; }
+  .sc-bar    { height:100%; border-radius:3px; transition:width .3s; }
+  .kap-rate-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:0.5px solid var(--bdr); font-size:12px; gap:10px; }
+  .kap-rate-row:last-child { border-bottom:none; } .kap-rate-row.cur { background:var(--surf); margin:0 -4px; padding:5px 4px; border-radius:4px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { text-align:left; padding:5px 4px; color:var(--txt2); font-weight:600; border-bottom:0.5px solid var(--bdr); }
+  th:not(:first-child) { text-align:right; } td { padding:5px 4px; border-bottom:0.5px solid var(--bdr); }
+  td:not(:first-child) { text-align:right; } tr:last-child td { border-bottom:none; } tr.sel { background:var(--surf); }
+  .f-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:0.5px solid var(--bdr); font-size:12px; }
+  .f-row:last-child { border-bottom:none; }
+  .a-row { display:flex; gap:8px; align-items:flex-start; padding:5px 0; border-bottom:0.5px solid var(--bdr); font-size:12px; }
+  .a-row:last-child { border-bottom:none; } .a-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:3px; }
+  .info-box { border:0.5px solid var(--bdr); border-radius:var(--r8); padding:10px 13px; font-size:12px; color:var(--txt2); margin-top:9px; }
+  .row-i { display:flex; justify-content:space-between; padding:5px 0; border-bottom:0.5px solid var(--bdr); font-size:12px; align-items:center; }
+  .row-i:last-child { border-bottom:none; }
+  .footer { text-align:center; font-size:11px; color:var(--txt2); margin-top:24px; padding-top:16px; border-top:0.5px solid var(--bdr); }
+  @media(max-width:580px){ .g2,.g4{grid-template-columns:1fr} .g3{grid-template-columns:1fr 1fr} .res-big{font-size:22px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="hdr-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-5"/></svg>
+  </div>
+  <div><h1>SSPF Wtp-invaar calculator <span style="font-weight:400;color:var(--txt2);font-size:13px">(versie 15-04-2026 - 20:07)</span></h1><p>Pensioenberekening na invaren per 1 januari 2027 · Stichting Shell Pensioenfonds</p></div>
+</div>
+
+<div class="disc"><strong>Indicatieve berekening.</strong> Gebaseerd op SSPF Wtp-implementatieplan (15 juli 2025) en fondscijfers eind februari 2026. Aan deze berekening kunnen geen rechten worden ontleend.</div>
+
+<div class="fund-bar">
+  <div><div class="fb-lbl">Vermogen (feb 2026)</div><div class="fb-val">€ 26,0 mrd</div></div>
+  <div><div class="fb-lbl">Verplichtingen VPV (feb 2026)</div><div class="fb-val">€ 19,1 mrd</div></div>
+  <div><div class="fb-lbl">Dekkingsgraad (feb 2026)</div><div class="fb-val red">135,9% · bijdrage € 500 mln</div></div>
+</div>
+
+<div class="card" style="margin-bottom:10px">
+  <div class="g2" style="gap:20px;margin-bottom:14px">
+    <div>
+      <span class="lbl">Leeftijd</span>
+      <div class="big" id="o-age">75 jaar</div>
+      <input type="range" min="70" max="100" value="75" step="1" id="sl-age">
+      <div class="rl"><span>70 jaar</span><span>100 jaar</span></div>
+    </div>
+    <div>
+      <span class="lbl">Bruto jaarpensioen (huidig)</span>
+      <div class="big" id="o-pen">€ 50.000</div>
+      <input type="range" min="25000" max="100000" value="62500" step="1000" id="sl-pen">
+      <div class="rl"><span>€ 25.000</span><span>€ 100.000</span></div>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="g2" style="gap:20px;margin-top:14px;margin-bottom:14px">
+    <div>
+      <span class="lbl">Renteverandering t.o.v. feb 2026</span>
+      <div class="big" id="o-dr">0,00%</div>
+      <input type="range" min="-2" max="2" value="0" step="0.25" id="sl-dr">
+      <div class="rl"><span>−2%</span><span>0%</span><span>+2%</span></div>
+      <div class="proj-box">
+        <div class="prow"><span class="pl">Geprojecteerde DG invaarmoment</span><strong id="o-dg" class="pv">135,9%</strong></div>
+        <div class="prow"><span class="pl">Geprojecteerde VPV invaarmoment</span><strong id="o-vpv" class="pv">€ 19,1 mrd</strong></div>
+        <div class="prow"><span class="pl">Plan transitiebijdrage Shell NL</span><strong id="o-pbij" class="pv">€ 500 mln</strong></div>
+      </div>
+      <div style="font-size:10px;color:var(--txt2);margin-top:5px">±2,75 pp DG per 1% rente · sectie 3.7 implementatieplan</div>
+    </div>
+    <div>
+      <span class="lbl">Rekenrente (kapitaalwaarde)</span>
+      <div class="big" id="o-disc">1,50%</div>
+      <input type="range" min="0" max="4" value="2" step="0.25" id="sl-disc">
+      <div class="rl"><span>0,0%</span><span>2,0%</span><span>4,0%</span></div>
+      <div class="warn" style="display:none"></div>
+      <div class="kap-live-box">
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Kapitaalwaarde pensioen bij geselecteerde rekenrente</div>
+        <div style="font-size:22px;font-weight:600" id="kap-live">—</div>
+        <div style="font-size:11px;color:var(--txt2);margin-top:2px" id="kap-live-sub">annuïteitsfactor — × jaarpensioen</div>
+      </div>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div style="margin-top:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span class="lbl" style="margin:0">Transitiebijdrage Shell NL</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge-plan">Implementatieplan</span>
+        <span style="font-size:11px;color:var(--txt2)">vs</span>
+        <span class="badge-var">Variabele bijdrage</span>
+      </div>
+    </div>
+    <div class="g2" style="gap:12px">
+      <div class="bij-plan">
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Implementatieplan — DG-afhankelijk</div>
+        <div style="font-size:18px;font-weight:600" id="p-bij-val">€ 500 mln</div>
+        <div style="font-size:11px;color:var(--txt2);margin-top:3px" id="p-bij-rule">DG ≥ 135% → € 500 mln</div>
+      </div>
+      <div class="bij-var">
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Variabele bijdrage</div>
+        <div style="font-size:18px;font-weight:600;color:var(--blue)" id="v-bij-val">€ 500 mln</div>
+        <input type="range" class="blue" min="0" max="1500" value="500" step="25" id="sl-bij" style="margin-top:5px">
+        <div class="rl"><span>€ 0</span><span>€ 750 mln</span><span>€ 1.500 mln</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-row">
+  <button class="tab on" data-tab="res">Vergelijking</button>
+  <button class="tab" data-tab="kap">Kapitaalwaarde</button>
+  <button class="tab" data-tab="sc">Scenario's</button>
+  <button class="tab" data-tab="fond">Fondsverdeling</button>
+  <button class="tab" data-tab="gev">Rentegevoeligheid</button>
+  <button class="tab" data-tab="aan">Aannames</button>
+</div>
+
+<!-- Vergelijking -->
+<div id="t-res">
+  <div class="g2" style="margin-bottom:10px">
+    <div class="card col-plan">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span class="badge-plan">Implementatieplan</span><span style="font-size:11px;color:var(--txt2)" id="p-blbl">€ 500 mln</span></div>
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Initieel bruto jaarpensioen na invaren</div>
+      <div class="res-big" id="p-res">—</div>
+      <div style="font-size:13px;margin-top:5px" id="p-dlt" class="green">—</div>
+      <div class="sep"></div>
+      <div style="font-size:12px;color:var(--txt2)">Maand: <strong id="p-mnd" style="color:var(--txt1)">—</strong></div>
+    </div>
+    <div class="card col-var">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span class="badge-var">Variabele bijdrage</span><span style="font-size:11px;color:var(--txt2)" id="v-blbl">€ 500 mln</span></div>
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Initieel bruto jaarpensioen na invaren</div>
+      <div class="res-big" id="v-res">—</div>
+      <div style="font-size:13px;margin-top:5px" id="v-dlt" class="green">—</div>
+      <div class="sep"></div>
+      <div style="font-size:12px;color:var(--txt2)">Maand: <strong id="v-mnd" style="color:var(--txt1)">—</strong></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px">Verschil variabele bijdrage t.o.v. implementatieplan</div>
+    <div class="g3" id="diff-grid" style="margin-bottom:12px"></div>
+    <div class="cmp-row"><div class="swatch" style="background:var(--red)"></div><span style="color:var(--txt2);width:64px">Plan:</span><div class="cmp-bar-bg"><div class="cmp-bar" id="cb-plan" style="background:var(--red)"></div></div><span class="cmp-lbl" id="cb-plan-l">—</span></div>
+    <div class="cmp-row"><div class="swatch" style="background:var(--blue)"></div><span style="color:var(--txt2);width:64px">Variabel:</span><div class="cmp-bar-bg"><div class="cmp-bar" id="cb-var" style="background:var(--blue)"></div></div><span class="cmp-lbl" id="cb-var-l">—</span></div>
+  </div>
+  <div class="g2">
+    <div class="info-box"><strong>RDR-bescherming:</strong> € 500 mln risicodelingsreserve dempt verlagingen eerste 15 jaar. Doelstelling gem. 2,6% kans op verlaging per jaar (sectie 6.7).</div>
+    <div class="info-box"><strong>Spreiding 5 jaar:</strong> beleggingsresultaten worden gespreid over 5 jaar verwerkt in de variabele uitkering. Dempt jaarlijkse schommelingen (sectie 8.1).</div>
+  </div>
+</div>
+
+<!-- Kapitaalwaarde -->
+<div id="t-kap" style="display:none">
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Kapitaalwaarde — gevoeligheid voor rekenrente</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">Contante waarde van het jaarpensioen over de resterende levensverwachting (AG2022). De invaar-verhoging verandert <em>niet</em> met de rekenrente.</div>
+    <div class="g2" style="gap:20px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span class="badge-plan">Implementatieplan</span> — <span id="kap-p-pen">—</span>/jr</div>
+        <div id="kap-plan-rows"></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span class="badge-var">Variabele bijdrage</span> — <span id="kap-v-pen">—</span>/jr</div>
+        <div id="kap-var-rows"></div>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div style="font-size:12px;color:var(--txt2);margin-top:8px">
+      Levensverwachting (AG2022): <strong id="kap-lv" style="color:var(--txt1)">—</strong>
+      &nbsp;·&nbsp; Annuïteitsfactor bij rekenrente <span id="kap-cur-disc">2,00%</span>: <strong id="kap-af" style="color:var(--txt1)">—</strong>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Verschil in kapitaalwaarde — plan vs variabele bijdrage</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:8px">Per rekenrente</div>
+    <div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--bdr);font-size:11px;font-weight:600;color:var(--txt2)">
+      <span>Voet</span><span style="text-align:right;color:var(--red)">Plan</span><span style="text-align:right;color:var(--blue)">Variabel</span><span style="text-align:right">Verschil</span>
+    </div>
+    <div id="kap-diff-rows"></div>
+  </div>
+</div>
+
+<!-- Scenario's -->
+<div id="t-sc" style="display:none">
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Pensioenverwachting na invaren — economische scenario's</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">Na initiële verhoging · variatie door beleggingsresultaten · gebaseerd op sectie 6.6 implementatieplan</div>
+    <div class="g2" style="gap:20px">
+      <div><div style="margin-bottom:8px"><span class="badge-plan">Implementatieplan</span></div><div id="sc-plan"></div></div>
+      <div><div style="margin-bottom:8px"><span class="badge-var">Variabele bijdrage</span></div><div id="sc-var"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Fondsverdeling -->
+<div id="t-fond" style="display:none">
+  <div class="g2">
+    <div class="card col-plan"><div style="margin-bottom:8px"><span class="badge-plan">Implementatieplan</span></div><div id="fond-plan"></div></div>
+    <div class="card col-var"><div style="margin-bottom:8px"><span class="badge-var">Variabele bijdrage</span></div><div id="fond-var"></div></div>
+  </div>
+  <div class="info-box">VPV bij invaarmoment (jan 2027) afgeleid via constante-vermogen aanname: VPV = € 26,0 mrd / geprojecteerde DG. Werkelijke VPV afhankelijk van DNB-rentetermijnstructuur Q3 2026.</div>
+</div>
+
+<!-- Rentegevoeligheid -->
+<div id="t-gev" style="display:none">
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Rentegevoeligheid — beide bijdrage-varianten</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">Leeftijd <span id="gev-age">75</span> jr · huidig pensioen <span id="gev-pen">—</span></div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Δrente</th><th>DG proj.</th>
+          <th style="color:var(--red)">Plan bijdr.</th><th style="color:var(--red)">Plan pensioen</th>
+          <th style="color:var(--blue)">Var. bijdr.</th><th style="color:var(--blue)">Var. pensioen</th>
+        </tr></thead>
+        <tbody id="gev-tb"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Effect transitiebijdrage-bracket (implementatieplan)</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">De glijdende bijdrage dempt het effect van een lagere DG op het pensioen</div>
+    <div id="bracket-bars"></div>
+  </div>
+</div>
+
+<!-- Aannames -->
+<div id="t-aan" style="display:none">
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px">Aannames en bronnen</div>
+    <div id="aan-list"></div>
+    <div style="margin-top:12px;display:flex;gap:16px;font-size:11px;color:var(--txt2)">
+      <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1a8a45;margin-right:4px"></span>Bevestigd</span>
+      <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#C07A00;margin-right:4px"></span>Aanname / afgeleid</span>
+    </div>
+  </div>
+</div>
+
+<div class="footer">SSPF Wtp-invaar calculator &nbsp;·&nbsp; Implementatieplan 15 juli 2025 + fondscijfers eind februari 2026 &nbsp;·&nbsp; Geen rechten te ontlenen &nbsp;·&nbsp; Sterftetafel AG2022</div>
+</div>
+
+<script>
+const eur=n=>'€\u00a0'+Math.round(n).toLocaleString('nl-NL');
+const mrd=m=>'€ '+(m/1000).toFixed(1)+' mrd';
+const pct=(n,p)=>(p&&n>0?'+':'')+n.toFixed(1)+'%';
+const fmtR=n=>(n>0?'+':'')+n.toFixed(2)+'%';
+const $=id=>document.getElementById(id);
+const ASSETS=26000,DG_BASE=135.9,DG_SENS=2.75,RDR=500,COMP=400,OP=0.02;
+const DISC_RATES=[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0];
+function planBij(dg){return dg>=135?500:dg>=130?650:dg>=125?850:0}
+function planBijRule(dg){return dg>=135?'DG \u2265 135% \u2192 \u20ac 500 mln':dg>=130?'DG 130\u2013135% \u2192 \u20ac 650 mln':dg>=125?'DG 125\u2013130% \u2192 \u20ac 850 mln':'DG < 125% \u2192 noodprotocol'}
+function proj(dr){const dg=DG_BASE+DG_SENS*dr;return{dg,vpv:ASSETS/(dg/100)}}
+function calcWithBij(vpv,B){const uitk=(ASSETS+B)*(1-OP)-RDR-COMP;return{enhPct:(uitk/vpv-1)*100,uitk}}
+const Q={70:0.0104,71:0.0119,72:0.0136,73:0.0155,74:0.0177,75:0.0203,76:0.0232,77:0.0265,78:0.0303,79:0.0348,80:0.040,81:0.046,82:0.053,83:0.061,84:0.071,85:0.082,86:0.094,87:0.109,88:0.125,89:0.143,90:0.164,91:0.187,92:0.212,93:0.239,94:0.268,95:0.298,96:0.329,97:0.359,98:0.389,99:0.417,100:0.444};
+const gQ=a=>Q[Math.min(a,100)]??0.5;
+function annuity(a,r){let af=0,lx=1;for(let t=0;t<=55;t++){if(a+t>115||lx<0.001)break;af+=lx/Math.pow(1+r/100,t);lx*=(1-gQ(a+t))}return af}
+function lifeExp(a){let lv=0,lx=1;for(let t=0;t<=55;t++){if(a+t>115||lx<0.001)break;lv+=lx;lx*=(1-gQ(a+t))}return a+lv}
+function ageAdj(a){return a>=88?0.88:a>=86?0.93:a>=85?0.97:1.0}
+function scenF(a){const h=Math.max(0,Math.min(1,(83-a)/13));return{p95:1+0.12+h*0.33,p75:1+0.07+h*0.17,p50:1,p25:1-0.08-h*0.05,p5:1-0.14-h*0.09}}
+let curAge=75,curP=62500,curDr=0,curDisc=2.0,curVarBij=500;
+
+function render(){
+  const{dg,vpv}=proj(curDr);
+  const pB=planBij(dg),vB=curVarBij,adj=ageAdj(curAge);
+  const af=annuity(curAge,curDisc),lv=lifeExp(curAge);
+  const plan=calcWithBij(vpv,pB),vari=calcWithBij(vpv,vB);
+  const pNewP=curP*(1+plan.enhPct*adj/100),vNewP=curP*(1+vari.enhPct*adj/100);
+  const diff=vNewP-pNewP,diffP=((vNewP/pNewP)-1)*100;
+
+  $('o-age').textContent=curAge+' jaar'; $('o-pen').textContent=eur(curP);
+  $('o-dr').textContent=(curDr>0?'+':'')+curDr.toFixed(2)+'%';
+  $('o-dg').textContent=dg.toFixed(1)+'%'; $('o-vpv').textContent=mrd(vpv);
+  $('o-pbij').textContent='\u20ac '+pB.toLocaleString('nl-NL')+' mln';
+  $('o-disc').textContent=curDisc.toFixed(2)+'%';
+  $('p-bij-val').textContent='\u20ac '+pB.toLocaleString('nl-NL')+' mln';
+  $('p-bij-rule').textContent=planBijRule(dg);
+  $('v-bij-val').textContent='\u20ac '+vB.toLocaleString('nl-NL')+' mln';
+  $('kap-live').textContent=eur(pNewP*af);
+  $('kap-live-sub').textContent='annui\u0308teitsfactor '+af.toFixed(2)+' \u00d7 '+eur(pNewP);
+  $('p-blbl').textContent='\u20ac '+pB.toLocaleString('nl-NL')+' mln';
+  $('v-blbl').textContent='\u20ac '+vB.toLocaleString('nl-NL')+' mln';
+  $('p-res').textContent=eur(pNewP); $('v-res').textContent=eur(vNewP);
+  $('p-dlt').textContent=eur(pNewP-curP)+' ('+pct(plan.enhPct*adj,true)+')';
+  $('v-dlt').textContent=eur(vNewP-curP)+' ('+pct(vari.enhPct*adj,true)+')';
+  $('p-dlt').className=plan.enhPct*adj>=0?'green':'red-c';
+  $('v-dlt').className=vari.enhPct*adj>=0?'green':'red-c';
+  $('p-mnd').textContent=eur(pNewP/12); $('v-mnd').textContent=eur(vNewP/12);
+
+  const dc=diff>0?'var(--green)':diff<0?'var(--red)':'var(--txt2)';
+  const bc=vB>pB?'var(--green)':vB<pB?'var(--red)':'var(--txt2)';
+  $('diff-grid').innerHTML=[
+    {l:'Verschil jaarpensioen',v:(diff>=0?'+':'')+eur(diff),c:dc},
+    {l:'Verschil % t.o.v. plan',v:pct(diffP,true),c:dc},
+    {l:'Verschil bijdrage',v:(vB-pB>=0?'+':'')+Math.round(vB-pB).toLocaleString('nl-NL')+' mln',c:bc},
+  ].map(d=>`<div class="metric"><div class="lbl">${d.l}</div><div class="v" style="color:${d.c}">${d.v}</div></div>`).join('');
+  const mxB=Math.max(pB,vB,1);
+  $('cb-plan').style.width=(pB/mxB*100)+'%'; $('cb-var').style.width=(vB/mxB*100)+'%';
+  $('cb-plan-l').textContent='\u20ac '+pB.toLocaleString('nl-NL')+' mln';
+  $('cb-var-l').textContent='\u20ac '+vB.toLocaleString('nl-NL')+' mln';
+
+  // kapitaalwaarde tab
+  $('kap-p-pen').textContent=eur(pNewP); $('kap-v-pen').textContent=eur(vNewP);
+  $('kap-lv').textContent=lv.toFixed(1)+' jaar'; $('kap-cur-disc').textContent=curDisc.toFixed(2)+'%'; $('kap-af').textContent=af.toFixed(2);
+  function kapRows(np){
+    const mxK=np*annuity(curAge,0.5);
+    return DISC_RATES.map(r=>{
+      const a=annuity(curAge,r),k=np*a,isCur=Math.abs(r-curDisc)<0.01,w=(k/mxK*100).toFixed(1);
+      return`<div class="kap-rate-row${isCur?' cur':''}">
+        <span style="font-weight:${isCur?'600':'400'};color:${isCur?'var(--txt1)':'var(--txt2)'};min-width:40px">${r.toFixed(2)}%${isCur?' \u2190':''}</span>
+        <div style="flex:1;height:6px;background:var(--bdr);border-radius:3px;overflow:hidden;margin:0 10px">
+          <div style="width:${w}%;height:100%;background:${isCur?'var(--blue)':'var(--txt2)'};border-radius:3px;opacity:${isCur?1:0.4}"></div>
+        </div>
+        <span style="font-weight:${isCur?'600':'400'}">${eur(k)}</span>
+      </div>`;}).join('');
+  }
+  $('kap-plan-rows').innerHTML=kapRows(pNewP); $('kap-var-rows').innerHTML=kapRows(vNewP);
+  $('kap-diff-rows').innerHTML=DISC_RATES.map(r=>{
+    const a=annuity(curAge,r),kp=pNewP*a,kv=vNewP*a,kd=kv-kp,isCur=Math.abs(r-curDisc)<0.01;
+    const dkc=kd>0?'var(--green)':kd<0?'var(--red)':'var(--txt2)';
+    return`<div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--bdr);font-size:12px;${isCur?'background:var(--surf);margin:0 -4px;padding:5px 4px;border-radius:4px':''}">
+      <span style="font-weight:${isCur?'600':'400'}">${r.toFixed(2)}%${isCur?' \u2190':''}</span>
+      <span style="text-align:right;color:var(--red)">${eur(kp)}</span>
+      <span style="text-align:right;color:var(--blue)">${eur(kv)}</span>
+      <span style="text-align:right;color:${dkc};font-weight:600">${kd>=0?'+':''}${eur(kd)}</span>
+    </div>`;}).join('');
+
+  // scenario
+  const scD=[{l:'Goed weer (P95)',k:'p95',c:'#1a8a45'},{l:'Gunstig (P75)',k:'p75',c:'#5aaa60'},{l:'Mediaan (P50)',k:'p50',c:'#888'},{l:'Ongunstig (P25)',k:'p25',c:'#C07A00'},{l:'Slecht weer (P5)',k:'p5',c:'#D4001A'}];
+  function scBars(np){const sc=scenF(curAge),mx=np*sc.p95;return scD.map(s=>{const v=np*sc[s.k],w=(v/mx*100).toFixed(1),rel=((v/curP-1)*100).toFixed(1);return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:11px;color:var(--txt2)">${s.l}</span><span style="font-size:11px;font-weight:600;color:${s.c}">${eur(v)}</span></div><div class="sc-bar-bg"><div class="sc-bar" style="width:${w}%;background:${s.c}"></div></div><div style="font-size:10px;color:var(--txt2);margin-top:1px">${rel>=0?'+':''}${rel}% t.o.v. huidig</div></div>`;}).join('');}
+  $('sc-plan').innerHTML=scBars(pNewP); $('sc-var').innerHTML=scBars(vNewP);
+
+  // fondsverdeling
+  function fondHTML(B,enhPct,adjP){const opRes=Math.round((ASSETS+B)*OP),uitk=Math.round((ASSETS+B)*(1-OP)-RDR-COMP);return[{l:'VPV (geprojecteerd)',v:mrd(vpv),hi:0,pos:0,neg:0},{l:'Fondsvermogen',v:mrd(ASSETS),hi:0,pos:0,neg:0},{l:'Transitiebijdrage Shell NL',v:'+ \u20ac '+B.toLocaleString('nl-NL')+' mln',hi:0,pos:1,neg:0},{l:'Operationele reserve (2%)',v:'\u2212 \u20ac '+opRes.toLocaleString('nl-NL')+' mln',hi:0,pos:0,neg:1},{l:'RDR',v:'\u2212 \u20ac 500 mln',hi:0,pos:0,neg:1},{l:'Compensatiedepot',v:'\u2212 \u20ac 400 mln',hi:0,pos:0,neg:1},{l:'Uitkeerbaar',v:mrd(uitk),hi:1,pos:0,neg:0},{l:'Verhoging fondsniveau',v:pct(enhPct,true),hi:1,pos:0,neg:0},{l:'Verhoging leeftijd '+curAge+' jr',v:pct(adjP,true),hi:1,pos:0,neg:0}].map(r=>`<div class="f-row"><span style="color:${r.hi?'var(--txt1)':'var(--txt2)'};font-weight:${r.hi?'600':'400'}">${r.l}</span><span style="color:${r.pos?'var(--green)':r.neg?'var(--red)':'var(--txt1)'};font-weight:${r.hi?'600':'400'}">${r.v}</span></div>`).join('');}
+  $('fond-plan').innerHTML=fondHTML(pB,plan.enhPct,plan.enhPct*adj);
+  $('fond-var').innerHTML=fondHTML(vB,vari.enhPct,vari.enhPct*adj);
+
+  // rentegevoeligheid
+  $('gev-age').textContent=curAge; $('gev-pen').textContent=eur(curP);
+  const drSteps=[-2,-1.5,-1,-0.5,0,0.5,1,1.5,2];
+  const mxEnh=Math.max(...drSteps.map(d=>{const{dg:g,vpv:v}=proj(d);return calcWithBij(v,planBij(g)).enhPct}));
+  $('gev-tb').innerHTML=drSteps.map(d=>{const{dg:g,vpv:v}=proj(d);const pbi=planBij(g),pr=calcWithBij(v,pbi),vr=calcWithBij(v,vB);const pAdj=pr.enhPct*adj,vAdj=vr.enhPct*adj,pPen=curP*(1+pAdj/100),vPen=curP*(1+vAdj/100),dPen=vPen-pPen,sel=Math.abs(d-curDr)<0.01,dc=dPen>0?'var(--green)':dPen<0?'var(--red)':'var(--txt2)';return`<tr class="${sel?'sel':''}"><td style="font-weight:${sel?'600':'400'};color:${sel?'var(--red)':'var(--txt1)'}">${fmtR(d)}${sel?' \u2190':''}</td><td>${g.toFixed(1)}%</td><td style="color:var(--red)">\u20ac ${pbi} mln</td><td style="font-weight:${sel?'600':'400'}">${eur(pPen)}</td><td style="color:var(--blue)">\u20ac ${vB} mln</td><td style="font-weight:${sel?'600':'400'}">${eur(vPen)} <span style="font-size:10px;color:${dc}">(${dPen>=0?'+':''}${Math.round(dPen).toLocaleString('nl-NL')})</span></td></tr>`;}).join('');
+  $('bracket-bars').innerHTML=drSteps.map(d=>{const{dg:g,vpv:v}=proj(d),pbi=planBij(g),ep=calcWithBij(v,pbi).enhPct,sel=Math.abs(d-curDr)<0.01,bc=pbi===500?'#888':pbi===650?'#C07A00':'#1a8a45',bw=(ep/mxEnh*100).toFixed(1);return`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:var(--txt2)">${fmtR(d)} \u00b7 DG ${g.toFixed(1)}% \u00b7 <span style="color:${bc}">\u20ac ${pbi} mln bijdrage</span></span><span style="font-weight:${sel?'600':'400'};color:${sel?'var(--red)':'var(--txt1)'}">+${ep.toFixed(1)}%${sel?' \u2190':''}</span></div><div style="height:6px;background:var(--surf);border-radius:3px;overflow:hidden"><div style="width:${bw}%;height:100%;background:${sel?'var(--red)':'#aaa'};border-radius:3px"></div></div></div>`;}).join('');
+
+  // aannames
+  const aData=[{l:'Fondsvermogen',v:'\u20ac 26,0 mrd (eind feb 2026)',src:'Aangeleverd fondsdocument',ok:1},{l:'VPV',v:'\u20ac 19,1 mrd (eind feb 2026)',src:'Aangeleverd fondsdocument',ok:1},{l:'Dekkingsgraad referentie',v:'135,9%',src:'Aangeleverd fondsdocument',ok:1},{l:'Plan transitiebijdrage (DG-bracket)',v:'\u20ac 500 / 650 / 850 mln',src:'Sectie 5.5 implementatieplan',ok:1},{l:'Variabele bijdrage',v:'\u20ac 0\u20131.500 mln (gebruikersinvoer)',src:'Modelextensie \u2014 ter vergelijking met plan',ok:1},{l:'Rentegevoeligheid DG',v:'\u00b12,75 pp per 1%',src:'Afgeleid sectie 3.7 (Q1-2025 referentie)',ok:0},{l:'VPV-projectie methode',v:'VPV = \u20ac 26,0 mrd / DG_proj',src:'Constante-vermogen aanname (hoge renteafdekking)',ok:0},{l:'Operationele reserve',v:'2%',src:'Sectie 5.8',ok:1},{l:'RDR',v:'\u20ac 500 mln',src:'Sectie 5.9',ok:1},{l:'Compensatiedepot',v:'\u20ac 400 mln',src:'Sectie 5.10',ok:1},{l:'Verdelingsbeginsel',v:'Gelijk delta netto profijt',src:'Sectie 5.3 en 5.6',ok:1},{l:'Minimumeis vooruitgang',v:'67% van scenario\u2019s',src:'Sectie 1.2 en 5.3',ok:1},{l:'Leeftijdscorrectie (>85 jr)',v:'\u22123% t/m \u221212%',src:'Afgeleid netto-profijt grafiek sectie 6.5',ok:0},{l:'Sterftetafel',v:'AG2022 (vereenvoudigd)',src:'SSPF-grondslagen niet gepubliceerd',ok:0},{l:'Rekenrente (kapitaalwaarde)',v:'Variabel \u2014 alleen effect op kapitaalwaarde, niet op invaar-verhoging',src:'DNB-rentetermijnstructuur bepaalt invaar-verhoging op fondsniveau',ok:1},{l:'Spreiding beleggingsresultaten',v:'5 jaar',src:'Sectie 8.1',ok:1},{l:'Gemiddelde kortingskans eerste 15 jaar',v:'2,6% per jaar',src:'Sectie 6.7',ok:1}];
+  $('aan-list').innerHTML=aData.map(a=>`<div class="a-row"><div class="a-dot" style="background:${a.ok?'#1a8a45':'#C07A00'}"></div><div><div><strong>${a.l}:</strong> ${a.v}</div><div style="color:var(--txt2);margin-top:1px">${a.src}</div></div></div>`).join('');
+}
+
+$('sl-age').addEventListener('input',e=>{curAge=+e.target.value;render()});
+$('sl-pen').addEventListener('input',e=>{curP=+e.target.value;render()});
+$('sl-dr').addEventListener('input',e=>{curDr=+e.target.value;render()});
+$('sl-disc').addEventListener('input',e=>{curDisc=+e.target.value;render()});
+$('sl-bij').addEventListener('input',e=>{curVarBij=+e.target.value;render()});
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on');
+  ['res','kap','sc','fond','gev','aan'].forEach(id=>{ $('t-'+id).style.display=t.dataset.tab===id?'block':'none'; });
+}));
+render();
+</script>
+</body>
+</html>
