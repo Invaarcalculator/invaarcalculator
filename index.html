@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SSPF Wtp-invaar calculator (versie 15-04-2026 - 22:21)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<title>SSPF Wtp-transitie calculator (versie 16-04-2026 13:21)</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -13,7 +14,7 @@
     --r8:8px; --r12:12px;
   }
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:14px; color:var(--txt1); background:var(--bg); min-height:100vh; padding:24px 16px 48px; }
-  .wrap { max-width:880px; margin:0 auto; }
+  .wrap { max-width:960px; margin:0 auto; }
   .hdr { display:flex; align-items:center; gap:12px; background:var(--card); border:0.5px solid var(--bdr); border-radius:var(--r12); padding:16px 20px; margin-bottom:10px; }
   .hdr-icon { width:40px; height:40px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .hdr h1 { font-size:16px; font-weight:600; }
@@ -42,8 +43,8 @@
   .bij-var  { background:var(--surf); border-radius:var(--r8); padding:11px; border-left:3px solid var(--blue); }
   .badge-plan { display:inline-block; background:var(--red);  color:#fff; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; }
   .badge-var  { display:inline-block; background:var(--blue); color:#fff; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; }
-  .tab-row { display:flex; gap:5px; margin:12px 0 6px; flex-wrap:wrap; }
-  .tab { border:0.5px solid var(--bdr2); border-radius:var(--r8); padding:6px 13px; font-size:12px; cursor:pointer; color:var(--txt2); background:var(--card); }
+  .tab-row { display:flex; gap:4px; margin:12px 0 6px; flex-wrap:wrap; }
+  .tab { border:0.5px solid var(--bdr2); border-radius:var(--r8); padding:5px 10px; font-size:11px; cursor:pointer; color:var(--txt2); background:var(--card); white-space:nowrap; }
   .tab:hover { background:var(--surf); } .tab.on { background:var(--txt1); color:#fff; border-color:var(--txt1); font-weight:600; }
   .col-plan { border-left:3px solid var(--red);  padding-left:12px; }
   .col-var  { border-left:3px solid var(--blue); padding-left:12px; }
@@ -80,15 +81,15 @@
   <div class="hdr-icon">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-5"/></svg>
   </div>
-  <div><h1>SSPF Wtp-invaar calculator <span style="font-weight:400;color:var(--txt2);font-size:13px">(versie 15-04-2026 - 22:21)</span></h1><p>Pensioenberekening na invaren per 1 januari 2027 · Stichting Shell Pensioenfonds</p></div>
+  <div><h1>SSPF Wtp-transitie calculator <span style="font-weight:400;color:var(--txt2);font-size:13px">(versie 16-04-2026 13:21)</span></h1></div>
 </div>
 
-<div class="disc"><strong>Indicatieve berekening.</strong> Gebaseerd op SSPF Wtp-implementatieplan (15 juli 2025) en fondscijfers eind februari 2026. Aan deze berekening kunnen geen rechten worden ontleend.</div>
+<div class="disc"><strong>Indicatieve berekeningen, geen actuarieel advies.</strong> Gebaseerd op het SSPF Wtp-implementatieplan (15 juli 2025) en openbaar beschikbare bronnen (fondscijfers feb 2026, DNB P-set CP2022-P 2026 Q2, sterftetafel AG2022). De maker is geen actuaris. Modelaannames zijn vereenvoudigingen van de werkelijke actuariële berekeningen. Aan deze berekeningen kunnen geen rechten worden ontleend.<br><br>Deze calculator is beschikbaar gesteld zodat de discussie rond het SSPF-invaardossier ondersteund kan worden door kwantitatieve inzichten. De maker neemt geen positie in voor of tegen invaren, maar wil een ieder de mogelijkheid geven om de discussie op basis van kwantitatieve gegevens te voeren. Fouten kunnen voorkomen en meldingen worden op prijs gesteld. De maker is actief op zoek naar een actuaris die bereid is de berekeningen en aannames te valideren. Iedereen die vragen of opmerkingen heeft, fouten signaleert, of wil bijdragen aan validatie is van harte uitgenodigd contact op te nemen.</div>
 
 <div class="fund-bar">
   <div><div class="fb-lbl">Vermogen (feb 2026)</div><div class="fb-val">€ 26,0 mrd</div></div>
   <div><div class="fb-lbl">Verplichtingen VPV (feb 2026)</div><div class="fb-val">€ 19,1 mrd</div></div>
-  <div><div class="fb-lbl">Dekkingsgraad (feb 2026)</div><div class="fb-val red">135,9% · bijdrage € 500 mln</div></div>
+  <div><div class="fb-lbl">Dekkingsgraad (feb 2026, referentie)</div><div class="fb-val red">135,9% · bijdrage € 500 mln</div></div>
 </div>
 
 <div class="card" style="margin-bottom:10px">
@@ -109,30 +110,30 @@
   <div class="sep"></div>
   <div class="g2" style="gap:20px;margin-top:14px;margin-bottom:14px">
     <div>
-      <span class="lbl">Renteverandering t.o.v. feb 2026</span>
-      <div class="big" id="o-dr">0,00%</div>
-      <input type="range" min="-2" max="2" value="0" step="0.25" id="sl-dr">
-      <div class="rl"><span>−2%</span><span>0%</span><span>+2%</span></div>
+      <span class="lbl">Dekkingsgraad invaarbeslissing</span>
+      <div class="big" id="o-dr">127,5%</div>
+      <input type="range" min="125" max="170" value="127.5" step="0.5" id="sl-dr">
+      <div class="rl"><span>125%</span><span>135,9% (feb 2026)</span><span>170%</span></div>
       <div class="proj-box">
-        <div class="prow"><span class="pl">Geprojecteerde DG invaarmoment</span><strong id="o-dg" class="pv">135,9%</strong></div>
-        <div class="prow"><span class="pl">Geprojecteerde VPV invaarmoment</span><strong id="o-vpv" class="pv">€ 19,1 mrd</strong></div>
-        <div class="prow"><span class="pl">Plan transitiebijdrage Shell NL</span><strong id="o-pbij" class="pv">€ 500 mln</strong></div>
+        <div class="prow"><span class="pl">Geprojecteerde VPV invaarmoment</span><strong id="o-vpv" class="pv">€ 20,4 mrd</strong></div>
+        <div class="prow"><span class="pl">Plan transitiebijdrage Shell NL</span><strong id="o-pbij" class="pv">€ 650 mln</strong></div>
       </div>
-      <div style="font-size:10px;color:var(--txt2);margin-top:5px">±2,75 pp DG per 1% rente · sectie 3.7 implementatieplan</div>
+      <div style="font-size:10px;color:var(--txt2);margin-top:5px">Basisscenario implementatieplan: 127,5% · meetmoment Q3 2026 · model gebruikt feb 2026 vermogen als benadering</div>
     </div>
     <div>
-      <span class="lbl">Rekenrente (kapitaalwaarde)</span>
-      <div class="big" id="o-disc">1,50%</div>
-      <input type="range" min="0" max="4" value="2" step="0.25" id="sl-disc">
-      <div class="rl"><span>0,0%</span><span>2,0%</span><span>4,0%</span></div>
-      <div class="warn" style="display:none"></div>
-      <div class="kap-live-box">
-        <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Kapitaalwaarde pensioen bij geselecteerde rekenrente</div>
-        <div style="font-size:22px;font-weight:600" id="kap-live">—</div>
-        <div style="font-size:11px;color:var(--txt2);margin-top:2px" id="kap-live-sub">annuïteitsfactor — × jaarpensioen</div>
+      <span class="lbl">Dekkingsgraad jaar-einde (31 dec 2026)</span>
+      <div class="big" id="o-dge">127,5%</div>
+      <input type="range" min="125" max="170" value="127.5" step="0.5" id="sl-dge">
+      <div class="rl"><span>125%</span><span>135,9% (feb 2026)</span><span>170%</span></div>
+      <div class="proj-box">
+        <div class="prow"><span class="pl">VPV bij jaar-einde DG</span><strong id="o-vpve" class="pv">€ 20,4 mrd</strong></div>
+        <div class="prow"><span class="pl">Uitkeerbaar (plan)</span><strong id="o-uitk" class="pv">—</strong></div>
+        <div class="prow"><span class="pl">Uitkeerbaar (variabel)</span><strong id="o-uitkv" class="pv">—</strong></div>
       </div>
+      <div style="font-size:10px;color:var(--txt2);margin-top:5px">Bepaalt te verdelen kapitaal · invaarbeslissing bepaalt de bijdrage-bracket</div>
     </div>
   </div>
+
   <div class="sep"></div>
   <div style="margin-top:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -157,16 +158,66 @@
       </div>
     </div>
   </div>
+
 </div>
 
 <div class="tab-row">
   <button class="tab on" data-tab="res">Vergelijking</button>
   <button class="tab" data-tab="kap">Kapitaalwaarde</button>
-  <button class="tab" data-tab="sc">Scenario's</button>
-  <button class="tab" data-tab="fond">Fondsverdeling</button>
-  <button class="tab" data-tab="gev">Rentegevoeligheid</button>
+  <button class="tab" data-tab="sc">Pensioenprognose</button>
+  <button class="tab" data-tab="prognose">Vermogensprognose</button>
+  <button class="tab" data-tab="oudnieuw">Huidig vs Nieuw</button>
+  <button class="tab" data-tab="fond">Vermogensverdeling</button>
+  <button class="tab" data-tab="gev">Bijdragegevoeligheid</button>
+  <button class="tab" data-tab="gev2d">2D-gevoeligheid</button>
+  <button class="tab" data-tab="rdr">RDR analyse</button>
+  <button class="tab" data-tab="uit">Uitleg model</button>
   <button class="tab" data-tab="aan">Aannames</button>
 </div>
+
+<!-- Huidig vs Nieuw -->
+<div id="t-oudnieuw" style="display:none">
+
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Huidig stelsel vs nieuw stelsel — jaar-voor-jaar vergelijking</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">
+      Huidig stelsel: pensioen groeit elk jaar met inflatie.
+      Nieuw stelsel: hogere startuitkering na invaren, daarna variabel (mediaan scenario).
+    </div>
+    <div class="g2" style="gap:20px">
+      <div>
+        <span class="lbl">Jaarlijkse inflatie (huidig stelsel)</span>
+        <div class="big" id="on-inf">2,50%</div>
+        <input type="range" min="0" max="5" value="2.5" step="0.25" id="sl-inf" style="width:100%;margin:4px 0 0;cursor:pointer">
+        <div class="rl"><span>0,0%</span><span>2,5%</span><span>5,0%</span></div>
+      </div>
+      <div>
+        <div style="background:var(--surf);border-radius:var(--r8);padding:10px 12px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Break-even punt</div>
+          <div style="font-size:22px;font-weight:600" id="on-be">—</div>
+          <div style="font-size:11px;color:var(--txt2);margin-top:2px" id="on-be-sub">jaar na invaren</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:12px;font-weight:600;margin-bottom:3px">Jaarlijks pensioen — oud vs nieuw</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">Leeftijd <span id="on-age">75</span> jr · huidig pensioen <span id="on-pen">—</span> · plan transitiebijdrage</div>
+    <div style="display:grid;grid-template-columns:50px 1fr 1fr 1fr 1fr;gap:4px;padding:5px 0;border-bottom:0.5px solid var(--bdr);font-size:11px;font-weight:600;color:var(--txt2)">
+      <span>Jaar</span><span style="text-align:right">Leeftijd</span><span style="text-align:right;color:var(--txt2)">Huidig stelsel</span><span style="text-align:right;color:var(--red)">Nieuw stelsel</span><span style="text-align:right">Verschil/jr</span>
+    </div>
+    <div id="on-rows"></div>
+    <div style="font-size:10px;color:var(--txt2);margin-top:8px">Nieuw stelsel toont mediaan scenario (P50). Werkelijke uitkomst afhankelijk van beleggingsresultaten.</div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:12px;font-weight:600;margin-bottom:8px">Cumulatief voordeel nieuw stelsel t.o.v. huidig stelsel</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">Opgeteld verschil in ontvangen pensioen over de jaren</div>
+    <div id="on-cumul"></div>
+  </div>
+</div>
+
 
 <!-- Vergelijking -->
 <div id="t-res">
@@ -194,17 +245,27 @@
     <div class="cmp-row"><div class="swatch" style="background:var(--red)"></div><span style="color:var(--txt2);width:64px">Plan:</span><div class="cmp-bar-bg"><div class="cmp-bar" id="cb-plan" style="background:var(--red)"></div></div><span class="cmp-lbl" id="cb-plan-l">—</span></div>
     <div class="cmp-row"><div class="swatch" style="background:var(--blue)"></div><span style="color:var(--txt2);width:64px">Variabel:</span><div class="cmp-bar-bg"><div class="cmp-bar" id="cb-var" style="background:var(--blue)"></div></div><span class="cmp-lbl" id="cb-var-l">—</span></div>
   </div>
-  <div class="g2">
-    <div class="info-box"><strong>RDR-bescherming:</strong> € 500 mln risicodelingsreserve dempt verlagingen eerste 15 jaar. Doelstelling gem. 2,6% kans op verlaging per jaar (sectie 6.7).</div>
-    <div class="info-box"><strong>Spreiding 5 jaar:</strong> beleggingsresultaten worden gespreid over 5 jaar verwerkt in de variabele uitkering. Dempt jaarlijkse schommelingen (sectie 8.1).</div>
-  </div>
+
 </div>
+
+</div><!-- end t-res -->
 
 <!-- Kapitaalwaarde -->
 <div id="t-kap" style="display:none">
+  <div style="background:var(--surf);border-radius:var(--r8);padding:12px 14px;margin-bottom:12px">
+    <span class="lbl">Rekenrente</span>
+    <div class="big" id="o-disc">2,50%</div>
+    <input type="range" min="0" max="5" value="2.5" step="0.25" id="sl-disc" style="margin:4px 0 0">
+    <div class="rl"><span>0,0%</span><span>2,5%</span><span>5,0%</span></div>
+    <div class="kap-live-box" style="margin-top:8px">
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Kapitaalwaarde pensioen bij geselecteerde rekenrente</div>
+      <div style="font-size:22px;font-weight:600" id="kap-live">—</div>
+      <div style="font-size:11px;color:var(--txt2);margin-top:2px" id="kap-live-sub">annuïteitsfactor — × jaarpensioen</div>
+    </div>
+  </div>
   <div class="card" style="margin-bottom:10px">
-    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Kapitaalwaarde — gevoeligheid voor rekenrente</div>
-    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">Contante waarde van het jaarpensioen over de resterende levensverwachting (AG2022). De invaar-verhoging verandert <em>niet</em> met de rekenrente.</div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Kapitaalwaarde pensioen</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">Wat zijn alle toekomstige pensioenuitkeringen samen waard in huidig geld? De rekenrente bepaalt hoe zwaar toekomstige betalingen meewegen — hoe lager de rente, hoe hoger de kapitaalwaarde. De invaar-verhoging zelf verandert niet met de rekenrente.</div>
     <div class="g2" style="gap:20px;margin-bottom:14px">
       <div>
         <div style="font-size:11px;color:var(--txt2);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span class="badge-plan">Implementatieplan</span> — <span id="kap-p-pen">—</span>/jr</div>
@@ -218,7 +279,7 @@
     <div class="sep"></div>
     <div style="font-size:12px;color:var(--txt2);margin-top:8px">
       Levensverwachting (AG2022): <strong id="kap-lv" style="color:var(--txt1)">—</strong>
-      &nbsp;·&nbsp; Annuïteitsfactor bij rekenrente <span id="kap-cur-disc">2,00%</span>: <strong id="kap-af" style="color:var(--txt1)">—</strong>
+      &nbsp;·&nbsp; Annuïteitsfactor bij rekenrente <span id="kap-cur-disc">2,50%</span>: <strong id="kap-af" style="color:var(--txt1)">—</strong>
     </div>
   </div>
   <div class="card">
@@ -231,11 +292,11 @@
   </div>
 </div>
 
-<!-- Scenario's -->
+<!-- Pensioenprognose -->
 <div id="t-sc" style="display:none">
   <div class="card">
     <div style="font-size:13px;font-weight:600;margin-bottom:3px">Pensioenverwachting na invaren — economische scenario's</div>
-    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">Na initiële verhoging · variatie door beleggingsresultaten · gebaseerd op sectie 6.6 implementatieplan</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">Jaarpensioen na 10 jaar · DNB P-set CP2022-P 2026 Q2 · 40% aandelen / 60% rente (SSPF profiel gepensioneerden) · reëel</div>
     <div class="g2" style="gap:20px">
       <div><div style="margin-bottom:8px"><span class="badge-plan">Implementatieplan</span></div><div id="sc-plan"></div></div>
       <div><div style="margin-bottom:8px"><span class="badge-var">Variabele bijdrage</span></div><div id="sc-var"></div></div>
@@ -243,7 +304,71 @@
   </div>
 </div>
 
-<!-- Fondsverdeling -->
+<!-- Vermogensprognose -->
+<div id="t-prognose" style="display:none">
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Vermogensprognose 10 jaar — DNB P-set 2026 Q2</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">Startkapitaal = kapitaalwaarde berekend pensioen · twee allocatieprofielen · 20.000 scenario's</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;align-items:start">
+      <div>
+        <span class="lbl">Inflatie aanname</span>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <div class="big" id="prg-inf-val">2,50%</div>
+        </div>
+        <input type="range" min="0" max="5" value="2.5" step="0.25" id="sl-prg-inf" style="margin:4px 0 0;cursor:pointer">
+        <div class="rl"><span>0,0%</span><span>2,5% (DNB)</span><span>5,0%</span></div>
+      </div>
+      <div>
+        <div style="margin-bottom:4px">
+          <span class="lbl">Kapitaalwaarde</span>
+          <div style="font-size:22px;font-weight:600" id="prg-start">—</div>
+          <div style="font-size:12px;color:var(--txt2);display:none" id="prg-start-sub"></div>
+        </div>
+        <div style="background:var(--surf);border-radius:var(--r8);padding:8px 10px;font-size:11px;color:var(--txt2)">
+          De twee P50 lijnen in de grafiek en de bedragen na 10 jaar zijn berekend met de gekozen inflatie. De bandbreedtes in de grafiek zijn gebaseerd op de DNB scenario's met 2,5% inflatie.
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:rgba(26,79,138,0.07);border-radius:var(--r8);padding:11px">
+        <div style="font-size:10px;font-weight:600;color:#1a4f8a;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px">Defensief · 40% aandelen</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div class="metric"><div class="lbl">P50</div><div style="font-size:14px;font-weight:600;color:#1a4f8a;margin-top:2px" id="kA-p50">—</div></div>
+          <div class="metric"><div class="lbl">P10</div><div style="font-size:14px;font-weight:600;color:#1a4f8a;margin-top:2px" id="kA-p10">—</div></div>
+          <div class="metric"><div class="lbl">P90</div><div style="font-size:14px;font-weight:600;color:#1a4f8a;margin-top:2px" id="kA-p90">—</div></div>
+        </div>
+      </div>
+      <div style="background:rgba(184,149,42,0.08);border-radius:var(--r8);padding:11px">
+        <div style="font-size:10px;font-weight:600;color:#b8952a;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px">Offensief · 60% aandelen</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div class="metric"><div class="lbl">P50</div><div style="font-size:14px;font-weight:600;color:#b8952a;margin-top:2px" id="kB-p50">—</div></div>
+          <div class="metric"><div class="lbl">P10</div><div style="font-size:14px;font-weight:600;color:#b8952a;margin-top:2px" id="kB-p10">—</div></div>
+          <div class="metric"><div class="lbl">P90</div><div style="font-size:14px;font-weight:600;color:#b8952a;margin-top:2px" id="kB-p90">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:relative;height:320px;margin-bottom:8px">
+      <canvas id="prg-chart"></canvas>
+    </div>
+
+    <div style="padding:8px 0;border-top:0.5px solid var(--bdr);font-size:11px;color:var(--txt2);text-align:center">
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:5px;justify-content:center">
+        <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:20px;height:3px;background:#1a4f8a;border-radius:2px"></span>P50 mediaan · 40% aandelen (defensief)</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:20px;height:3px;background:#b8952a;border-radius:2px"></span>P50 mediaan · 60% aandelen (offensief)</span>
+      </div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center">
+        <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:20px;height:10px;background:rgba(26,79,138,0.18);border-radius:2px"></span>P10–P90 · 80% van defensieve scenario's</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:20px;height:10px;background:rgba(26,79,138,0.07);border-radius:2px;border:0.5px solid rgba(26,79,138,0.2)"></span>P5–P95 · 90% van defensieve scenario's</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Vermogensverdeling -->
 <div id="t-fond" style="display:none">
   <div class="g2">
     <div class="card col-plan"><div style="margin-bottom:8px"><span class="badge-plan">Implementatieplan</span></div><div id="fond-plan"></div></div>
@@ -254,13 +379,23 @@
 
 <!-- Rentegevoeligheid -->
 <div id="t-gev" style="display:none">
+  <div style="background:var(--surf);border-radius:var(--r8);padding:12px 14px;margin-bottom:12px">
+    <span class="lbl">Spreidingstermijn bufferverdeling</span>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:2px">
+      <div class="big" id="o-spr">10 jaar</div>
+      <div style="font-size:12px;color:var(--txt2)" id="o-spr-effect"></div>
+    </div>
+    <input type="range" min="0" max="40" value="10" step="1" id="sl-spr" style="accent-color:#6b46c1;width:100%;margin:4px 0 0;cursor:pointer">
+    <div class="rl"><span>0 jr (gelijk)</span><span>10 jr (default)</span><span>40 jr (∞)</span></div>
+    <div style="font-size:10px;color:var(--txt2);margin-top:5px">Langere termijn = meer buffer naar jongeren = nadelig voor gepensioneerden · standaard methode DNB</div>
+  </div>
   <div class="card" style="margin-bottom:10px">
-    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Rentegevoeligheid — beide bijdrage-varianten</div>
-    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">Leeftijd <span id="gev-age">75</span> jr · huidig pensioen <span id="gev-pen">—</span></div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Bijdragegevoeligheid — effect van DG invaarbeslissing</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">Leeftijd <span id="gev-age">75</span> jr · huidig pensioen <span id="gev-pen">—</span> · DG invaarbeslissing bepaalt de bijdrage-bracket · DG jaar-einde bepaalt te verdelen kapitaal</div>
     <div style="overflow-x:auto">
       <table>
         <thead><tr>
-          <th>Δrente</th><th>DG proj.</th>
+          <th>Dekkingsgraad</th><th>VPV</th>
           <th style="color:var(--red)">Plan bijdr.</th><th style="color:var(--red)">Plan pensioen</th>
           <th style="color:var(--blue)">Var. bijdr.</th><th style="color:var(--blue)">Var. pensioen</th>
         </tr></thead>
@@ -272,6 +407,249 @@
     <div style="font-size:13px;font-weight:600;margin-bottom:3px">Effect transitiebijdrage-bracket (implementatieplan)</div>
     <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">De glijdende bijdrage dempt het effect van een lagere DG op het pensioen</div>
     <div id="bracket-bars"></div>
+  </div>
+</div>
+
+<!-- 2D-gevoeligheid -->
+<div id="t-gev2d" style="display:none">
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">2D-gevoeligheid — DG invaarbeslissing × DG jaar-einde</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Jaarpensioen plan-bijdrage · leeftijd <span id="gev2d-age">75</span> jr · huidig pensioen <span id="gev2d-pen">—</span></div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">
+      Rijen = DG invaarbeslissing (bepaalt bijdrage-bracket) · Kolommen = DG jaar-einde (bepaalt te verdelen kapitaal)
+    </div>
+    <div style="overflow-x:auto" id="gev2d-wrap"></div>
+    <div style="display:flex;gap:16px;font-size:11px;color:var(--txt2);margin-top:10px;flex-wrap:wrap">
+      <span><span style="display:inline-block;width:12px;height:12px;background:rgba(26,138,69,0.25);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Hoog pensioen</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:rgba(184,149,42,0.25);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Middel</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:rgba(212,0,26,0.15);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Laag pensioen</span>
+      <span style="margin-left:8px">← Geselecteerde cel gemarkeerd</span>
+    </div>
+  </div>
+</div>
+
+<!-- RDR analyse -->
+<div id="t-rdr" style="display:none">
+
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px">Risicodelingsreserve (RDR) — verzoek vs besluit</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px">SN/COR verzocht € 500 mln extra in de RDR. Bestuur heeft dit niet gehonoreerd. Deze tab toont het effect.</div>
+
+    <div class="g2" style="gap:12px;margin-bottom:12px">
+      <div style="background:var(--surf);border-radius:var(--r8);padding:11px;border-left:3px solid var(--green)">
+        <div style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Besluit bestuur (gehonoreerd)</div>
+        <div style="font-size:18px;font-weight:600">RDR € 500 mln</div>
+        <div style="font-size:11px;color:var(--txt2);margin-top:3px">Hogere startuitkering · minder buffer bij tegenvallers</div>
+      </div>
+      <div style="background:var(--surf);border-radius:var(--r8);padding:11px;border-left:3px solid #6b46c1">
+        <div style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Verzoek SN/COR (niet gehonoreerd)</div>
+        <div style="font-size:18px;font-weight:600;color:#6b46c1">RDR € 1.000 mln</div>
+        <div style="font-size:11px;color:var(--txt2);margin-top:3px">Lagere startuitkering · meer buffer bij tegenvallers</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <span class="lbl">RDR scenario (schuif voor vergelijking)</span>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:2px">
+        <div class="big" id="rdr-val">€ 500 mln</div>
+        <div style="font-size:12px;color:var(--txt2)" id="rdr-label">besluit bestuur</div>
+      </div>
+      <input type="range" min="500" max="1000" value="500" step="50" id="sl-rdr" style="accent-color:#6b46c1;width:100%;margin:4px 0 0;cursor:pointer">
+      <div class="rl"><span>€ 500 mln (besluit)</span><span>€ 750 mln</span><span>€ 1.000 mln (verzoek)</span></div>
+    </div>
+  </div>
+
+  <div class="g2" style="gap:8px;margin-bottom:10px">
+    <div class="card" style="border-left:3px solid var(--green)">
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:6px">Besluit bestuur · RDR € 500 mln</div>
+      <div style="font-size:11px;color:var(--txt2)">Jaarpensioen na invaren</div>
+      <div style="font-size:24px;font-weight:600;margin:3px 0" id="rdr-p-res">—</div>
+      <div style="font-size:12px" id="rdr-p-dlt" class="green">—</div>
+      <div class="sep"></div>
+      <div style="font-size:12px;color:var(--txt2)">Maand: <strong id="rdr-p-mnd" style="color:var(--txt1)">—</strong></div>
+      <div class="sep"></div>
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">RDR beschermt bij tegenvaller van</div>
+      <div style="font-size:14px;font-weight:600" id="rdr-p-buf">—</div>
+      <div style="font-size:10px;color:var(--txt2);margin-top:2px">als % van VPV · dempt kortingen eerste jaren</div>
+    </div>
+    <div class="card" style="border-left:3px solid #6b46c1">
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:6px">Scenario slider · RDR <span id="rdr-v-lbl">€ 500 mln</span></div>
+      <div style="font-size:11px;color:var(--txt2)">Jaarpensioen na invaren</div>
+      <div style="font-size:24px;font-weight:600;margin:3px 0;color:#6b46c1" id="rdr-v-res">—</div>
+      <div style="font-size:12px" id="rdr-v-dlt" class="green">—</div>
+      <div class="sep"></div>
+      <div style="font-size:12px;color:var(--txt2)">Maand: <strong id="rdr-v-mnd" style="color:var(--txt1)">—</strong></div>
+      <div class="sep"></div>
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">RDR beschermt bij tegenvaller van</div>
+      <div style="font-size:14px;font-weight:600;color:#6b46c1" id="rdr-v-buf">—</div>
+      <div style="font-size:10px;color:var(--txt2);margin-top:2px">als % van VPV · dempt kortingen eerste jaren</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Afweging: startuitkering vs bescherming</div>
+    <div id="rdr-tradeoff"></div>
+    <div class="sep"></div>
+    <div style="font-size:11px;color:var(--txt2);margin-top:8px">
+      Een hogere RDR verlaagt de startuitkering maar vergroot de buffer die kortingen dempt bij slechte beleggingsjaren.
+      De RDR wordt aangesproken voordat deelnemers met een verlaging worden geconfronteerd.
+      Bij voldoende herstel wordt de RDR weer aangevuld.
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Effect per leeftijd bij RDR € 1.000 mln (verzoek SN/COR)</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">Verschil t.o.v. besluit bestuur (RDR € 500 mln) · huidige renteverandering en bijdrage-instellingen</div>
+    <div id="rdr-age-table"></div>
+  </div>
+</div>
+
+<!-- Uitleg model -->
+<div id="t-uit" style="display:none">
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:14px">Hoe het model werkt</div>
+
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:14px">Het model gebruikt de SSPF-fondscijfers van eind februari 2026: vermogen € 26,0 mrd, verplichtingen (VPV) € 19,1 mrd, dekkingsgraad 135,9%.</div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:5px">Stap 1 — Dekkingsgraad projecteren</div>
+      <div style="font-size:12px;color:var(--txt2)">De gebruiker kan een renteverandering invoeren. Per 1% rente verschuift de dekkingsgraad met ±2,75 procentpunt (sectie 3.7 implementatieplan). De VPV op het invaarmoment volgt daaruit via een constante-vermogen aanname: VPV = € 26,0 mrd / geprojecteerde DG.</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:5px">Stap 2 — Uitkeerbaar vermogen berekenen</div>
+      <div style="background:var(--surf);border-radius:var(--r8);padding:10px 13px;font-size:12px;font-family:monospace;margin-bottom:6px;line-height:1.7">
+        Uitkeerbaar = (Vermogen + Transitiebijdrage) × 98%<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;− RDR (€ 500 mln)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;− Compensatiedepot (€ 400 mln)
+      </div>
+      <div style="font-size:12px;color:var(--txt2)">De 2% operationele reserve en de twee depots zijn vaste parameters uit het implementatieplan. De transitiebijdrage Shell NL is DG-afhankelijk (€ 500 / 650 / 850 mln per bracket) of vrij instelbaar als vergelijkingsvariant.</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:5px">Stap 3 — Invaarverhoging bepalen</div>
+      <div style="background:var(--surf);border-radius:var(--r8);padding:10px 13px;font-size:12px;font-family:monospace;margin-bottom:6px">
+        Verhoging % = Uitkeerbaar / VPV − 1
+      </div>
+      <div style="font-size:12px;color:var(--txt2)">Dit is de verhoging op fondsniveau, gelijk voor alle deelnemers vóór leeftijdscorrectie.</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px">Stap 4 — Leeftijdscorrectie toepassen</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:8px">Oudere deelnemers krijgen een lagere verhoging omdat zij minder beleggingsrisico toebedeeld krijgen (afgeleid uit netto-profijt grafiek sectie 6.5).</div>
+      <div style="background:var(--surf);border-radius:var(--r8);overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;font-size:11px;font-weight:600;color:var(--txt2);padding:7px 12px;border-bottom:0.5px solid var(--bdr)"><span>Leeftijd</span><span>Factor</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;font-size:12px;padding:6px 12px;border-bottom:0.5px solid var(--bdr)"><span>jonger dan 85 jaar</span><span>100%</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;font-size:12px;padding:6px 12px;border-bottom:0.5px solid var(--bdr)"><span>85 jaar</span><span>97%</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;font-size:12px;padding:6px 12px;border-bottom:0.5px solid var(--bdr)"><span>86 tot 87 jaar</span><span>93%</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;font-size:12px;padding:6px 12px"><span>88 jaar en ouder</span><span>88%</span></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:5px">Stap 4b — Bufferverdeling spreidingstermijn</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:8px">De standaard methode (DNB) verdeelt de buffer niet gelijk over alle leeftijden. Deelnemers met een langere resterende levensverwachting krijgen een groter aandeel van de buffer, omdat zij meer beleggingsrisico kunnen dragen. De spreidingstermijn bepaalt hoe sterk dit effect is.</div>
+      <div style="background:var(--surf);border-radius:var(--r8);padding:10px 13px;font-size:12px;font-family:monospace;margin-bottom:8px;line-height:1.7">
+        spreadFactor = (1 − alpha) + alpha × (resterende levensduur / gemiddelde levensduur pool)<br>
+        alpha = spreidingstermijn / 40 &nbsp;[0 = gelijk, 1 = volledig proportioneel]
+      </div>
+      <div style="background:var(--surf);border-radius:var(--r8);overflow:hidden;font-size:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;font-weight:600;color:var(--txt2);padding:7px 12px;border-bottom:0.5px solid var(--bdr)"><span>Leeftijd</span><span>T = 0 jr</span><span>T = 10 jr</span><span>T = 40 jr (∞)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:6px 12px;border-bottom:0.5px solid var(--bdr)"><span>70 jaar</span><span>neutraal</span><span style="color:var(--green)">licht hoger</span><span style="color:var(--green)">hoger</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:6px 12px;border-bottom:0.5px solid var(--bdr)"><span>75 jaar</span><span>neutraal</span><span>neutraal</span><span>neutraal</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:6px 12px;border-bottom:0.5px solid var(--bdr)"><span>85 jaar</span><span>neutraal</span><span style="color:var(--amber)">licht lager</span><span style="color:var(--red)">lager</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:6px 12px"><span>90 jaar</span><span>neutraal</span><span style="color:var(--red)">lager</span><span style="color:var(--red)">aanzienlijk lager</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--txt2);margin-top:6px">Gemiddelde resterende levensduur SSPF-pool: circa 12 jaar (aanname). Exacte ALM-verdeling (Ortec) niet publiek beschikbaar.</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:5px">Stap 5 — Nieuw jaarpensioen</div>
+      <div style="background:var(--surf);border-radius:var(--r8);padding:10px 13px;font-size:12px;font-family:monospace;margin-bottom:6px">
+        Nieuw pensioen = Huidig pensioen × (1 + Verhoging% × Leeftijdsfactor × Spreidingsfactor)
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:5px">Kapitaalwaarde (apart)</div>
+      <div style="font-size:12px;color:var(--txt2)">De kapitaalwaarde is de contante waarde van het nieuwe jaarpensioen over de resterende levensverwachting (sterftetafel AG2022), verdisconteerd tegen de door de gebruiker gekozen rekenrente. Dit heeft geen invloed op de invaarverhoging zelf. Die volgt uitsluitend uit de DNB-rentetermijnstructuur op fondsniveau.</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:5px">Stap 6 — Scenario's en vermogensprognose (DNB P-set)</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:8px">Beide tabs gebruiken dezelfde databron: DNB Prudentiële scenario-set CP2022-P 2026 Q2 met 20.000 scenario's. Het SSPF profiel voor gepensioneerden is 40% aandelen / 60% rente (defensief).</div>
+
+      <div style="background:var(--surf);border-radius:var(--r8);padding:10px 12px;font-size:12px;margin-bottom:10px">
+        <div style="font-weight:600;margin-bottom:6px">Wat betekent P10, P50, P90?</div>
+        <div style="color:var(--txt2);line-height:1.6;margin-bottom:8px">
+          Een percentiel geeft aan in hoeveel procent van de 20.000 scenario's het resultaat <em>lager</em> uitvalt dan de getoonde waarde.
+          P10 betekent: in 10% van de scenario's is de uitkomst slechter — dit is een pessimistisch maar realistisch scenario.
+          P50 is de mediaan: de helft van de scenario's loopt beter af, de andere helft slechter.
+          P90 betekent: slechts 10% van de scenario's doet het beter — dit is een optimistisch scenario.
+          De bandbreedte P10–P90 omvat 80% van alle uitkomsten.
+        </div>
+        <div style="border-top:0.5px solid var(--bdr);padding-top:8px">
+          <div style="font-weight:600;margin-bottom:4px">Definitie goed weer / slecht weer (bijlage 2 implementatieplan)</div>
+          <div style="color:var(--txt2);line-height:1.6">
+            Het SSPF implementatieplan hanteert drie scenario's: mediaan (P50), 
+            <span style="color:#D4001A;font-weight:500">slecht weer = 5% percentiel (P5)</span> en 
+            <span style="color:#1a8a45;font-weight:500">goed weer = 95% percentiel (P95)</span>.
+            Dit zijn exact de buitenste percentielgrenzen van de DNB P-set die in de scenario-tab en vermogensprognose worden gebruikt.
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--surf);border-radius:var(--r8);overflow:hidden;font-size:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;font-weight:600;color:var(--txt2);padding:7px 12px;border-bottom:0.5px solid var(--bdr)"><span>Percentiel</span><span style="text-align:right">Factor jaar 10</span><span style="text-align:right">Label implementatieplan</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 12px;border-bottom:0.5px solid var(--bdr);color:#1a8a45"><span>P95</span><span style="text-align:right">×1,74</span><span style="text-align:right">goed weer</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 12px;border-bottom:0.5px solid var(--bdr);color:#5aaa60"><span>P75</span><span style="text-align:right">×1,42</span><span style="text-align:right">gunstig</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 12px;border-bottom:0.5px solid var(--bdr)"><span>P50</span><span style="text-align:right">×1,22</span><span style="text-align:right">mediaan</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 12px;border-bottom:0.5px solid var(--bdr);color:#C07A00"><span>P25</span><span style="text-align:right">×1,05</span><span style="text-align:right">ongunstig</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 12px;color:#D4001A"><span>P5</span><span style="text-align:right">×0,78</span><span style="text-align:right">slecht weer</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--txt2);margin-top:6px;margin-bottom:10px">Factoren zijn reëel (gecorrigeerd voor 2,5% inflatie per jaar). Pensioenprognose tab toont jaarpensioen na 10 jaar. Vermogensprognose toont kapitaalwaardeontwikkeling per jaar.</div>
+
+      <div style="background:var(--surf);border-radius:var(--r8);padding:10px 12px;font-size:12px">
+        <div style="font-weight:600;margin-bottom:6px">Inflatie slider in vermogensprognose — nominale hertaling</div>
+        <div style="color:var(--txt2);line-height:1.6;margin-bottom:8px">
+          De DNB P-set is opgebouwd in <em>reële termen</em> — de 2,5% inflatie is er al ingebakken.
+          De inflatieslider past de weergave aan door de reële DNB-factoren te vermenigvuldigen met een nominale opslag:
+        </div>
+        <div style="background:var(--card);border-radius:var(--r8);padding:8px 12px;font-family:monospace;font-size:11px;margin-bottom:8px;line-height:1.8">
+          nominale factor(jaar t) = reële DNB-factor(t) × (1 + inflatie)^t
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+          <div style="background:var(--card);border-radius:var(--r8);padding:7px 10px;text-align:center">
+            <div style="font-weight:600;margin-bottom:2px">0,0%</div>
+            <div style="color:var(--txt2);font-size:10px">puur reëel<br>koopkracht constant</div>
+          </div>
+          <div style="background:rgba(26,79,138,0.07);border-radius:var(--r8);padding:7px 10px;text-align:center;border:0.5px solid rgba(26,79,138,0.2)">
+            <div style="font-weight:600;margin-bottom:2px;color:#1a4f8a">2,5%</div>
+            <div style="color:var(--txt2);font-size:10px">= DNB aanname<br>nominaal = reëel</div>
+          </div>
+          <div style="background:var(--card);border-radius:var(--r8);padding:7px 10px;text-align:center">
+            <div style="font-weight:600;margin-bottom:2px">&gt; 2,5%</div>
+            <div style="color:var(--txt2);font-size:10px">hogere inflatie<br>nominaal hoger, koopkracht daalt</div>
+          </div>
+        </div>
+        <div style="color:var(--txt2);font-size:11px;border-top:0.5px solid var(--bdr);padding-top:6px">
+          Belangrijk: de bandbreedte van de scenario's (P5–P95) blijft op reële DNB-basis. Alleen de schaal van de grafiek en de KPI-waarden verschuiven mee met de inflatieaanname.
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:var(--surf);border-radius:var(--r8);padding:10px 13px;font-size:12px;color:var(--txt2)">
+        <strong style="color:var(--txt1)">RDR-bescherming</strong><br>
+        De risicodelingsreserve van € 500 mln dempt verlagingen in de eerste 15 jaar. Doelstelling: gemiddeld 2,6% kans op verlaging per jaar (sectie 6.7). De RDR wordt aangesproken voordat deelnemers een korting ontvangen, en aangevuld bij voldoende herstel.
+      </div>
+      <div style="background:var(--surf);border-radius:var(--r8);padding:10px 13px;font-size:12px;color:var(--txt2)">
+        <strong style="color:var(--txt1)">Spreiding 5 jaar</strong><br>
+        Beleggingsresultaten worden gespreid over 5 jaar verwerkt in de variabele uitkering (sectie 8.1). Dit dempt jaarlijkse schommelingen: een goed beleggingsjaar leidt niet direct tot een grote verhoging, een slecht jaar niet direct tot een grote verlaging.
+      </div>
+    </div>
+        <div style="background:#fffbeb;border:0.5px solid #fcd34d;border-radius:var(--r8);padding:10px 13px;font-size:12px;color:#92400e">
+      <strong>Wat het model niet doet:</strong> het toont de initiële verhoging bij invaren. Toekomstige aanpassingen zijn variabel. De scenario-tab en vermogensprognose-tab tonen de verwachte ontwikkeling op basis van DNB P-set CP2022-P 2026 Q2 (40% aandelen, SSPF profiel gepensioneerden).
+    </div>
   </div>
 </div>
 
@@ -287,7 +665,7 @@
   </div>
 </div>
 
-<div class="footer">SSPF Wtp-invaar calculator &nbsp;·&nbsp; Implementatieplan 15 juli 2025 + fondscijfers eind februari 2026 &nbsp;·&nbsp; Geen rechten te ontlenen &nbsp;·&nbsp; Sterftetafel AG2022</div>
+<div class="footer">SSPF Wtp-transitie calculator &nbsp;·&nbsp; Implementatieplan 15 juli 2025 + fondscijfers eind februari 2026 &nbsp;·&nbsp; Geen rechten te ontlenen &nbsp;·&nbsp; Sterftetafel AG2022 &nbsp;·&nbsp; Vragen of opmerkingen: <a href="mailto:hans@invaarcalculator.nl" style="color:var(--txt2)">hans@invaarcalculator.nl</a></div>
 </div>
 
 <script>
@@ -296,36 +674,68 @@ const mrd=m=>'€ '+(m/1000).toFixed(1)+' mrd';
 const pct=(n,p)=>(p&&n>0?'+':'')+n.toFixed(1)+'%';
 const fmtR=n=>(n>0?'+':'')+n.toFixed(2)+'%';
 const $=id=>document.getElementById(id);
-const ASSETS=26000,DG_BASE=135.9,DG_SENS=2.75,RDR=500,COMP=400,OP=0.02;
-const DISC_RATES=[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0];
+const ASSETS=26000,DG_BASE=135.9,RDR=500,COMP=400,OP=0.02;
+const DISC_RATES=[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0];
 function planBij(dg){return dg>=135?500:dg>=130?650:dg>=125?850:0}
 function planBijRule(dg){return dg>=135?'DG \u2265 135% \u2192 \u20ac 500 mln':dg>=130?'DG 130\u2013135% \u2192 \u20ac 650 mln':dg>=125?'DG 125\u2013130% \u2192 \u20ac 850 mln':'DG < 125% \u2192 noodprotocol'}
-function proj(dr){const dg=DG_BASE+DG_SENS*dr;return{dg,vpv:ASSETS/(dg/100)}}
+function proj(dg){return{dg,vpv:ASSETS/(dg/100)}}
 function calcWithBij(vpv,B){const uitk=(ASSETS+B)*(1-OP)-RDR-COMP;return{enhPct:(uitk/vpv-1)*100,uitk}}
+function calcCustom(vpv,B,rdr){const uitk=(ASSETS+B)*(1-OP)-rdr-COMP;return{enhPct:(uitk/vpv-1)*100,uitk}}
 const Q={70:0.0104,71:0.0119,72:0.0136,73:0.0155,74:0.0177,75:0.0203,76:0.0232,77:0.0265,78:0.0303,79:0.0348,80:0.040,81:0.046,82:0.053,83:0.061,84:0.071,85:0.082,86:0.094,87:0.109,88:0.125,89:0.143,90:0.164,91:0.187,92:0.212,93:0.239,94:0.268,95:0.298,96:0.329,97:0.359,98:0.389,99:0.417,100:0.444};
 const gQ=a=>Q[Math.min(a,100)]??0.5;
 function annuity(a,r){let af=0,lx=1;for(let t=0;t<=55;t++){if(a+t>115||lx<0.001)break;af+=lx/Math.pow(1+r/100,t);lx*=(1-gQ(a+t))}return af}
 function lifeExp(a){let lv=0,lx=1;for(let t=0;t<=55;t++){if(a+t>115||lx<0.001)break;lv+=lx;lx*=(1-gQ(a+t))}return a+lv}
 function ageAdj(a){return a>=88?0.88:a>=86?0.93:a>=85?0.97:1.0}
-function scenF(a){const h=Math.max(0,Math.min(1,(83-a)/13));return{p95:1+0.12+h*0.33,p75:1+0.07+h*0.17,p50:1,p25:1-0.08-h*0.05,p5:1-0.14-h*0.09}}
-let curAge=75,curP=62500,curDr=0,curDisc=2.0,curVarBij=2500;
+// Bufferverdeling: standaard methode. AVG_REM = gemiddelde resterende levensduur SSPF-pool (~12 jr)
+const AVG_REM=12;
+function spreadFactor(a,T){const rem=Math.max(lifeExp(a)-a,0.5),alpha=Math.min(T/40,1);return(1-alpha)+alpha*(rem/AVG_REM)}
+function scenF(a){
+  // DNB P-set A · 40% aandelen / 60% rente · SSPF profiel gepensioneerden · jaar 10 · reëel
+  return{
+    p95:DNB_A.p95[10],
+    p75:(DNB_A.P50[10]+DNB_A.P90[10])/2,
+    p50:DNB_A.P50[10],
+    p25:(DNB_A.P10[10]+DNB_A.P50[10])/2,
+    p5: DNB_A.p05[10]
+  };
+}
+let curAge=75,curP=62500,curDg=127.5,curDgE=127.5,curDisc=2.5,curVarBij=2500,curSpr=10,curRdr=500,curInf=2.5;
+
+function calcPensioen(dgBeslissing, dgJaarEinde, extraBij=0){
+  const bij=extraBij>0?extraBij:planBij(dgBeslissing);
+  const vpvE=ASSETS/(dgJaarEinde/100);
+  const uitk=(ASSETS+bij)*(1-OP)-RDR-COMP;
+  return{enhPct:(uitk/vpvE-1)*100,uitk,bij,vpvE};
+}
 
 function render(){
-  const{dg,vpv}=proj(curDr);
-  const pB=planBij(dg),vB=curVarBij,adj=ageAdj(curAge);
+  const dg=curDg,vpv=ASSETS/(curDg/100);
+  const vpvE=ASSETS/(curDgE/100);
+  const pB=planBij(dg),vB=curVarBij,adj=ageAdj(curAge)*spreadFactor(curAge,curSpr);
   const af=annuity(curAge,curDisc),lv=lifeExp(curAge);
-  const plan=calcWithBij(vpv,pB),vari=calcWithBij(vpv,vB);
+  const plan=calcWithBij(vpvE,pB),vari=calcWithBij(vpvE,vB);
   const pNewP=curP*(1+plan.enhPct*adj/100),vNewP=curP*(1+vari.enhPct*adj/100);
   const diff=vNewP-pNewP,diffP=((vNewP/pNewP)-1)*100;
 
   $('o-age').textContent=curAge+' jaar'; $('o-pen').textContent=eur(curP);
-  $('o-dr').textContent=(curDr>0?'+':'')+curDr.toFixed(2)+'%';
-  $('o-dg').textContent=dg.toFixed(1)+'%'; $('o-vpv').textContent=mrd(vpv);
+  $('o-dr').textContent=dg.toFixed(1)+'%';
+  $('o-dge').textContent=curDgE.toFixed(1)+'%';
+  $('o-vpv').textContent=mrd(vpv);
+  $('o-vpve').textContent=mrd(vpvE);
+  const uitkTot=(ASSETS+pB)*(1-OP)-RDR-COMP;
+  const uitkVar=(ASSETS+vB)*(1-OP)-RDR-COMP;
+  $('o-uitk').textContent=mrd(uitkTot);
+  $('o-uitkv').textContent=mrd(uitkVar);
   $('o-pbij').textContent='\u20ac '+pB.toLocaleString('nl-NL')+' mln';
+  $('o-vpve').textContent=mrd(vpvE);
   $('o-disc').textContent=curDisc.toFixed(2)+'%';
   $('p-bij-val').textContent='\u20ac '+pB.toLocaleString('nl-NL')+' mln';
   $('p-bij-rule').textContent=planBijRule(dg);
   $('v-bij-val').textContent='\u20ac '+vB.toLocaleString('nl-NL')+' mln';
+  // spreidingstermijn display
+  const sf=spreadFactor(curAge,curSpr),sfEffect=((sf-1)*100);
+  $('o-spr').textContent=curSpr===40?'\u221e (40 jr)':curSpr+' jaar';
+  $('o-spr-effect').textContent='effect op verhoging leeftijd '+curAge+' jr: '+(sfEffect>=0?'+':'')+sfEffect.toFixed(1)+'%';
   $('kap-live').textContent=eur(pNewP*af);
   $('kap-live-sub').textContent='annui\u0308teitsfactor '+af.toFixed(2)+' \u00d7 '+eur(pNewP);
   $('p-blbl').textContent='\u20ac '+pB.toLocaleString('nl-NL')+' mln';
@@ -353,7 +763,7 @@ function render(){
   $('kap-p-pen').textContent=eur(pNewP); $('kap-v-pen').textContent=eur(vNewP);
   $('kap-lv').textContent=lv.toFixed(1)+' jaar'; $('kap-cur-disc').textContent=curDisc.toFixed(2)+'%'; $('kap-af').textContent=af.toFixed(2);
   function kapRows(np){
-    const mxK=np*annuity(curAge,0.5);
+    const mxK=np*annuity(curAge,0.0);
     return DISC_RATES.map(r=>{
       const a=annuity(curAge,r),k=np*a,isCur=Math.abs(r-curDisc)<0.01,w=(k/mxK*100).toFixed(1);
       return`<div class="kap-rate-row${isCur?' cur':''}">
@@ -387,25 +797,268 @@ function render(){
 
   // rentegevoeligheid
   $('gev-age').textContent=curAge; $('gev-pen').textContent=eur(curP);
-  const drSteps=[-2,-1.5,-1,-0.5,0,0.5,1,1.5,2];
-  const mxEnh=Math.max(...drSteps.map(d=>{const{dg:g,vpv:v}=proj(d);return calcWithBij(v,planBij(g)).enhPct}));
-  $('gev-tb').innerHTML=drSteps.map(d=>{const{dg:g,vpv:v}=proj(d);const pbi=planBij(g),pr=calcWithBij(v,pbi),vr=calcWithBij(v,vB);const pAdj=pr.enhPct*adj,vAdj=vr.enhPct*adj,pPen=curP*(1+pAdj/100),vPen=curP*(1+vAdj/100),dPen=vPen-pPen,sel=Math.abs(d-curDr)<0.01,dc=dPen>0?'var(--green)':dPen<0?'var(--red)':'var(--txt2)';return`<tr class="${sel?'sel':''}"><td style="font-weight:${sel?'600':'400'};color:${sel?'var(--red)':'var(--txt1)'}">${fmtR(d)}${sel?' \u2190':''}</td><td>${g.toFixed(1)}%</td><td style="color:var(--red)">\u20ac ${pbi} mln</td><td style="font-weight:${sel?'600':'400'}">${eur(pPen)}</td><td style="color:var(--blue)">\u20ac ${vB} mln</td><td style="font-weight:${sel?'600':'400'}">${eur(vPen)} <span style="font-size:10px;color:${dc}">(${dPen>=0?'+':''}${Math.round(dPen).toLocaleString('nl-NL')})</span></td></tr>`;}).join('');
-  $('bracket-bars').innerHTML=drSteps.map(d=>{const{dg:g,vpv:v}=proj(d),pbi=planBij(g),ep=calcWithBij(v,pbi).enhPct,sel=Math.abs(d-curDr)<0.01,bc=pbi===500?'#888':pbi===650?'#C07A00':'#1a8a45',bw=(ep/mxEnh*100).toFixed(1);return`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:var(--txt2)">${fmtR(d)} \u00b7 DG ${g.toFixed(1)}% \u00b7 <span style="color:${bc}">\u20ac ${pbi} mln bijdrage</span></span><span style="font-weight:${sel?'600':'400'};color:${sel?'var(--red)':'var(--txt1)'}">+${ep.toFixed(1)}%${sel?' \u2190':''}</span></div><div style="height:6px;background:var(--surf);border-radius:3px;overflow:hidden"><div style="width:${bw}%;height:100%;background:${sel?'var(--red)':'#aaa'};border-radius:3px"></div></div></div>`;}).join('');
+  const dgSteps=[125,127.5,130,132.5,135,135.9,140,145,150,155,160,170];
+  const mxEnh=Math.max(...dgSteps.map(g=>{const v=ASSETS/(curDgE/100);return calcWithBij(v,planBij(g)).enhPct}));
+  $('gev-tb').innerHTML=dgSteps.map(g=>{
+    const vpvI=ASSETS/(g/100),vpvD=ASSETS/(curDgE/100),pbi=planBij(g),pr=calcWithBij(vpvD,pbi),vr=calcWithBij(vpvD,vB);
+    const pAdj=pr.enhPct*adj,vAdj=vr.enhPct*adj,pPen=curP*(1+pAdj/100),vPen=curP*(1+vAdj/100),dPen=vPen-pPen;
+    const sel=Math.abs(g-curDg)<0.1,dc=dPen>0?'var(--green)':dPen<0?'var(--red)':'var(--txt2)';
+    return`<tr class="${sel?'sel':''}">
+      <td style="font-weight:${sel?'600':'400'};color:${sel?'var(--red)':'var(--txt1)'}">${g.toFixed(1)}%${sel?' \u2190':''}</td>
+      <td>${mrd(vpvI)}</td>
+      <td style="color:var(--red)">\u20ac ${pbi} mln</td>
+      <td style="font-weight:${sel?'600':'400'}">${eur(pPen)}</td>
+      <td style="color:var(--blue)">\u20ac ${vB} mln</td>
+      <td style="font-weight:${sel?'600':'400'}">${eur(vPen)} <span style="font-size:10px;color:${dc}">(${dPen>=0?'+':''}${Math.round(dPen).toLocaleString('nl-NL')})</span></td>
+    </tr>`;}).join('');
+  $('bracket-bars').innerHTML=dgSteps.map(g=>{const vpvD=ASSETS/(curDgE/100),pbi=planBij(g),ep=calcWithBij(vpvD,pbi).enhPct,sel=Math.abs(g-curDg)<0.1,bc=pbi===500?'#888':pbi===650?'#C07A00':'#1a8a45',bw=(ep/mxEnh*100).toFixed(1);return`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:var(--txt2)">DG beslissing ${g.toFixed(1)}% \u00b7 bijdrage <span style="color:${bc}">\u20ac ${pbi} mln</span></span><span style="font-weight:${sel?'600':'400'};color:${sel?'var(--red)':'var(--txt1)'}">+${ep.toFixed(1)}%${sel?' \u2190':''}</span></div><div style="height:6px;background:var(--surf);border-radius:3px;overflow:hidden"><div style="width:${bw}%;height:100%;background:${sel?'var(--red)':'#aaa'};border-radius:3px"></div></div></div>`;}).join('');
+
+  // 2D gevoeligheid tab
+  if($('gev2d-wrap')){
+    $('gev2d-age').textContent=curAge; $('gev2d-pen').textContent=eur(curP);
+    const dgB=[125,127.5,130,132.5,135,140,145,150];
+    const dgE=[125,127.5,130,132.5,135,140,145,150,155,160];
+    const allP=dgB.flatMap(b=>dgE.map(e=>{const v=ASSETS/(e/100);return curP*(1+calcWithBij(v,planBij(b)).enhPct*adj/100);}));
+    const minP=Math.min(...allP),maxP=Math.max(...allP);
+    function cellColor(p){const t=(p-minP)/(maxP-minP);if(t>0.66)return'rgba(26,138,69,'+(0.1+t*0.3).toFixed(2)+')';if(t>0.33)return'rgba(184,149,42,'+(0.1+t*0.2).toFixed(2)+')';return'rgba(212,0,26,'+(0.05+t*0.15).toFixed(2)+')';}
+    let h2d='<table style="border-collapse:collapse;font-size:11px;min-width:600px">';
+    h2d+='<thead><tr><th style="padding:5px 8px;text-align:left;color:var(--txt2);font-weight:600;border-bottom:0.5px solid var(--bdr)">DG beslissing ↓ / jaar-einde →</th>';
+    dgE.forEach(e=>{h2d+='<th style="padding:5px 6px;text-align:right;color:var(--txt2);font-weight:600;border-bottom:0.5px solid var(--bdr)">'+e.toFixed(1)+'%</th>';});
+    h2d+='</tr></thead><tbody>';
+    dgB.forEach(b=>{
+      const pbi=planBij(b),bc=pbi===500?'#888':pbi===650?'#C07A00':'#1a8a45';
+      const selRow=Math.abs(b-curDg)<0.1;
+      h2d+='<tr style="'+(selRow?'background:var(--surf)':'')+'">';
+      h2d+='<td style="padding:5px 8px;font-weight:'+(selRow?'600':'400')+';color:'+(selRow?'var(--red)':'var(--txt1)')+';white-space:nowrap;border-bottom:0.5px solid var(--bdr)">'+b.toFixed(1)+'% \u00b7 <span style="color:'+bc+';">\u20ac '+pbi+' mln</span>'+(selRow?' \u2190':'')+'</td>';
+      dgE.forEach(e=>{
+        const v=ASSETS/(e/100),p=curP*(1+calcWithBij(v,planBij(b)).enhPct*adj/100);
+        const selCol=Math.abs(e-curDgE)<0.1,selBoth=selRow&&selCol;
+        h2d+='<td style="padding:4px 6px;text-align:right;background:'+(selBoth?'rgba(26,79,138,0.18)':cellColor(p))+';font-weight:'+(selBoth?'700':'400')+';border:'+(selBoth?'2px solid #1a4f8a':'0.5px solid var(--bdr)')+'">'+eur(p)+'</td>';
+      });
+      h2d+='</tr>';
+    });
+    h2d+='</tbody></table>';
+    $('gev2d-wrap').innerHTML=h2d;
+  }
+
+  // Huidig vs Nieuw tab
+  $('on-age').textContent=curAge; $('on-pen').textContent=eur(curP);
+  $('on-inf').textContent=curInf.toFixed(2)+'%';
+  const newStart=pNewP;
+  const scOn=scenF(curAge);
+  const YEARS=Math.min(25, Math.round(lifeExp(curAge)-curAge+5));
+  let beYear=null,cumDiff=0;
+  let rows='',cumuls='';
+  const maxCum=newStart*YEARS;
+  for(let y=0;y<=YEARS;y++){
+    const oud=curP*Math.pow(1+curInf/100,y);
+    const nieuw=newStart;
+    const d=nieuw-oud;
+    if(beYear===null && d<=0) beYear=y;
+    cumDiff+=d;
+    const sel=y===0||y===5||y===10||y===15||y===20||y===YEARS;
+    const isBe=beYear===y;
+    if(sel||isBe){
+      const dc=d>0?'var(--green)':d<0?'var(--red)':'var(--txt2)';
+      rows+=`<div style="display:grid;grid-template-columns:50px 1fr 1fr 1fr 1fr;gap:4px;padding:5px 0;border-bottom:0.5px solid var(--bdr);font-size:12px;${isBe?'background:#fff3cd;margin:0 -4px;padding:5px 4px;border-radius:4px':''}">
+        <span style="font-weight:${isBe?'600':'400'};color:${isBe?'#92400e':'var(--txt1)'}">${y}${isBe?' \u26a0\ufe0f':''}</span>
+        <span style="text-align:right">${curAge+y} jr</span>
+        <span style="text-align:right;color:var(--txt2)">${eur(oud)}</span>
+        <span style="text-align:right;color:var(--red)">${eur(nieuw)}</span>
+        <span style="text-align:right;color:${dc};font-weight:${isBe?'600':'400'}">${d>=0?'+':''}${eur(d)}</span>
+      </div>`;
+    }
+    // cumul bar every 5 years
+    if(y>0&&y%5===0){
+      const cumVal=cumDiff,w=Math.min(Math.abs(cumVal)/maxCum*100,100).toFixed(1),cc=cumVal>0?'var(--green)':'var(--red)';
+      cumuls+=`<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="color:var(--txt2)">Na ${y} jaar (leeftijd ${curAge+y})</span>
+          <span style="font-weight:600;color:${cc}">${cumVal>=0?'+':''}${eur(cumVal)}</span>
+        </div>
+        <div style="height:8px;background:var(--surf);border-radius:4px;overflow:hidden">
+          <div style="width:${w}%;height:100%;background:${cc};border-radius:4px"></div>
+        </div>
+      </div>`;
+    }
+  }
+  if(beYear===null) beYear='>';
+  $('on-be').textContent=beYear==='>'+YEARS?`meer dan ${YEARS} jaar`:beYear===null?`meer dan ${YEARS} jaar`:`jaar ${beYear}`;
+  $('on-be-sub').textContent=beYear==='>'?`huidig stelsel haalt nieuw niet in binnen ${YEARS} jaar`:`leeftijd ${curAge+(beYear==='>'?YEARS:beYear)} jaar · daarna loopt huidig stelsel voor`;
+  $('on-rows').innerHTML=rows;
+  $('on-cumul').innerHTML=cumuls;
+
+  // RDR analyse tab
+  const rdrBase=500,rdrAlt=curRdr;
+  const planBase=calcCustom(vpv,pB,rdrBase),planAlt=calcCustom(vpv,pB,rdrAlt);
+  const pBaseP=curP*(1+planBase.enhPct*adj/100),pAltP=curP*(1+planAlt.enhPct*adj/100);
+  const rdrDiff=pAltP-pBaseP;
+  $('rdr-val').textContent='\u20ac '+rdrAlt.toLocaleString('nl-NL')+' mln';
+  $('rdr-label').textContent=rdrAlt===500?'besluit bestuur':rdrAlt===1000?'verzoek SN/COR':'tussenscenario';
+  $('rdr-v-lbl').textContent='\u20ac '+rdrAlt.toLocaleString('nl-NL')+' mln';
+  $('rdr-p-res').textContent=eur(pBaseP);
+  $('rdr-p-dlt').textContent=eur(pBaseP-curP)+' ('+pct(planBase.enhPct*adj,true)+')';
+  $('rdr-p-dlt').style.color=planBase.enhPct*adj>=0?'var(--green)':'var(--red)';
+  $('rdr-p-mnd').textContent=eur(pBaseP/12);
+  $('rdr-p-buf').textContent='\u20ac '+rdrBase.toLocaleString('nl-NL')+' mln ('+((rdrBase/vpv)*100).toFixed(1)+'% van VPV)';
+  $('rdr-v-res').textContent=eur(pAltP);
+  $('rdr-v-dlt').textContent=eur(pAltP-curP)+' ('+pct(planAlt.enhPct*adj,true)+')';
+  $('rdr-v-dlt').style.color=planAlt.enhPct*adj>=0?'var(--green)':'var(--red)';
+  $('rdr-v-mnd').textContent=eur(pAltP/12);
+  $('rdr-v-buf').textContent='\u20ac '+rdrAlt.toLocaleString('nl-NL')+' mln ('+((rdrAlt/vpv)*100).toFixed(1)+'% van VPV)';
+  const tc=rdrDiff<0?'var(--green)':'var(--red)';
+  $('rdr-tradeoff').innerHTML=`
+    <div class="g3" style="gap:10px">
+      <div class="metric"><div class="lbl">Verschil startpensioen</div><div class="v" style="color:${tc}">${rdrDiff>=0?'+':''}${eur(rdrDiff)}/jr</div><div class="s">slider vs besluit</div></div>
+      <div class="metric"><div class="lbl">Verschil per maand</div><div class="v" style="color:${tc}">${rdrDiff>=0?'+':''}${eur(rdrDiff/12)}/mnd</div><div class="s">slider vs besluit</div></div>
+      <div class="metric"><div class="lbl">Extra RDR buffer</div><div class="v" style="color:#6b46c1">+\u20ac\u00a0${(rdrAlt-rdrBase).toLocaleString('nl-NL')} mln</div><div class="s">meer kortingsbuffer</div></div>
+    </div>`;
+  const ageSteps=[70,72,74,76,78,80,82,84,86,88,90];
+  $('rdr-age-table').innerHTML=`<div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--bdr);font-size:11px;font-weight:600;color:var(--txt2)">
+    <span>Leeftijd</span><span style="text-align:right;color:var(--green)">RDR 500 mln</span><span style="text-align:right;color:#6b46c1">RDR 1.000 mln</span><span style="text-align:right">Verschil/jr</span><span style="text-align:right">Verschil/mnd</span></div>`+
+  ageSteps.map(a=>{
+    const af2=ageAdj(a)*spreadFactor(a,curSpr);
+    const b=curP*(1+calcCustom(vpv,pB,500).enhPct*af2/100);
+    const v=curP*(1+calcCustom(vpv,pB,1000).enhPct*af2/100);
+    const d=v-b,sel=a===curAge;
+    return`<div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--bdr);font-size:12px;${sel?'background:var(--surf);margin:0 -4px;padding:5px 4px;border-radius:4px':''}">
+      <span style="font-weight:${sel?'600':'400'}">${a} jr${sel?' \u2190':''}</span>
+      <span style="text-align:right;color:var(--green)">${eur(b)}</span>
+      <span style="text-align:right;color:#6b46c1">${eur(v)}</span>
+      <span style="text-align:right;color:var(--red);font-weight:${sel?'600':'400'}">${eur(d)}</span>
+      <span style="text-align:right;color:var(--red)">${eur(d/12)}</span>
+    </div>`;}).join('');
 
   // aannames
-  const aData=[{l:'Fondsvermogen',v:'\u20ac 26,0 mrd (eind feb 2026)',src:'Aangeleverd fondsdocument',ok:1},{l:'VPV',v:'\u20ac 19,1 mrd (eind feb 2026)',src:'Aangeleverd fondsdocument',ok:1},{l:'Dekkingsgraad referentie',v:'135,9%',src:'Aangeleverd fondsdocument',ok:1},{l:'Plan transitiebijdrage (DG-bracket)',v:'\u20ac 500 / 650 / 850 mln',src:'Sectie 5.5 implementatieplan',ok:1},{l:'Variabele bijdrage',v:'\u20ac 0\u20131.500 mln (gebruikersinvoer)',src:'Modelextensie \u2014 ter vergelijking met plan',ok:1},{l:'Rentegevoeligheid DG',v:'\u00b12,75 pp per 1%',src:'Afgeleid sectie 3.7 (Q1-2025 referentie)',ok:0},{l:'VPV-projectie methode',v:'VPV = \u20ac 26,0 mrd / DG_proj',src:'Constante-vermogen aanname (hoge renteafdekking)',ok:0},{l:'Operationele reserve',v:'2%',src:'Sectie 5.8',ok:1},{l:'RDR',v:'\u20ac 500 mln',src:'Sectie 5.9',ok:1},{l:'Compensatiedepot',v:'\u20ac 400 mln',src:'Sectie 5.10',ok:1},{l:'Verdelingsbeginsel',v:'Gelijk delta netto profijt',src:'Sectie 5.3 en 5.6',ok:1},{l:'Minimumeis vooruitgang',v:'67% van scenario\u2019s',src:'Sectie 1.2 en 5.3',ok:1},{l:'Leeftijdscorrectie (>85 jr)',v:'\u22123% t/m \u221212%',src:'Afgeleid netto-profijt grafiek sectie 6.5',ok:0},{l:'Sterftetafel',v:'AG2022 (vereenvoudigd)',src:'SSPF-grondslagen niet gepubliceerd',ok:0},{l:'Rekenrente (kapitaalwaarde)',v:'Variabel \u2014 alleen effect op kapitaalwaarde, niet op invaar-verhoging',src:'DNB-rentetermijnstructuur bepaalt invaar-verhoging op fondsniveau',ok:1},{l:'Spreiding beleggingsresultaten',v:'5 jaar',src:'Sectie 8.1',ok:1},{l:'Gemiddelde kortingskans eerste 15 jaar',v:'2,6% per jaar',src:'Sectie 6.7',ok:1}];
+  const aData=[
+    {l:'Fondsvermogen',v:'\u20ac 26,0 mrd (eind feb 2026)',src:'Aangeleverd fondsdocument',ok:1},
+    {l:'VPV',v:'\u20ac 19,1 mrd (eind feb 2026)',src:'Aangeleverd fondsdocument',ok:1},
+    {l:'Dekkingsgraad referentie (feb 2026)',v:'135,9%',src:'Aangeleverd fondsdocument',ok:1},
+    {l:'DG invaarbeslissing (meetmoment)',v:'Variabel 125\u2013170% · basisscenario implementatieplan 127,5% · meetmoment Q3 2026',src:'Sectie 6.2 implementatieplan',ok:1},
+    {l:'DG jaar-einde',v:'Variabel 125\u2013170% · bepaalt te verdelen kapitaal (VPV = \u20ac 26,0 mrd / DG)',src:'Constante-vermogen aanname \u2014 werkelijke VPV afhankelijk van DNB-rentetermijnstructuur Q3 2026',ok:0},
+    {l:'Plan transitiebijdrage (DG-bracket)',v:'\u20ac 500 / 650 / 850 mln · bepaald door DG invaarbeslissing',src:'Sectie 5.5 implementatieplan',ok:1},
+    {l:'Variabele bijdrage',v:'\u20ac 0\u20135.000 mln (gebruikersinvoer)',src:'Modelextensie \u2014 ter vergelijking met plan',ok:1},
+    {l:'Spreidingstermijn bufferverdeling',v:'Variabel 0\u201340 jaar · default 10 jaar · standaard methode DNB',src:'Exacte ALM-verdeling (Ortec) niet publiek \u2014 gemiddelde pool-levensduur aanname 12 jaar',ok:0},
+    {l:'VPV-projectie methode',v:'VPV = \u20ac 26,0 mrd / DG jaar-einde',src:'Constante-vermogen aanname (hoge renteafdekking SSPF)',ok:0},
+    {l:'Operationele reserve',v:'2%',src:'Sectie 5.8',ok:1},
+    {l:'RDR',v:'\u20ac 500 mln',src:'Sectie 5.9',ok:1},
+    {l:'Compensatiedepot',v:'\u20ac 400 mln',src:'Sectie 5.10',ok:1},
+    {l:'Verdelingsbeginsel',v:'Gelijk delta netto profijt',src:'Sectie 5.3 en 5.6',ok:1},
+    {l:'Minimumeis vooruitgang',v:'67% van scenario\u2019s',src:'Sectie 1.2 en 5.3',ok:1},
+    {l:'Leeftijdscorrectie (>85 jr)',v:'\u22123% t/m \u221212%',src:'Afgeleid netto-profijt grafiek sectie 6.5',ok:0},
+    {l:'Sterftetafel',v:'AG2022 (vereenvoudigd)',src:'SSPF-grondslagen niet gepubliceerd',ok:0},
+    {l:'Rekenrente (kapitaalwaarde)',v:'Variabel 0\u20135% · default 2,5% \u2014 alleen effect op kapitaalwaarde, niet op invaar-verhoging',src:'DNB-rentetermijnstructuur bepaalt invaar-verhoging op fondsniveau',ok:1},
+    {l:'Scenario\u2019s en vermogensprognose',v:'DNB P-set CP2022-P 2026 Q2 · 40% aandelen / 60% rente · reëel · jaar 10',src:'SSPF profiel gepensioneerden · vervangt eerdere sectie 6.6 aanname',ok:1},
+    {l:'Spreiding beleggingsresultaten',v:'5 jaar',src:'Sectie 8.1',ok:1},
+    {l:'Gemiddelde kortingskans eerste 15 jaar',v:'2,6% per jaar',src:'Sectie 6.7',ok:1},
+  ];
   $('aan-list').innerHTML=aData.map(a=>`<div class="a-row"><div class="a-dot" style="background:${a.ok?'#1a8a45':'#C07A00'}"></div><div><div><strong>${a.l}:</strong> ${a.v}</div><div style="color:var(--txt2);margin-top:1px">${a.src}</div></div></div>`).join('');
+
+  // Vermogensprognose
+  const prgCap=Math.round(pNewP*af);
+  $('prg-start-sub').textContent='kapitaalwaarde · rekenrente '+curDisc.toFixed(2)+'% · leeftijd '+curAge+' jr';
+  updatePrgChart(prgCap);
+}
+
+// ── Vermogensprognose — DNB P-set 2026 Q2 ──
+const DNB_A={"P10":[1.0,0.920947,0.888689,0.86938,0.855997,0.847377,0.850177,0.85385,0.857129,0.862216,0.86954],"P50":[1.0,1.024512,1.046868,1.069505,1.091291,1.11366,1.136045,1.157148,1.179091,1.200865,1.22287],"P90":[1.0,1.10914,1.186949,1.256574,1.321709,1.384708,1.434482,1.482972,1.530582,1.574491,1.622436],"p05":[1.0,0.888246,0.842322,0.813297,0.791255,0.773688,0.771168,0.772626,0.775455,0.780499,0.782769],"p95":[1.0,1.13162,1.224634,1.307697,1.387147,1.464406,1.519412,1.573494,1.630705,1.68947,1.742515]};
+const DNB_B={"P10":[1.0,0.881421,0.834495,0.807454,0.788692,0.776764,0.780016,0.785331,0.789379,0.795837,0.805668],"P50":[1.0,1.036769,1.07044,1.104861,1.138638,1.173043,1.207869,1.241002,1.275879,1.310565,1.346432],"P90":[1.0,1.16371,1.286159,1.399176,1.507908,1.615687,1.703065,1.788978,1.87487,1.955509,2.04457],"p05":[1.0,0.832369,0.767519,0.72739,0.698212,0.674619,0.670991,0.672722,0.676679,0.682866,0.687072],"p95":[1.0,1.19743,1.344852,1.481818,1.617376,1.752077,1.851586,1.951471,2.055921,2.166889,2.270707]};
+const PRG_YEARS=[2027,2028,2029,2030,2031,2032,2033,2034,2035,2036,2037];
+const fmtK=v=>'€\u00a0'+Math.round(v).toLocaleString('nl-NL');
+const fmtFull2=v=>'€\u00a0'+Math.round(v).toLocaleString('nl-NL');
+
+let curPrgInf=2.5;
+
+function nomAdj(t,inf){return Math.pow(1+inf/100,t);}
+
+function buildPrgDatasets(cap,inf){
+  const s=r=>r.map((v,t)=>Math.round(v*cap*nomAdj(t,inf)));
+  return[
+    {data:s(DNB_A.p05),backgroundColor:'rgba(26,79,138,0.055)',borderWidth:0,fill:'+1',pointRadius:0,tension:0.4},
+    {data:s(DNB_A.p95),backgroundColor:'rgba(26,79,138,0.055)',borderWidth:0,fill:false,pointRadius:0,tension:0.4},
+    {data:s(DNB_A.P10),backgroundColor:'rgba(26,79,138,0.13)',borderWidth:0,fill:'+1',pointRadius:0,tension:0.4},
+    {data:s(DNB_A.P90),backgroundColor:'rgba(26,79,138,0.13)',borderWidth:0,fill:false,pointRadius:0,tension:0.4},
+    {label:'A-P50',data:s(DNB_A.P50),borderColor:'#1a4f8a',borderWidth:2.5,backgroundColor:'transparent',fill:false,pointRadius:4,pointBackgroundColor:'#fff',pointBorderColor:'#1a4f8a',pointBorderWidth:2,tension:0.4},
+    {label:'B-P50',data:s(DNB_B.P50),borderColor:'#b8952a',borderWidth:2.5,backgroundColor:'transparent',fill:false,pointRadius:4,pointBackgroundColor:'#fff',pointBorderColor:'#b8952a',pointBorderWidth:2,tension:0.4},
+  ];
+}
+
+let prgChart=null;
+function initPrgChart(cap){
+  const ctx2=document.getElementById('prg-chart');
+  if(!ctx2)return;
+  if(prgChart){prgChart.destroy();prgChart=null;}
+  prgChart=new Chart(ctx2.getContext('2d'),{
+    type:'line',
+    data:{labels:PRG_YEARS,datasets:buildPrgDatasets(cap,curPrgInf)},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:250,easing:'easeInOutQuad'},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(13,27,42,0.92)',
+          titleFont:{family:'monospace',size:11},bodyFont:{family:'monospace',size:11},
+          padding:14,cornerRadius:2,
+          callbacks:{
+            title:items=>'Jaar '+items[0].label,
+            label:item=>{
+              if(item.datasetIndex===4)return`  40% aandelen · P50:  ${fmtFull2(item.raw)}`;
+              if(item.datasetIndex===5)return`  60% aandelen · P50:  ${fmtFull2(item.raw)}`;
+              return null;
+            },
+            afterLabel:item=>{
+              const i=item.dataIndex;
+              if(item.datasetIndex===4)return`  P10–P90:  ${fmtFull2(prgChart.data.datasets[2].data[i])} – ${fmtFull2(prgChart.data.datasets[3].data[i])}`;
+              return null;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(201,192,180,0.4)'},ticks:{font:{size:10},color:'#4a5568'},border:{color:'rgba(201,192,180,0.6)'}},
+        y:{grid:{color:'rgba(201,192,180,0.4)'},ticks:{font:{size:10},color:'#4a5568',callback:v=>fmtK(v)},border:{color:'rgba(201,192,180,0.6)'}}
+      }
+    }
+  });
+}
+
+function updatePrgChart(cap){
+  if(!prgChart) initPrgChart(cap);
+  const n10=nomAdj(10,curPrgInf);
+  const inf=curPrgInf;
+  $('prg-inf-val').textContent=inf.toFixed(2)+'%';
+
+  $('prg-start').textContent=fmtK(cap);
+  $('kA-p50').textContent=fmtK(DNB_A.P50[10]*cap*n10);
+  $('kA-p10').textContent=fmtK(DNB_A.P10[10]*cap*n10);
+  $('kA-p90').textContent=fmtK(DNB_A.P90[10]*cap*n10);
+  $('kB-p50').textContent=fmtK(DNB_B.P50[10]*cap*n10);
+  $('kB-p10').textContent=fmtK(DNB_B.P10[10]*cap*n10);
+  $('kB-p90').textContent=fmtK(DNB_B.P90[10]*cap*n10);
+  if(prgChart){
+    const ds=buildPrgDatasets(cap,curPrgInf);
+    prgChart.data.datasets.forEach((d,i)=>{d.data=ds[i].data;});
+    prgChart.update();
+  }
 }
 
 $('sl-age').addEventListener('input',e=>{curAge=+e.target.value;render()});
+$('sl-prg-inf').addEventListener('input',e=>{curPrgInf=+e.target.value;render()});
 $('sl-pen').addEventListener('input',e=>{curP=+e.target.value;render()});
-$('sl-dr').addEventListener('input',e=>{curDr=+e.target.value;render()});
+$('sl-dr').addEventListener('input',e=>{curDg=+e.target.value;render()});
+$('sl-dge').addEventListener('input',e=>{curDgE=+e.target.value;render()});
 $('sl-disc').addEventListener('input',e=>{curDisc=+e.target.value;render()});
 $('sl-bij').addEventListener('input',e=>{curVarBij=+e.target.value;render()});
+$('sl-spr').addEventListener('input',e=>{curSpr=+e.target.value;render()});
+$('sl-rdr').addEventListener('input',e=>{curRdr=+e.target.value;render()});
+$('sl-inf').addEventListener('input',e=>{curInf=+e.target.value;render()});
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
   t.classList.add('on');
-  ['res','kap','sc','fond','gev','aan'].forEach(id=>{ $('t-'+id).style.display=t.dataset.tab===id?'block':'none'; });
+  ['res','oudnieuw','kap','sc','prognose','fond','gev','gev2d','rdr','uit','aan'].forEach(id=>{ $('t-'+id).style.display=t.dataset.tab===id?'block':'none'; });
+  if(t.dataset.tab==='prognose') render();
 }));
 render();
 </script>
