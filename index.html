@@ -1292,7 +1292,7 @@
 // beschikbaar in de bouwomgeving), nu is het label eerlijk.
 // Wordt overal in de UI ingevuld via .version-label spans.
 // ══════════════════════════════════════════════════════════════════
-const VERSION = 'Release 2 · 18-04-2026 17:30';
+const VERSION = 'Release 2 · 18-04-2026 20:30';
 document.querySelectorAll('.version-label').forEach(el => el.textContent = VERSION);
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -2429,6 +2429,55 @@ const HELP = {
 
     <h3>Disclaimer</h3>
     <p>Deze tool is bedoeld voor verkenning en educatie. De resultaten zijn een vereenvoudigde illustratie en kunnen afwijken van de officiële berekening van uw eigen pensioenfonds. Raadpleeg uw fonds voor uw persoonlijke situatie.</p>
+
+    <h3>Werkwijze in vier stappen</h3>
+    <p>De drie schermen zijn bedoeld om in volgorde te doorlopen. Elk scherm bouwt voort op het vorige; wijzigingen die u bovenaan maakt, werken automatisch door naar beneden. Zo haalt u het meeste uit de tool:</p>
+
+    <h3>Stap 1 — Verzamel uw persoonlijke gegevens</h3>
+    <p>U heeft een paar cijfers nodig die u in uw <b>Uniform Pensioenoverzicht (UPO)</b> vindt, of in het meest recente jaaroverzicht van uw pensioenfonds:</p>
+    <ul>
+      <li><b>Uw huidige leeftijd</b>.</li>
+      <li><b>Uw jaarlijkse pensioenuitkering</b> — het bedrag dat u per jaar bruto ontvangt (of gaat ontvangen vanaf pensioendatum). Op het UPO staat dit vaak als "te bereiken ouderdomspensioen per jaar".</li>
+      <li><b>Een realistische inflatie-aanname</b> — de meeste fondsen rekenen met 2% tot 2,5% voor lange termijn; u kunt dit later nog aanpassen om gevoeligheid te verkennen.</li>
+    </ul>
+    <p>Deze drie invoer-velden stelt u in op het scherm <b>Huidig pensioen</b>. Ze worden automatisch gedeeld met de andere schermen.</p>
+
+    <h3>Stap 2 — Uw fondsgegevens</h3>
+    <p>Ga nu naar het scherm <b>Pensioenpotje na invaren</b>. Hier voert u de fondsspecifieke gegevens in die de verdeling bij invaren bepalen. Kijk voor deze waarden op de website van uw fonds, in het jaarverslag of in de transitieplan-communicatie:</p>
+    <ul>
+      <li><b>Fondsvermogen bij invaren</b> — het totale belegde vermogen van uw fonds (bijvoorbeeld € 10 mrd voor een middelgroot fonds).</li>
+      <li><b>Dekkingsgraad bij invaren</b> — de verhouding vermogen tot verplichtingen. Boven 100% is er een overschot dat verdeeld wordt, onder 100% krijgt elke deelnemer minder dan zijn geldwaarde.</li>
+      <li><b>Compensatiebudget</b> — het bedrag dat uw fonds apart heeft gezet om specifieke leeftijdsgroepen extra te compenseren voor de nadelen van de overgang. Staat vaak in het transitieplan onder "compensatie voor afschaffing doorsneepremie".</li>
+      <li><b>Aantal deelnemers</b> — grootte van het fonds in personen, bepaalt hoe het compensatiebudget wordt verdeeld.</li>
+    </ul>
+    <p>Stel vervolgens in hoe de compensatie over leeftijden wordt verdeeld (<b>Hoofdgroep</b> en <b>Hoe breed verdeeld</b>). Fondsen publiceren meestal een grafiek of tabel van de compensatiecurve; probeer die vorm na te bootsen met de twee schuiven.</p>
+    <p>Ten slotte zet u de <b>spreidingstermijn bufferverdeling</b> — dit is de DNB-methodiek die bepaalt hoe het vermogen boven 100% dekking tussen generaties wordt verdeeld. DNB hanteert 10 jaar als standaard; fondsen kunnen afwijken en dat staat in hun transitieplan.</p>
+
+    <h3>Stap 3 — Aannames over de toekomst</h3>
+    <p>Ga naar het scherm <b>Verwacht pensioen bij invaren</b>. Hier kalibreert u hoe uw potje zich na invaren ontwikkelt. Twee rentes zijn cruciaal:</p>
+    <ul>
+      <li><b>Projectierendement</b> — de conservatieve rente waarmee uw potje bij aanvang wordt omgezet naar een jaarlijkse uitkering. Wettelijk vastgesteld door DNB en per jaar gepubliceerd, meestal in de orde 1–2%.</li>
+      <li><b>Verwacht gemiddeld rendement</b> — wat uw fonds op lange termijn denkt te halen met zijn beleggingsbeleid. Voor een fonds met een gemiddeld beleggingsprofiel typisch 4–5%. Hoger rendement betekent grotere bandbreedte (meer risico).</li>
+    </ul>
+    <p>De <b>volatiliteit</b> bepaalt hoe groot de schommelingen zijn — afhankelijk van hoe risicovol uw fonds belegt. De <b>demping</b> bepaalt of uw uitkering direct reageert op rendementen of over meerdere jaren wordt uitgemiddeld. De <b>buffer</b> is al gezet op scherm 2 en bepaalt hoe tekortjaren worden opgevangen.</p>
+
+    <h3>Stap 4 — Lees en interpreteer</h3>
+    <p>Kijk naar de drie kerngetallen onder de grafiek op scherm 3:</p>
+    <ul>
+      <li><b>Totaal uitgekeerd onder Wtp</b> — wat u naar verwachting tot uw sterfdatum ontvangt onder het nieuwe stelsel.</li>
+      <li><b>Totaal uitgekeerd onder huidig pensioen</b> — dezelfde som voor uw huidige regeling met volledige inflatie-indexatie. Dit is een optimistische benchmark: in de praktijk hebben fondsen de indexatie vaak jarenlang niet kunnen toekennen.</li>
+      <li><b>Verschil</b> — absoluut en procentueel, positief of negatief.</li>
+    </ul>
+    <p>Kijk daarnaast naar de <b>spreiding van de blauwe band</b> (de 80%-bandbreedte) en de <b>buffer-statistieken</b> onderaan. Een brede band betekent grote onzekerheid; veel tekortjaren die niet door de buffer gedekt worden betekenen dat reële uitkeringen over de tijd kunnen dalen.</p>
+    <p>Variëer vervolgens de rendements- en bufferaannames om te zien hoe gevoelig uw uitkomst is. Als kleine wijzigingen grote gevolgen hebben, weet u dat de uitkomst sterk afhangt van toekomstige onzekerheden.</p>
+
+    <h3>Tips en veelgemaakte fouten</h3>
+    <ul>
+      <li><b>Wees voorzichtig met de inflatie-slider</b>. De rode benchmark-lijn op scherm 3 veronderstelt dat uw huidige pensioen jaarlijks volledig met inflatie meegroeit. In de praktijk hebben veel fondsen jarenlang niet geïndexeerd. De rode lijn is dus vaak een bovengrens van wat u zonder Wtp zou krijgen, niet de verwachtingswaarde.</li>
+      <li><b>De blauwe mediaan is niet wat u zeker krijgt</b>. 50% van de scenario's valt hoger uit, 50% lager. Kijk altijd ook naar de onderkant van de band om te zien wat er in ongunstige scenario's kan gebeuren.</li>
+      <li><b>Projectierendement ≠ verwacht rendement</b>. Het verschil tussen beide bepaalt of uw uitkering in verwachting stijgt. Als u beide op hetzelfde getal zet, blijft uw uitkering nominaal stabiel — dat is een nuttige sanity-check.</li>
+      <li><b>Fondsgegevens zijn openbaar</b>. Alle grote fondsen publiceren dekkingsgraad, verwacht rendement, projectierendement en het transitieplan op hun website. Als een getal niet te vinden is, vraag het bij uw fonds op.</li>
+    </ul>
 
     <details class="actuary">
       <summary>Voor actuarissen — methodologie, termen, gedeelde aannames</summary>
