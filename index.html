@@ -577,11 +577,37 @@
     .tab-btn { font-size: 12px; padding: 9px 8px; }
   }
 
+  /* ─── DNB bufferverdeling kaart ─────────────────────────────── */
+  .dnb-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 6px 0 10px;
+  }
+  .dnb-effect { color: var(--txt2); }
+  .dnb-effect--pos { color: var(--green); font-weight: 600; }
+  .dnb-effect--neg { color: var(--red);   font-weight: 600; }
+
+  /* Asymmetrische schaal: "10 jr (default)" zit op 25% van een 0-40 slider.
+     De middelste span wordt absoluut geplaatst; space-between laat de
+     buitenste twee gewoon uitlijnen op de randen. */
+  .rl-dnb { position: relative; }
+  .rl-dnb-default {
+    position: absolute;
+    left: 25%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
   /* ─── Responsive ────────────────────────────────────────────── */
   @media (max-width: 580px) {
     .g2, .g4 { grid-template-columns: 1fr; }
     .g3      { grid-template-columns: 1fr 1fr; }
     .res-num { font-size: 24px; }
+    /* Op smal scherm zou "10 jr (default)" op 25% overlappen met "0 jr";
+       de caption eronder benoemt de default toch al. */
+    .rl-dnb-default { display: none; }
   }
 
   /* ─── Reduced motion ────────────────────────────────────────── */
@@ -1008,6 +1034,24 @@
       </div>
     </div>
 
+    <!-- DNB spreidingsmethode voor vermogen boven 100% dekkingsgraad -->
+    <div class="card">
+      <span class="lbl" for="ppk-sl-dnb">Spreidingstermijn bufferverdeling</span>
+      <div class="dnb-head">
+        <span class="big" id="ppk-dnb-disp">10 jaar</span>
+        <span class="meta-inline dnb-effect" id="ppk-dnb-effect">effect op verhoging leeftijd — jr: —</span>
+      </div>
+      <input class="slider-green" type="range" id="ppk-sl-dnb" min="0" max="40" step="1" value="10">
+      <div class="rl rl-dnb">
+        <span>0 jr (gelijk)</span>
+        <span class="rl-dnb-default">10 jr (default)</span>
+        <span>40 jr (lang)</span>
+      </div>
+      <p class="meta-inline" style="margin-top:10px">
+        Bij een langere termijn schuift een groter deel van het vermogen boven 100% dekking naar jongere cohorten; gepensioneerden krijgen een kleiner aandeel in het overschot. DNB hanteert 10 jaar als standaard.
+      </p>
+    </div>
+
   </section><!-- /screen-ppk -->
 
   <!-- ════════════════════════════════════════════════════════════
@@ -1098,22 +1142,25 @@
     <!-- Rendementsinstellingen -->
     <div class="card">
       <h3 class="card-title">Rendementsinstellingen</h3>
+      <p class="meta-inline" style="margin-bottom:14px">
+        Er zijn twee rentes in het spel. Het <b>projectierendement</b> zet uw potje bij de start om in een jaarlijkse uitkering — conservatief gekozen (wettelijk vastgesteld door DNB). Het <b>verwacht rendement</b> bepaalt hoe die uitkering daarna jaarlijks meebeweegt met het beleggingsresultaat — hoger, op basis van het beleggingsbeleid van het fonds. De gap tussen deze twee bepaalt of en hoe snel uw uitkering in verwachting stijgt.
+      </p>
       <div class="g2 g2--gap-lg">
         <div class="field">
           <div class="inline-row">
-            <label class="inline-lbl" for="verw-sl-rend">Verwacht gemiddeld rendement</label>
+            <label class="inline-lbl" for="verw-sl-proj">Projectierendement (conversie potje → uitkering)</label>
+            <span class="inline-val" id="verw-disp-proj">2,00%</span>
+          </div>
+          <input class="slider-blue" type="range" min="0" max="4" step="0.25" value="2" id="verw-sl-proj">
+          <div class="rl"><span>0,00%</span><span>2,00%</span><span>4,00%</span></div>
+        </div>
+        <div class="field">
+          <div class="inline-row">
+            <label class="inline-lbl" for="verw-sl-rend">Verwacht gemiddeld rendement (groei uitkering)</label>
             <span class="inline-val" id="verw-disp-rend">5,00%</span>
           </div>
           <input class="slider-blue" type="range" min="0" max="8" step="0.25" value="5" id="verw-sl-rend">
           <div class="rl"><span>0,00%</span><span>4,00%</span><span>8,00%</span></div>
-        </div>
-        <div class="field">
-          <div class="inline-row">
-            <label class="inline-lbl" for="verw-sl-vola">Volatiliteit (op- en neerwaartse beweging)</label>
-            <span class="inline-val" id="verw-disp-vola">10%</span>
-          </div>
-          <input class="slider-blue" type="range" min="0" max="25" step="1" value="10" id="verw-sl-vola">
-          <div class="rl"><span>0%</span><span>12%</span><span>25%</span></div>
         </div>
       </div>
 
@@ -1122,11 +1169,11 @@
       <div class="g2 g2--gap-lg">
         <div class="field">
           <div class="inline-row">
-            <label class="inline-lbl" for="verw-sl-inf">Inflatie</label>
-            <span class="inline-val" id="verw-disp-inf">2,50%</span>
+            <label class="inline-lbl" for="verw-sl-vola">Volatiliteit (op- en neerwaartse beweging)</label>
+            <span class="inline-val" id="verw-disp-vola">10%</span>
           </div>
-          <input class="slider-blue" type="range" min="0" max="8" step="0.25" value="2.5" id="verw-sl-inf" data-state="inf">
-          <div class="rl"><span>0,00%</span><span>4,00%</span><span>8,00%</span></div>
+          <input class="slider-blue" type="range" min="0" max="25" step="1" value="10" id="verw-sl-vola">
+          <div class="rl"><span>0%</span><span>12%</span><span>25%</span></div>
         </div>
         <div class="field">
           <div class="inline-row">
@@ -1136,6 +1183,17 @@
           <input class="slider-blue" type="range" min="0" max="10" step="1" value="5" id="verw-sl-demp">
           <div class="rl"><span>geen</span><span>5 jaar</span><span>10 jaar</span></div>
         </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="field">
+        <div class="inline-row">
+          <label class="inline-lbl" for="verw-sl-inf">Inflatie</label>
+          <span class="inline-val" id="verw-disp-inf">2,50%</span>
+        </div>
+        <input class="slider-blue" type="range" min="0" max="8" step="0.25" value="2.5" id="verw-sl-inf" data-state="inf">
+        <div class="rl"><span>0,00%</span><span>4,00%</span><span>8,00%</span></div>
       </div>
 
     </div>
@@ -1234,7 +1292,7 @@
 // beschikbaar in de bouwomgeving), nu is het label eerlijk.
 // Wordt overal in de UI ingevuld via .version-label spans.
 // ══════════════════════════════════════════════════════════════════
-const VERSION = 'Release 1 · 18-04-2026 14:29';
+const VERSION = 'Release 2 · 18-04-2026 17:30';
 document.querySelectorAll('.version-label').forEach(el => el.textContent = VERSION);
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -1251,8 +1309,22 @@ const COLOR_GREY  = '#6b7280';
 const COLOR_GRID  = 'rgba(0,0,0,0.05)';
 const COLOR_TT_BG = 'rgba(13,27,42,0.92)';
 
-// ─── AG2022 sterftekansen (qx) vanaf 70 jaar ─────────────────────
+// ─── AG2022 sterftekansen (qx) ───────────────────────────────────
+// Leeftijden 70–100 gebruikt door scherm 1 (KV, levensverwachting)
+// en scherm 3 (simulatie). Leeftijden 25–69 toegevoegd voor de
+// DNB-spreidingsmethode op scherm 2, die over de volledige
+// fondspopulatie (25–100) normaliseert. Alle waarden benaderen
+// AG2022 (gemengde populatie, geen gender-onderscheid).
 const Q = {
+  25:0.00046, 26:0.00048, 27:0.00050, 28:0.00053, 29:0.00056,
+  30:0.00058, 31:0.00062, 32:0.00065, 33:0.00069, 34:0.00074,
+  35:0.00079, 36:0.00084, 37:0.00090, 38:0.00097, 39:0.00105,
+  40:0.00114, 41:0.00124, 42:0.00135, 43:0.00147, 44:0.00161,
+  45:0.00176, 46:0.00193, 47:0.00212, 48:0.00233, 49:0.00256,
+  50:0.00281, 51:0.00310, 52:0.00342, 53:0.00378, 54:0.00418,
+  55:0.00462, 56:0.00511, 57:0.00566, 58:0.00627, 59:0.00695,
+  60:0.00770, 61:0.00853, 62:0.00945, 63:0.00748, 64:0.00852,
+  65:0.00926, 66:0.00917, 67:0.00970, 68:0.00960, 69:0.00988,
   70:0.0104, 71:0.0119, 72:0.0136, 73:0.0155, 74:0.0177,
   75:0.0203, 76:0.0232, 77:0.0265, 78:0.0303, 79:0.0348,
   80:0.040,  81:0.046,  82:0.053,  83:0.061,  84:0.071,
@@ -1263,26 +1335,42 @@ const Q = {
 };
 const gQ = a => Q[Math.min(a, 100)] ?? 0.5;
 
-// ─── Annuïteitsfactor afgekapt op maxA ───────────────────────────
-function annuityTo(a, r, maxA) {
+// Horizon-cap voor annuïteits- en levensverwachtings-berekeningen.
+// Alle functies stoppen ook vanzelf wanneer de overlevings-kans ℓ
+// te klein wordt; deze cap is een extra bovengrens om pathologische
+// input (bv. ingevoerde leeftijd > MAX_AGE) veilig af te vangen.
+const MAX_AGE = 100;
+
+// ─── Annuïteitsfactor afgekapt op MAX_AGE ────────────────────────
+// r = rente in decimaal (bv. 0.025 voor 2,5%), consistent met
+// annuityYears en de rest van de codebase.
+function annuityTo(a, r) {
   let af = 0, lx = 1;
-  for (let t = 0; t < maxA - a && t <= 55; t++) {
+  for (let t = 0; t < MAX_AGE - a && t <= 55; t++) {
     if (a + t > 115 || lx < 0.001) break;
-    af += lx / Math.pow(1 + r/100, t);
+    af += lx / Math.pow(1 + r, t);
     lx *= (1 - gQ(a + t));
   }
   return af;
 }
 
 // ─── Levensverwachting volgens AG2022 ────────────────────────────
+// Complete (verwachte) leeftijd bij overlijden = a + ë_a, met
+//   ë_a ≈ e_a + 0,5
+//   e_a = Σ_{t=1} ℓ_{a+t}/ℓ_a        (curtate: geheel aantal nog
+//                                     te leven jaren)
+// De +0,5 corrigeert voor het feit dat overlijden gemiddeld
+// halverwege een jaar plaatsvindt; sluit aan bij hoe CBS en
+// AG2022 levensverwachting rapporteren.
 function lifeExp(a) {
-  let lv = 0, lx = 1;
+  let sum = 0, lx = 1;
   for (let t = 0; t <= 55; t++) {
-    if (a + t > 115 || lx < 0.001) break;
-    lv += lx;
+    if (a + t > 115) break;
     lx *= (1 - gQ(a + t));
+    if (lx < 0.001) break;
+    sum += lx;
   }
-  return a + lv;
+  return a + sum + 0.5;
 }
 
 // ─── Chart.js plugin: stippellijn op levensverwachting ───────────
@@ -1360,7 +1448,7 @@ function commonChartOptions(lv, yAxisTitle, labelFn) {
 }
 
 function renderStart() {
-  const af  = annuityTo(sAge, sDisc, 100);
+  const af  = annuityTo(sAge, sDisc / 100);
   const lv  = lifeExp(sAge);
   const kap = sPen * af;
   const isReel = verwState.viewMode === 'reel';
@@ -1458,7 +1546,7 @@ function renderStart() {
   const kapLabels = [], kapWithIdx = [], kapConstant = [];
   for (let age = sAge; age <= 100; age++) {
     const offset = age - sAge;
-    const af2 = annuityTo(age, sDisc, 100);
+    const af2 = annuityTo(age, sDisc / 100);
     const deflator = Math.pow(1 + infFrac, offset);
     kapLabels.push(age);
     const nomIdx  = sPen * deflator * af2;    // geldwaarde met indexatie, nominaal
@@ -1499,9 +1587,8 @@ function renderStart() {
   }
 }
 
-// Listeners startscherm — alleen inflatie is nog scherm-lokaal
-$('ss-inf').addEventListener('input', e => { sInf = +e.target.value; renderStart(); });
-// (age, pen en rente worden centraal afgehandeld via STATE — zie onderaan)
+// Alle sliders op het startscherm (incl. inflatie) worden centraal afgehandeld
+// via de data-state dispatcher onderaan de app. Geen aparte listeners nodig.
 
 // ══════════════════════════════════════════════════════════════════
 // MIJN PENSIOENPOTJE — fonds-agnostische berekening
@@ -1589,6 +1676,40 @@ function ppkDrawCurve(age, mu, sigma) {
   lblEl.style.color = factor >= 1 ? 'var(--green)' : 'var(--red)';
 }
 
+// ─── DNB spreidingsmethode voor buffer-verdeling ──────────────────
+// Verwacht aantal jaren dat iemand van `age` alive is binnen een
+// N-jaars venster, genormaliseerd: E[jaren alive in [0,N)] / N.
+// Bij N=0 (geen spreiding): factor 1 → vol aandeel direct.
+// Bij grote N: ouderen krijgen minder (korte resterende levensduur
+// vs. lang venster), jongeren nagenoeg vol aandeel.
+function dnbShareFactor(age, N) {
+  if (N <= 0) return 1;
+  let sum = 0, lx = 1;
+  for (let t = 0; t < N; t++) {
+    sum += lx;
+    lx *= (1 - gQ(Math.min(age + t, 100)));
+    if (lx < 0.001) break;
+  }
+  return sum / N;
+}
+
+// Normalisatie-factor zodat het totale overschot (≥100% dekking) volledig
+// verdeeld wordt over alle cohorten. Gestileerde aanname: 1 persoon per
+// leeftijdsjaar 25..100 met gelijk gewogen KV (consistent met de
+// compensatie-curve-aanname). Dit herverdeelt wat ouderen "verliezen"
+// naar jongeren — zonder normalisatie zou dat geld "verdwijnen" in het
+// collectief. Gememoïseerd op N (verandert alleen als N wijzigt).
+const _dnbNormCache = new Map();
+function dnbNormFactor(N) {
+  if (N <= 0) return 1;
+  if (_dnbNormCache.has(N)) return _dnbNormCache.get(N);
+  let total = 0;
+  for (let a = 25; a <= 100; a++) total += dnbShareFactor(a, N);
+  const norm = 76 / total;   // 76 cohorten, gemiddelde shareFactor = total/76
+  _dnbNormCache.set(N, norm);
+  return norm;
+}
+
 function ppkCalculate() {
   const age      = +$('ppk-sl-age').value;
   const pen      = +$('ppk-sl-pen').value;
@@ -1610,7 +1731,7 @@ function ppkCalculate() {
     : (bufferRaw / 100) * fonds;
 
   // Geldwaarde (zelfde annuïteitsformule als startscherm)
-  const kv = pen * annuityTo(Math.min(age, 99), r * 100, 100);
+  const kv = pen * annuityTo(Math.min(age, 99), r);
 
   // Fondsbalans
   const vpvTotal = fonds / dg;
@@ -1618,8 +1739,26 @@ function ppkCalculate() {
   // Verdeelbaar vermogen na alle aftrekken en toevoegingen
   const verdeelbaar = fonds - depot - buffer - overig + bijstort;
 
-  // Evenredige toewijzing
-  const ppkProp = kv / vpvTotal * verdeelbaar;
+  // ─── DNB spreidingsmethode ────────────────────────────────────
+  // Het verdeelbaar vermogen wordt in tweeën gesplitst:
+  //   1. Basis-deel (tot 100% dekking): altijd direct toegedeeld proportioneel aan KV
+  //   2. Overschot-deel (> 100% dekking): verdeeld over N jaar
+  //
+  // Bij N=0 (gelijk): iedereen krijgt direct zijn evenredig aandeel van het
+  //   overschot → identiek aan oude rekening (PPK_prop = KV × verdeelbaar/VPV).
+  // Bij N>0: iedereen krijgt een leeftijds-gewogen aandeel van het overschot,
+  //   gebaseerd op verwachte jaren alive binnen het N-jaars venster.
+  //   Ouderen "verliezen" aandeel door eerdere sterftekans; dat aandeel wordt
+  //   via de normalisatie herverdeeld over alle deelnemers → meer naar jongeren.
+  const spreidingN = +$('ppk-sl-dnb').value;
+  const baseRatio  = Math.min(1, verdeelbaar / vpvTotal);   // 100% of minder bij onderdekking
+  const surplus    = Math.max(0, verdeelbaar - vpvTotal);   // overschot > 100%
+  const sFactor    = dnbShareFactor(age, spreidingN);
+  const nFactor    = dnbNormFactor(spreidingN);
+
+  const ppkBase    = kv * baseRatio;
+  const ppkSurplus = (kv / vpvTotal) * surplus * sFactor * nFactor;
+  const ppkProp    = ppkBase + ppkSurplus;
 
   // Compensatiecomponent (uit het compensatiebudget — de andere afromingen
   // verlagen wel het verdeelbare deel, maar voeden geen individuele compensatie)
@@ -1633,9 +1772,10 @@ function ppkCalculate() {
 
   return {
     age, pen, kv, vpvTotal, verdeelbaar,
-    ppkProp, ppkComp, ppkTotal, ratio,
+    ppkProp, ppkBase, ppkSurplus, ppkComp, ppkTotal, ratio,
     dg, fonds, depot, buffer, overig, bijstort,
-    N, wRelative, mu, sigma
+    N, wRelative, mu, sigma,
+    spreidingN, sFactor, nFactor, surplus,
   };
 }
 
@@ -1664,11 +1804,41 @@ function ppkRender() {
   $('ppk-disp-overig').textContent   = '€\u00a0' + parseInt($('ppk-sl-overig').value, 10).toLocaleString('nl-NL') + ' mln';
   $('ppk-disp-bijstort').textContent = '€\u00a0' + parseInt($('ppk-sl-bijstort').value, 10).toLocaleString('nl-NL') + ' mln';
 
+  // DNB spreidingstermijn display
+  const spreidingN = +$('ppk-sl-dnb').value;
+  $('ppk-dnb-disp').textContent = spreidingN + ' jaar';
+
   // Compensatie-curve preview
   ppkDrawCurve(age, mu, sigma);
 
   const res = ppkCalculate();
   const { kv, ppkProp, ppkComp, ppkTotal, ratio, dg, wRelative, buffer, overig, bijstort } = res;
+
+  // DNB effect-label: verschil in verhoging t.o.v. directe verdeling (N=0).
+  // Geeft aan wat de spreidingstermijn deze leeftijd oplevert of kost,
+  // uitgedrukt in procentpunten verhoging boven KV.
+  //
+  // Bij N=0  : sFactor × nFactor = 1 → delta = 0 (geen effect van spreiden).
+  // Bij N>0 jong : sFactor × nFactor > 1 → positief effect (meer dan direct).
+  // Bij N>0 oud  : sFactor × nFactor < 1 → negatief effect (minder dan direct).
+  //
+  // Formule: ppkProp − ppkProp_N0 = (KV/VPV) × Surplus × (s·ν − 1),
+  // gedeeld door KV × 100 → procentpunten. Valt weg als er geen surplus is
+  // (DG ≤ 100% of alle aftrekken gelijk aan fondsvermogen).
+  const dnbEffectEl = $('ppk-dnb-effect');
+  if (res.vpvTotal > 0) {
+    const deltaPP = (res.surplus / res.vpvTotal) * (res.sFactor * res.nFactor - 1) * 100;
+    const s = deltaPP >= 0 ? '+' : '−';
+    dnbEffectEl.textContent =
+      `effect op verhoging leeftijd ${age} jr: ${s}${fmtNL1(Math.abs(deltaPP))}%`;
+    dnbEffectEl.classList.remove('dnb-effect--pos', 'dnb-effect--neg');
+    // Bij |delta| < 0,05 procentpunt (afrondings-ruis of N=0): neutraal laten
+    if (Math.abs(deltaPP) >= 0.05) {
+      dnbEffectEl.classList.add(deltaPP >= 0 ? 'dnb-effect--pos' : 'dnb-effect--neg');
+    }
+  } else {
+    dnbEffectEl.textContent = 'effect op verhoging leeftijd — jr: —';
+  }
 
   // Hoofdkaarten
   $('ppk-kv').textContent  = eur(kv);
@@ -1711,7 +1881,8 @@ function ppkRender() {
 [
   'ppk-sl-fonds', 'ppk-sl-dg', 'ppk-sl-depot',
   'ppk-sl-buffer', 'ppk-sl-overig', 'ppk-sl-bijstort',
-  'ppk-sl-piek', 'ppk-sl-breedte', 'ppk-sl-n'
+  'ppk-sl-piek', 'ppk-sl-breedte', 'ppk-sl-n',
+  'ppk-sl-dnb'
 ].forEach(id => {
   $(id).addEventListener('input', () => {
     if ($('screen-ppk').classList.contains('active'))  ppkRender();
@@ -1769,6 +1940,7 @@ document.querySelectorAll('input[data-state]').forEach(el => {
     if (key === 'age')   sAge  = val;
     if (key === 'pen')   sPen  = val;
     if (key === 'rente') sDisc = val;
+    if (key === 'inf')   sInf  = val;
 
     // Re-render het actieve scherm
     renderActive();
@@ -1849,7 +2021,8 @@ function getCurrentPotje() {
 
 function verwSimulate() {
   const age   = +$('verw-sl-age').value;
-  const meanR = +$('verw-sl-rend').value / 100;
+  const proj  = +$('verw-sl-proj').value / 100;   // conversie potje → startuitkering
+  const meanR = +$('verw-sl-rend').value / 100;   // groei van de uitkering (Monte Carlo)
   const vola  = +$('verw-sl-vola').value / 100;
   const inf   = +$('verw-sl-inf').value / 100;
   const damp  = +$('verw-sl-demp').value;   // 0 = geen demping, anders rollend over N jaar
@@ -1873,19 +2046,24 @@ function verwSimulate() {
   const endAge = Math.min(100, Math.ceil(lvExact));
   const years = Math.max(1, endAge - age);
 
-  // Startuitkering: annuïteit van potje over verwachte restduur
-  const baseUitkering = potje / annuityYears(annYears, meanR);
+  // Startuitkering: annuïteit van potje over verwachte restduur, tegen het
+  // PROJECTIERENDEMENT (conservatief, wettelijk vastgesteld door DNB).
+  // Hiermee wordt het potje omgezet in een gelijkblijvende nominale startuitkering
+  // als het rendement gelijk zou zijn aan het projectierendement — de "voorzichtige
+  // schatting". Vervolgens laat de Monte Carlo de uitkering daarna meebewegen met
+  // het gerealiseerde rendement (dat gemiddeld meanR is); als meanR > proj stijgt
+  // de uitkering gemiddeld, als meanR < proj daalt hij.
+  const baseUitkering = potje / annuityYears(annYears, proj);
 
   // Inflatie-deflators voor reële weergave
   const deflators = [1];
   for (let t = 1; t <= years; t++) deflators.push(Math.pow(1 + inf, t));
 
   // Benchmark (rode lijn) — "oude situatie met volledige inflatie-indexatie".
-  // Start op de huidige pensioenaanspraak (slider op startscherm / PPK-scherm),
-  // groeit nominaal met inflatie. Reëel is deze lijn dus horizontaal op pen.
-  // Dit maakt het verschil met de Wtp-startuitkering (baseUitkering) visueel
-  // zichtbaar: de "u gaat erop vooruit"-sprong op t=0 verschijnt als gap
-  // tussen rode startpunt en blauwe mediaan-startpunt.
+  // Start op de huidige pensioenaanspraak (slider op startscherm / PPK-scherm)
+  // en groeit nominaal met inflatie. Reëel is deze lijn horizontaal op pen.
+  // Het verschil tussen rode en blauwe lijn bij t=0 hangt af van de gap tussen
+  // projectierendement (blauwe conversie) en de oude rekenrente achter pen.
   const benchmarkNom = deflators.map(d => ppk.pen * d);
   const benchmarkReel = deflators.map(() => ppk.pen);
 
@@ -2017,6 +2195,7 @@ function verwRender() {
 
   // Slider-displays
   $('verw-age').textContent       = sim.age + ' jaar';
+  $('verw-disp-proj').textContent = fmtNL2($('verw-sl-proj').value) + '%';
   $('verw-disp-rend').textContent = fmtNL2($('verw-sl-rend').value) + '%';
   $('verw-disp-vola').textContent = $('verw-sl-vola').value + '%';
   $('verw-disp-inf').textContent  = fmtNL2($('verw-sl-inf').value) + '%';
@@ -2198,7 +2377,7 @@ function drawVerwChart(sim, p10, p50, p90, benchmark, isReel) {
 
 // Listeners voor de verw-sliders (age en inf worden via data-state gesynced en
 // triggeren automatisch een re-render via renderActive).
-['verw-sl-rend', 'verw-sl-vola', 'verw-sl-inf', 'verw-sl-demp'].forEach(id => {
+['verw-sl-proj', 'verw-sl-rend', 'verw-sl-vola', 'verw-sl-inf', 'verw-sl-demp'].forEach(id => {
   $(id).addEventListener('input', () => {
     if ($('screen-verw').classList.contains('active')) verwRender();
   });
@@ -2288,7 +2467,7 @@ const HELP = {
           <li><b>Annuïteits-horizon afgekapt op x=100</b>: ℓ<sub>x+t</sub>/(1+r)<sup>t</sup> wordt afgebroken bij t=100−x of wanneer ℓ &lt; 0,001.</li>
           <li><b>Populatie-aanname compensatie</b>: één deelnemer per leeftijdsjaar tussen 25 en 100 (76 punten). Gebruikt in scherm 2 voor normalisatie van w<sub>relatief</sub>, en impliciet in scherm 3 via KV<sub>i</sub>/VPV<sub>totaal</sub>-ratio voor buffer-aandeel.</li>
           <li><b>Geen bruto/netto onderscheid</b>: alle bedragen zijn vóór belasting en zonder uitvoeringskosten.</li>
-          <li><b>Eén rekenrente</b>: dezelfde r wordt gebruikt voor KV-berekening, annuïteit startuitkering en kapitaalwaarde-verloop. In de praktijk hanteren fondsen aparte rentes voor aanspraken, premie-inkoop en bestemd vermogen.</li>
+          <li><b>Rekenrente vs. projectierendement vs. verwacht rendement</b>: scherm 1 en 2 gebruiken één rekenrente r voor KV-berekening en annuïteit-factor. Scherm 3 gebruikt daarnaast twee aparte rentes: een projectierendement μ<sub>proj</sub> voor de conversie potje→startuitkering, en een verwacht rendement μ voor de Monte-Carlo-paden. In de praktijk hanteren fondsen meerdere rentes (aanspraken, premie-inkoop, bestemd vermogen, projectie); deze tool benadert die structuur met twee instelbare rentes op scherm 3.</li>
           <li><b>Geen leeftijdsafhankelijke risicoprofielen</b>: scherm 3 gebruikt één μ/σ voor alle jaren. Werkelijk Wtp-beleid kent een lifecycle met afnemend risicobudget bij toenemende leeftijd.</li>
         </ul>
 
@@ -2343,8 +2522,12 @@ breekpunt: ℓ<sub>x+t</sub> &lt; 0,001  of  x+t &gt; 115</pre>
         <p>P = jaarlijkse pensioenuitkering (constant of geïndexeerd), r = rekenrente, q<sub>x</sub> uit AG2022.</p>
 
         <h3>Levensverwachting</h3>
-        <pre>e<sub>x</sub> = Σ<sub>t=0</sub><sup>55</sup>  ℓ<sub>x+t</sub>     (curtate)
-weergegeven als x + e<sub>x</sub> in de UI</pre>
+        <pre>e<sub>x</sub>  = Σ<sub>t=1</sub><sup>55</sup>  ℓ<sub>x+t</sub> / ℓ<sub>x</sub>       (curtate — verwacht aantal
+                                        hele nog te leven jaren)
+ë<sub>x</sub>  ≈ e<sub>x</sub> + 0,5                   (complete — correctie voor
+                                        overlijden halverwege jaar)
+weergegeven als x + ë<sub>x</sub> in de UI, aansluitend op hoe CBS
+en AG2022 levensverwachting rapporteren.</pre>
 
         <h3>Verloop kapitaalwaarde over leeftijd</h3>
         <p>Voor de grafiek "Verloop geldwaarde" wordt voor elke leeftijd a ∈ [x, 100] berekend:</p>
@@ -2416,6 +2599,12 @@ T<sub>reëel</sub>  = P × e<sub>x</sub>                     (constante koopkrac
       <li><b>Aantal deelnemers in het fonds</b>: het totale aantal deelnemers waarover het compensatiebudget wordt verdeeld.</li>
     </ul>
 
+    <h3>Spreidingstermijn bufferverdeling (DNB-methodiek)</h3>
+    <p>Het fonds hoeft het vermogen boven de 100%-dekking (het "overschot") niet in één keer over alle deelnemers te verdelen. DNB kent een <b>spreidingsmethode</b> waarbij dat overschot over een aantal jaren N wordt uitgesmeerd. Het basis-deel (tot 100% dekking) wordt wél direct toegedeeld; alleen het overschot wordt gespreid.</p>
+    <p>Hoe langer de spreidingstermijn, hoe minder van het overschot oudere deelnemers ontvangen — zij leven naar verwachting minder van de N jaren mee — en hoe meer er bij jongere cohorten terechtkomt. Bij <b>N = 0 (gelijk)</b> is er geen spreiding en krijgt iedereen het volledige aandeel direct (identiek aan hoe het zonder deze slider werkt). Bij <b>N = 10 (DNB-default)</b> ontstaat er al een merkbare herverdeling naar jongeren. Bij <b>N = 40 (nagenoeg ∞)</b> ontvangen gepensioneerden vrijwel niets van het overschot.</p>
+    <p>De tekst naast de slider, "<i>effect op verhoging leeftijd X jr: ±Y%</i>", toont wat de spreidingstermijn u <b>extra oplevert of kost</b> ten opzichte van direct verdelen (N = 0), uitgedrukt in procentpunten van uw geldwaarde KV. Bij N = 0 staat dit getal op 0%, want er is geen spreiding. Bij hogere N wordt het positief voor jongere cohorten en negatief voor oudere cohorten.</p>
+    <p>Voorbeeld: bij een dekkingsgraad van 127,5% en N = 10 krijgt een 30-jarige ongeveer +5,9%pt extra (bovenop de +27,5% basis-verhoging), terwijl een 85-jarige ongeveer −7,2%pt verliest. Een 70-jarige zit net nog in de plus (+3,8%pt); de kanteling naar verlies ligt rond de 75–78 jaar bij deze instellingen.</p>
+
     <h3>Wat zegt het percentage onder uw potje?</h3>
     <ul>
       <li><b>Boven 100%</b>: u krijgt meer terug dan de huidige geldwaarde van uw pensioen. Meestal doordat de dekkingsgraad boven 100% staat (het fonds heeft overschot) en u bovenop uw evenredig deel compensatie ontvangt.</li>
@@ -2426,20 +2615,37 @@ T<sub>reëel</sub>  = P × e<sub>x</sub>                     (constante koopkrac
     <p>Dit is een <b>vereenvoudigde berekening</b>. Echte fondsen kennen complexere toedelingsregels die rekening houden met evenwichtigheid tussen generaties, partner- en wezenpensioen, en specifieke afspraken met sociale partners. Gebruik dit scherm om gevoel te krijgen voor de mechaniek; de werkelijke uitkomst bij uw fonds kan afwijken.</p>
 
     <details class="actuary">
-      <summary>Voor actuarissen — PPK-decompositie, bell-curve, balans</summary>
+      <summary>Voor actuarissen — PPK-decompositie, DNB-spreiding, bell-curve, balans</summary>
       <div class="actuary-body">
-        <h3>PPK-decompositie</h3>
-        <pre>KV<sub>i</sub>          = P<sub>i</sub> · ä(x<sub>i</sub>, r)                      individuele kapitaalwaarde
-VPV<sub>totaal</sub>    = Fondsvermogen / DG                    totale voorziening
-Verdeelbaar    = Fondsvermogen − Compensatiedepot
-                              − Buffer
-                              − Overige reserveringen
-                              + Bijstortingen
-PPK<sub>prop,i</sub>    = (KV<sub>i</sub> / VPV<sub>totaal</sub>) · Verdeelbaar     evenredig deel
-PPK<sub>comp,i</sub>    = (Compensatiedepot / N) · w<sub>relatief</sub>(x<sub>i</sub>)   compensatiecomponent
-PPK<sub>i</sub>         = PPK<sub>prop,i</sub> + PPK<sub>comp,i</sub>               totale potje
-ratio<sub>i</sub>       = PPK<sub>i</sub> / KV<sub>i</sub>                          verhouding tot geldwaarde</pre>
-        <p>Buffer, overige reserveringen en bijstortingen schuiven alleen het verdeelbare vermogen; ze beïnvloeden niet PPK<sub>comp</sub>. Compensatiedepot gaat óók eraf bij het verdeelbare deel (dubbele functie).</p>
+        <h3>PPK-decompositie (met DNB-spreidingsmethode)</h3>
+        <pre>KV<sub>i</sub>               = P<sub>i</sub> · ä(x<sub>i</sub>, r)                      individuele kapitaalwaarde
+VPV<sub>totaal</sub>         = Fondsvermogen / DG                    totale voorziening
+Verdeelbaar         = Fondsvermogen − Compensatiedepot
+                                   − Buffer
+                                   − Overige reserveringen
+                                   + Bijstortingen
+baseRatio           = min(1, Verdeelbaar / VPV<sub>totaal</sub>)         dekkingsfractie basis-deel
+Surplus             = max(0, Verdeelbaar − VPV<sub>totaal</sub>)         overschot > 100%
+s(x, N)             = (1/N) · Σ<sub>t=0</sub><sup>N−1</sup> ℓ<sub>x+t</sub>                verwacht aandeel in N-jaars venster
+s̄(N)                = (1/76) · Σ<sub>a=25</sub><sup>100</sup> s(a, N)              gemiddeld aandeel over cohorten
+ν(N)                = 1 / s̄(N)                          normalisatie (totaal behoud)
+PPK<sub>base,i</sub>         = KV<sub>i</sub> · baseRatio                       evenredig deel tot 100%
+PPK<sub>surplus,i</sub>      = (KV<sub>i</sub> / VPV<sub>totaal</sub>) · Surplus · s(x<sub>i</sub>, N) · ν(N)
+PPK<sub>prop,i</sub>         = PPK<sub>base,i</sub> + PPK<sub>surplus,i</sub>
+PPK<sub>comp,i</sub>         = (Compensatiedepot / N) · w<sub>relatief</sub>(x<sub>i</sub>)
+PPK<sub>i</sub>              = PPK<sub>prop,i</sub> + PPK<sub>comp,i</sub>               totale potje
+ratio<sub>i</sub>            = PPK<sub>i</sub> / KV<sub>i</sub>                          verhouding tot geldwaarde</pre>
+        <p>Bij <b>N = 0</b> geldt s(x, 0) = ν(0) = 1, zodat PPK<sub>prop,i</sub> = KV<sub>i</sub> · (Verdeelbaar / VPV<sub>totaal</sub>) — de pre-DNB-formule. Bij <b>N &gt; 0</b> verschuift alleen het <i>overschot</i>-deel van de verdeling: oudere deelnemers krijgen minder, jongere meer. Het basis-deel (tot 100%-dekking) blijft bij alle N direct en proportioneel aan KV.</p>
+
+        <h3>DNB-spreidingsmethode: mechaniek en interpretatie</h3>
+        <pre>s(x, N)  = E[aantal jaren alive in [0, N)] / N       aandeel-factor cohort x
+        = (Σ<sub>t=0</sub><sup>N−1</sup> ℓ<sub>x+t</sub>) / N
+        met  ℓ<sub>x</sub> = 1,  ℓ<sub>x+t+1</sub> = ℓ<sub>x+t</sub> · (1 − q<sub>x+t</sub>)     AG2022
+
+ν(N)     = normalisatie-factor, kiest zo dat Σ<sub>cohorten</sub> aandeel = 100%
+         = 76 / Σ<sub>a=25</sub><sup>100</sup> s(a, N)                  aanname: 1 persoon per leeftijdsjaar</pre>
+        <p>De factor s(x, N) daalt sterker voor oudere cohorten, omdat ℓ<sub>x+t</sub> eerder terugvalt. Bij N → ∞ convergeert s(x, ∞) naar e<sub>x</sub>/∞ = 0 voor elke x, maar de normalisatie ν(N) groeit navenant mee, zodat jongere cohorten (waar s relatief langer richting 1 blijft) het leeuwendeel ontvangen. Dit modelleert de DNB-keuze: "langere termijn = meer naar jongeren".</p>
+        <p><b>Let op</b>: in deze tool wordt aangenomen dat het fonds precies één deelnemer per leeftijdsjaar 25–100 heeft met gelijk gewogen KV (dezelfde stylering als bij de compensatie-curve). Bij werkelijke demografie (veel gepensioneerden, minder actieven) schuift ν(N) merkbaar. Voor een fondsspecifieke uitkomst zou ν(N) gewogen moeten worden met de werkelijke KV-distributie per leeftijd.</p>
 
         <h3>Compensatiecurve (bell-shape)</h3>
         <pre>w(a)           = exp(−½ · ((a − μ) / σ)²)             ongenormaliseerd gewicht
@@ -2449,37 +2655,45 @@ w<sub>relatief</sub>(a)  = w(a) / Σ<sub>a=25</sub><sup>100</sup> w(a) × 76    
 
         <h3>Balans-check</h3>
         <pre>Σ<sub>i</sub> PPK<sub>i</sub>       = Σ<sub>i</sub> PPK<sub>prop,i</sub> + Σ<sub>i</sub> PPK<sub>comp,i</sub>
-                = Verdeelbaar · (Σ<sub>i</sub> KV<sub>i</sub> / VPV<sub>totaal</sub>)
-                  + Compensatiedepot · (Σ<sub>i</sub> w<sub>relatief</sub>(x<sub>i</sub>) / N)
-                ≈ Verdeelbaar + Compensatiedepot     (als Σ KV<sub>i</sub> = VPV en Σ w = N)
-                = Fondsvermogen − Buffer − Overige + Bijstort</pre>
-        <p>In een gesloten populatie waar alle KV opgeteld VPV<sub>totaal</sub> vormen en alle w<sub>relatief</sub> opgeteld N, is de som van alle potjes exact het verdeelbare plus het compensatiedepot. In deze tool rekenen we per individu, niet over de hele populatie, dus deze check geldt alleen conceptueel.</p>
+
+Σ<sub>i</sub> PPK<sub>prop,i</sub>  = Σ<sub>i</sub> PPK<sub>base,i</sub> + Σ<sub>i</sub> PPK<sub>surplus,i</sub>
+              = baseRatio · Σ<sub>i</sub> KV<sub>i</sub>  +  Surplus · (Σ<sub>i</sub> KV<sub>i</sub>/VPV) · s̄ · ν
+              = baseRatio · VPV<sub>totaal</sub>  +  Surplus · s̄ · ν      (bij Σ KV = VPV)
+              = baseRatio · VPV<sub>totaal</sub>  +  Surplus            (per constructie: s̄ · ν = 1)
+              = Verdeelbaar     (zie definities baseRatio en Surplus)</pre>
+        <p>De normalisatie ν(N) garandeert dat het totale Verdeelbaar volledig over de populatie verdeeld wordt, ongeacht N. De <i>verdeling tussen cohorten</i> verandert met N, maar het <i>totaal</i> niet — dit is een pure herverdeling tussen generaties.</p>
 
         <h3>Gekoppelde state met andere schermen</h3>
         <ul>
           <li><b>x<sub>i</sub>, P<sub>i</sub>, r</b>: leeftijd, pensioen, rekenrente zijn gedeeld met scherm 1 (Huidig pensioen) via <code>data-state</code>.</li>
           <li><b>Buffer</b>: gedeeld met scherm 3 (Verwacht pensioen), waar B<sub>0</sub><sup>fonds</sup> de initiële buffer is voor het Monte-Carlo-model.</li>
-          <li><b>PPK<sub>i</sub></b>: output van dit scherm wordt de input K voor scherm 3, waar U<sub>0</sub> = K / a(n<sub>ann</sub>, μ).</li>
+          <li><b>PPK<sub>i</sub></b>: output van dit scherm wordt de input K voor scherm 3, waar U<sub>0</sub> = K / a(n<sub>ann</sub>, μ). De DNB-spreidingstermijn werkt dus direct door in de blauwe mediaan-lijn en de buffer-aandelen op scherm 3.</li>
         </ul>
 
         <h3>Aannames & beperkingen</h3>
         <ul>
-          <li><b>Fonds-agnostische normalisatie</b>: 1 persoon per leeftijdsjaar 25–100 (76 punten). Bij werkelijke leeftijdsverdelingen (veel gepensioneerden, weinig jongeren) schuift de relatieve compensatie.</li>
+          <li><b>Fonds-agnostische normalisatie</b>: 1 persoon per leeftijdsjaar 25–100 (76 punten), zowel voor de compensatie-curve als voor de DNB-normalisatie ν(N). Bij werkelijke leeftijdsverdelingen schuiven beide.</li>
+          <li><b>Gelijk gewogen KV per cohort in ν(N)</b>: in de normalisatie krijgt elke leeftijd hetzelfde gewicht, terwijl in een reëel fonds de KV-verdeling sterk asymmetrisch is (actieven bouwen nog op, gepensioneerden zijn "plat"). Een gewogen normalisatie zou de herverdeling naar jongeren minder extreem maken.</li>
+          <li><b>DNB-spreiding in discrete stappen</b>: N is een geheel aantal jaren; een continue spreidingstermijn is niet gemodelleerd.</li>
+          <li><b>Geen terugkoppeling naar dekkingsgraad</b>: de spreidingstermijn beïnvloedt alleen de verdeling op t=0, niet hoe het overschot tussen t=0 en t=N zelf verder belegd wordt of hoe rendementen terugvloeien.</li>
           <li><b>Lineaire scheiding KV / PPK<sub>comp</sub></b>: KV gebruikt de ingevoerde rekenrente r, terwijl VPV<sub>totaal</sub> impliciet de DNB-curve gebruikt. Mismatch wordt zichtbaar als r afwijkt van de DNB-equivalente rekenrente.</li>
-          <li><b>Geen evenwichtigheids-toets</b>: er wordt niet gecontroleerd op generationele evenwichtigheid (WTP-evenwichtsmaatstaven zoals netto profijt per cohort).</li>
+          <li><b>Geen evenwichtigheids-toets</b>: er wordt niet gecontroleerd op generationele evenwichtigheid (WTP-evenwichtsmaatstaven zoals netto profijt per cohort). De DNB-spreidingstermijn is zelf een <i>instrument</i> voor evenwichtigheid, maar de uitkomst wordt in deze tool niet getoetst.</li>
           <li><b>Geen leeftijdsafhankelijke toedeling van risicodragend vermogen</b>: de evenredige toewijzing is op basis van KV, niet op basis van lifecycle-toedelingsregels.</li>
-          <li><b>N is parameter</b>, geen werkelijk deelnemersbestand. Bij heterogene fondsen (slapers, gepensioneerden, actieven met verschillende KV-profielen) is een gewogen N nodig.</li>
+          <li><b>N<sub>deeln</sub> is parameter</b>, geen werkelijk deelnemersbestand. Bij heterogene fondsen (slapers, gepensioneerden, actieven met verschillende KV-profielen) is een gewogen deelnemer-aantal nodig.</li>
           <li><b>Geen partner-/wezenpensioen</b>: alleen ouderdomspensioen wordt toegerekend.</li>
           <li><b>Symmetrische bell-curve</b>: de normaal-verdeelde vorm rond μ is een abstractie. Echte fondsen kiezen soms asymmetrische of trapvormige compensatie.</li>
         </ul>
 
         <h3>Sanity checks</h3>
         <ul>
-          <li>Bij Compensatiedepot = 0, Buffer = 0, Overig = 0, Bijstort = 0: PPK<sub>comp,i</sub> = 0 en PPK<sub>i</sub> = KV<sub>i</sub> · DG, dus ratio = DG (exact proportioneel).</li>
-          <li>Bij μ ver van x<sub>i</sub> en kleine σ: w<sub>relatief</sub>(x<sub>i</sub>) → 0, PPK<sub>comp,i</sub> → 0, u krijgt alleen uw evenredig deel.</li>
-          <li>Bij σ → ∞: w<sub>relatief</sub>(a) → 1 voor alle a, alle leeftijden krijgen dezelfde compensatie (Compensatiedepot / N).</li>
-          <li>Bij DG = 100% en Compensatiedepot = 0: PPK<sub>i</sub> = KV<sub>i</sub>, ratio = 100%.</li>
-          <li>Bij hoge bijstortingen: ratio kan boven DG uitkomen doordat Verdeelbaar > VPV<sub>totaal</sub>.</li>
+          <li><b>N = 0 (gelijk)</b>: s(x, 0) = ν(0) = 1, dus PPK<sub>prop,i</sub> = KV<sub>i</sub> · (Verdeelbaar / VPV<sub>totaal</sub>) voor elke x — identiek aan de pre-DNB-formule. De effect-tekst toont voor elke leeftijd exact dezelfde verhoging.</li>
+          <li><b>N = 40 (~∞) en DG hoog</b>: s(x, 40) daalt monotoon met x; jongere cohorten hebben bijna s ≈ 1, oudere (x ≥ 85) hebben s &lt; 0,3. Effect-tekst voor een 75-jarige is significant lager dan voor een 30-jarige.</li>
+          <li><b>DG = 100%, Compensatiedepot = 0</b>: Surplus = 0, dus PPK<sub>surplus,i</sub> = 0 ongeacht N. De DNB-spreiding heeft geen effect als er geen overschot te verdelen is. Effect-tekst toont 0% voor elke leeftijd.</li>
+          <li><b>DG &lt; 100% (onderdekking)</b>: Surplus = 0, baseRatio &lt; 1, DNB-spreiding heeft geen effect. Iedereen krijgt een gelijke fractie van zijn KV, ongeacht leeftijd.</li>
+          <li><b>Bij Compensatiedepot = 0, Buffer = 0, Overig = 0, Bijstort = 0 en DG = 127,5%, N = 0</b>: PPK<sub>i</sub> = KV<sub>i</sub> · 1,275 voor elke leeftijd, ratio = 127,5%. Bij N = 10 ziet een 30-jarige nog steeds ≈ 127,5%, een 85-jarige duidelijk minder.</li>
+          <li><b>Bij μ ver van x<sub>i</sub> en kleine σ</b>: w<sub>relatief</sub>(x<sub>i</sub>) → 0, PPK<sub>comp,i</sub> → 0, u krijgt alleen uw (DNB-gewogen) evenredig deel.</li>
+          <li><b>Bij σ → ∞</b>: w<sub>relatief</sub>(a) → 1 voor alle a, alle leeftijden krijgen dezelfde compensatie (Compensatiedepot / N<sub>deeln</sub>).</li>
+          <li><b>Bij hoge bijstortingen</b>: Verdeelbaar &gt; VPV<sub>totaal</sub> dus Surplus stijgt; effect van N op de verhoging wordt groter.</li>
         </ul>
 
         <p class="actuary-note">De volledige termen-vertaaltabel vindt u in de uitleg op het overzichtsscherm.</p>
@@ -2501,8 +2715,8 @@ w<sub>relatief</sub>(a)  = w(a) / Σ<sub>a=25</sub><sup>100</sup> w(a) × 76    
     <p>De verticale stippellijn markeert uw verwachte sterfdatum. Na die leeftijd is de curve alleen nog theoretisch van belang.</p>
 
     <h3>Hoe lezen?</h3>
-    <p><b>De startsprong bij uw huidige leeftijd</b>: het verticale verschil tussen het startpunt van de blauwe en de rode lijn toont of u erop vooruit gaat bij invaren. Wtp is verkocht met "iedereen gaat erop vooruit"; deze sprong maakt dat concreet voor uw situatie.</p>
-    <p><b>Het verloop</b>: zit de blauwe lijn consequent boven de rode, dan doet het Wtp-pensioen het gemiddeld beter dan uw huidige pensioen met inflatie-indexatie. De breedte van de blauwe band geeft aan hoe onzeker die uitkomst is. Een smalle band betekent weinig risico, een brede band betekent veel variatie mogelijk.</p>
+    <p><b>Het startpunt van de blauwe lijn</b>: uw pensioenpotje wordt bij aanvang omgerekend naar een startuitkering tegen het projectierendement — een conservatieve, wettelijk vastgestelde rente. Dit getal is daarmee een voorzichtige schatting van wat u als eerste jaaruitkering zou kunnen ontvangen. Het hoeft niet hoger of lager te zijn dan uw huidige pensioen; dat hangt af van uw potje-grootte, uw leeftijd en het gekozen projectierendement.</p>
+    <p><b>Het verloop</b>: de lijn beweegt daarna mee met het gerealiseerde rendement. Ligt het verwacht rendement boven het projectierendement, dan stijgt de uitkering in verwachting; zijn ze gelijk, dan blijft hij nominaal stabiel. De breedte van de blauwe band toont de onzekerheid. Zit de blauwe lijn consequent boven de rode, dan doet het Wtp-pensioen het gemiddeld beter dan uw huidige pensioen met inflatie-indexatie; daaronder omgekeerd. Welk scenario u krijgt hangt af van de rendements- en bufferinstellingen.</p>
 
     <h3>De drie getallen onder de grafiek</h3>
     <ul>
@@ -2521,12 +2735,14 @@ w<sub>relatief</sub>(a)  = w(a) / Σ<sub>a=25</sub><sup>100</sup> w(a) × 76    
 
     <h3>De schuiven</h3>
     <ul>
-      <li><b>Verwacht gemiddeld rendement</b>: wat u op lange termijn aan rendement verwacht (bijvoorbeeld 5% per jaar).</li>
-      <li><b>Volatiliteit</b>: hoeveel het rendement van jaar tot jaar schommelt rond dat gemiddelde. Hoger betekent grotere uitslagen omhoog en omlaag.</li>
+      <li><b>Projectierendement</b>: de rente waarmee uw potje bij aanvang wordt omgerekend naar de startuitkering. Wettelijk vastgesteld door DNB, historisch in de orde van 1–2%. Een lager projectierendement geeft een lagere startuitkering (conservatiever) maar laat meer ruimte voor verhoging later; een hoger projectierendement geeft een hogere start maar minder ruimte voor groei.</li>
+      <li><b>Verwacht gemiddeld rendement</b>: wat het fonds op lange termijn aan rendement verwacht te halen (bijvoorbeeld 5% per jaar, afhankelijk van beleggingsbeleid). De uitkering groeit mee met het gerealiseerde rendement, dat gemiddeld dit getal volgt. Als dit boven het projectierendement ligt, stijgt uw uitkering in verwachting; als het gelijk is, blijft hij stabiel.</li>
+      <li><b>Volatiliteit</b>: hoeveel het rendement van jaar tot jaar schommelt rond dat gemiddelde. Hoger betekent grotere uitslagen omhoog en omlaag en een bredere blauwe band.</li>
+      <li><b>Demping</b>: over hoeveel jaren het rendement wordt uitgemiddeld (rollend gemiddelde). 0 = geen demping (uitkering reageert direct op rendement), 10 = sterk gedempt (uitkering beweegt trager).</li>
       <li><b>Inflatie</b>: met hoeveel de prijzen jaarlijks stijgen. De buffer probeert de uitkering hiermee te laten meegroeien. Gekoppeld aan het scherm Huidig pensioen.</li>
-      <li><b>Demping</b>: over hoeveel jaren het rendement wordt uitgemiddeld (rollend gemiddelde). 0 = geen demping, 10 = sterk gedempt.</li>
       <li><b>Extra buffer voor demping</b>: de collectieve buffer van het fonds. Gekoppeld aan het scherm Pensioenpotje onder dezelfde naam.</li>
     </ul>
+    <p><i>Waarom twee rentes?</i> Het projectierendement is de voorzichtige aanname waartegen uw potje naar een uitkering wordt omgezet — dat is wat u als eerste jaaruitkering mag verwachten. Het verwacht rendement is de realistische aanname over wat het fonds op lange termijn haalt. Het verschil tussen beide bepaalt of en hoe snel uw uitkering in verwachting stijgt. Pensioenfondsen publiceren beide rentes afzonderlijk; door ze hier beide in te stellen kunt u de situatie van uw eigen fonds benaderen.</p>
 
     <h3>Hoe de buffer werkt</h3>
     <p>De buffer is een collectieve reserve die het fonds apart heeft gezet. Uw aandeel daarin is evenredig aan uw kapitaalwaarde. Elk jaar vergelijkt het model of het (gedempte) rendement voldoende is om uw uitkering met inflatie te laten meegroeien.</p>
@@ -2545,18 +2761,22 @@ w<sub>relatief</sub>(a)  = w(a) / Σ<sub>a=25</sub><sup>100</sup> w(a) × 76    
       <summary>Voor actuarissen — model, formules, beperkingen</summary>
       <div class="actuary-body">
         <h3>Model</h3>
-        <pre>r<sub>t</sub>             ~ N(μ, σ²)               iid jaarrendementen (Box-Muller, Mulberry32 PRNG)
+        <pre>μ<sub>proj</sub>           = projectierendement (conservatieve conversie-rente, DNB)
+μ                = verwacht gemiddeld rendement (realistisch, beleggingsbeleid)
+σ                = volatiliteit
+r<sub>t</sub>             ~ N(μ, σ²)               iid jaarrendementen (Box-Muller, Mulberry32 PRNG)
 n<sub>ann</sub>              = ⌊x + e<sub>x</sub>⌋ − x             annuïteits-horizon (verwachte restjaren, floor)
 n<sub>plot</sub>             = ⌈x + e<sub>x</sub>⌉ − x             plot-horizon (naar boven afgerond sterfjaar, cap op 100)
-U<sub>0</sub>             = PPK<sub>i</sub> / a(n<sub>ann</sub>, μ)       startuitkering, annuïteit over n<sub>ann</sub> jaar
+U<sub>0</sub>             = PPK<sub>i</sub> / a(n<sub>ann</sub>, μ<sub>proj</sub>)    startuitkering tegen projectierendement
 a(n, μ)           = (1 − (1+μ)<sup>−n</sup>) / μ          gewone annuïteits-immediate
 π                = inflatie (slider, gekoppeld aan scherm 1)
 w                = demping-window (jaren), w=0 → r̄<sub>t</sub>=r<sub>t</sub>
 r̄<sub>t</sub>             = rollend gemiddelde van r<sub>t</sub> over de laatste min(t+1, w) jaren</pre>
+        <p>De tool gebruikt <b>twee</b> rentes. De conversie van potje naar startuitkering gaat tegen μ<sub>proj</sub> — de conservatieve, wettelijk vastgestelde rente. De jaarlijkse groei van de uitkering gaat met het gerealiseerde r̄<sub>t</sub> dat gemiddeld μ is. Onder μ = μ<sub>proj</sub> blijft U<sub>t</sub> nominaal stabiel in verwachting; onder μ &gt; μ<sub>proj</sub> stijgt hij, onder μ &lt; μ<sub>proj</sub> daalt hij. Deze scheiding is noodzakelijk om te voorkomen dat één rente zowel als voorzichtigheidsmaatstaf als als groeiverwachting gebruikt wordt — dat zou een systematische bias in U<sub>0</sub> opleveren.</p>
 
         <h3>Rode benchmark-lijn: huidig pensioen met inflatie</h3>
         <pre>U<sub>t</sub><sup>(bench)</sup>     = pen · (1 + π)<sup>t</sup>         pen = huidige pensioenaanspraak (slider)</pre>
-        <p>Start op de huidige pensioenaanspraak (niet op U<sub>0</sub><sup>Wtp</sup>); het verschil tussen rood en de blauwe lijn bij leeftijd x is de "erop vooruit"-sprong bij invaren. In reële weergave horizontaal op pen (consistent met scherm 1).</p>
+        <p>Start op de huidige pensioenaanspraak (niet op U<sub>0</sub><sup>Wtp</sup>). Het verschil tussen rood en blauw bij leeftijd x hangt af van (a) de gap tussen de rekenrente achter <b>pen</b> en μ<sub>proj</sub> voor de Wtp-conversie, en (b) de verhouding potje-grootte tot pensioenaanspraak. In reële weergave is deze lijn horizontaal op pen (consistent met scherm 1).</p>
 
         <h3>Wtp-pad per scenario: demping + buffer</h3>
         <pre>B<sub>0</sub><sup>fonds</sup>         = slider "Extra buffer voor demping" (gekoppeld met PPK-scherm)
