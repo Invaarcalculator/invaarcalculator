@@ -1,4 +1,22 @@
 <!DOCTYPE html>
+<!--
+  Invaarcalculator® v3.0.168
+  Build: 2026-05-16
+
+  Onafhankelijk rekenhulpmiddel voor SSPF-deelnemers.
+  Geeft een indicatie van de mogelijke invaareffecten onder de
+  Wet toekomst pensioenen (Wtp). Niet gevalideerd door SSPF, DNB
+  of AFM. Aan de uitkomsten kunnen geen rechten worden ontleend.
+
+  Licentie: Creative Commons Naamsvermelding-NietCommercieel 4.0
+  Internationaal (CC BY-NC 4.0)
+  https://creativecommons.org/licenses/by-nc/4.0/
+
+  Broncode: https://github.com/Invaarcalculator/invaarcalculator
+  Vragen of opmerkingen: hans@invaarcalculator.nl
+
+  © Innovation Nestor
+-->
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
@@ -15,7 +33,12 @@
     --card:  #fff;
     --surf:  #f0efed;
     --txt1:  #1a1a1a;
-    --txt2:  #6b7280;
+    /* v3.0.166: --txt2 #6b7280 → #5a6473 voor WCAG AA contrast (≥4.5:1)
+       op zowel witte als licht-grijze achtergronden (display-deepdive,
+       cohort-tabellen). Effectief contrast ~7:1 op wit, ~6,7:1 op
+       rgba(0,0,0,0.025). Visueel nog steeds duidelijk secundair t.o.v.
+       --txt1. */
+    --txt2:  #5a6473;
     --bdr:   rgba(0,0,0,0.10);
     --bdr2:  rgba(0,0,0,0.18);
     --red:   #D4001A;
@@ -1562,17 +1585,20 @@
   //
   // Detectie: extensie-scripts hebben URL's met schemes die
   // 'extension://' of 'webkit-masked-url://' bevatten. We gebruiken
-  // String.indexOf i.p.v. regex omdat regex-escape-quoting in een
-  // template-literal-gebouwde HTML-bundle een valstrik is (zie
-  // v3.0.139-tooling §3 voor de regex-bug die hier op gebrand stond).
+  // String.includes() voor leesbaarheid en consistentie met moderne JS.
+  // (v3.0.166-tooling: indexOf(...) !== -1 vervangen door includes()
+  // op aanwijzing van SonarCloud — zie L1574/L1575.) Regex blijft hier
+  // bewust niet gebruikt: regex-escape-quoting in een template-literal-
+  // gebouwde HTML-bundle is een valstrik (zie v3.0.139-tooling §3 voor
+  // de regex-bug die hier op gebrand stond).
   // Voor 'error'-events staat het pad in e.filename; voor
   // 'unhandledrejection' moeten we in de stack-trace kijken, want
   // filename ontbreekt daar.
   function isExtensionUrl(s) {
     if (!s) return false;
     s = String(s);
-    return s.indexOf('extension://') !== -1
-        || s.indexOf('webkit-masked-url://') !== -1;
+    return s.includes('extension://')
+        || s.includes('webkit-masked-url://');
   }
   function isExtensionError(reason) {
     if (!reason) return false;
@@ -1582,17 +1608,20 @@
     return isExtensionUrl(stack) || isExtensionUrl(msg);
   }
 
-  window.addEventListener('error', function(e) {
+  // v3.0.166-tooling: window.* → globalThis.* op aanwijzing van SonarCloud
+  // (Prefer globalThis over window, L1585/1588/1593/1595). globalThis is
+  // de moderne portable manier; in een browser is hij identiek aan window.
+  globalThis.addEventListener('error', function(e) {
     if (isExtensionUrl(e.filename) || isExtensionError(e.error)) {
       // Stille negeer; loggen voor diagnose-debug zonder de gebruiker te storen.
-      if (window.console && console.debug) console.debug('[extensie-noise genegeerd]', e.message, e.filename);
+      if (globalThis.console && console.debug) console.debug('[extensie-noise genegeerd]', e.message, e.filename);
       return;
     }
     showError('JS-fout', (e.message || 'onbekend') + (e.filename ? ' @ ' + e.filename + ':' + e.lineno : ''));
   });
-  window.addEventListener('unhandledrejection', function(e) {
+  globalThis.addEventListener('unhandledrejection', function(e) {
     if (isExtensionError(e.reason)) {
-      if (window.console && console.debug) console.debug('[extensie-noise genegeerd]', e.reason);
+      if (globalThis.console && console.debug) console.debug('[extensie-noise genegeerd]', e.reason);
       return;
     }
     showError('Promise-fout', (e.reason && e.reason.message) || String(e.reason));
@@ -2010,12 +2039,12 @@
           <strong>${r(u.deelnemer.pen)}</strong>
         </label>
         <input type="range" id="in-pen" data-field="pen"
-               min="0" max="200000" step="500"
+               min="0" max="400000" step="1000"
                value="${u.deelnemer.pen}">
         <div class="slider-markers">
           <span class="marker-min">\u20AC 0</span>
-          <span class="marker-mid">\u20AC 100.000</span>
-          <span class="marker-max">\u20AC 200.000</span>
+          <span class="marker-mid">\u20AC 200.000</span>
+          <span class="marker-max">\u20AC 400.000</span>
         </div>
       </div>
     </div>
@@ -2059,12 +2088,12 @@
             <strong>${r(g)}</strong>
           </label>
           <input type="range" id="in-y0" data-field="y0"
-                 min="0" max="200000" step="500"
+                 min="0" max="400000" step="1000"
                  value="${g}">
           <div class="slider-markers">
             <span class="marker-min">\u20AC 0</span>
-            <span class="marker-mid">\u20AC 100.000</span>
-            <span class="marker-max">\u20AC 200.000</span>
+            <span class="marker-mid">\u20AC 200.000</span>
+            <span class="marker-max">\u20AC 400.000</span>
           </div>
         </div>
       </div>
@@ -2191,12 +2220,12 @@
             <strong>${r(Oe)}</strong>
           </label>
           <input type="range" id="in-pen-laag" data-field="pen_laag"
-                 min="0" max="200000" step="500"
+                 min="0" max="400000" step="1000"
                  value="${Oe}">
           <div class="slider-markers">
             <span class="marker-min">\u20AC 0</span>
-            <span class="marker-mid">\u20AC 100.000</span>
-            <span class="marker-max">\u20AC 200.000</span>
+            <span class="marker-mid">\u20AC 200.000</span>
+            <span class="marker-max">\u20AC 400.000</span>
           </div>
         </div>
         <div class="slider-control">
@@ -2258,7 +2287,7 @@
         Aanpak
       </button>
     </div>
-  `}var hn=null,bn=null;function kr(){return hn||(hn=vn("help-modal-overlay","help-modal-title","help-modal-body")),hn}function wt(){return bn||(bn=vn("sensitivity-modal-overlay","sensitivity-modal-title","sensitivity-modal-body")),bn}function mr(t){let e=dr[t];if(!e)return;let n=e({state:u,pct:at,euro:Yt,releaseVersion:yt}),r="";n.currentValue&&(r+=`<p class="help-modal-current">${W(n.currentValue)}</p>`);for(let a of n.sections)if(a.heading&&(r+=`<h3 class="help-modal-section-h">${W(a.heading)}</h3>`),"rows"in a){a.intro&&(r+=`<p class="help-modal-section-body">${W(a.intro)}</p>`),r+='<table class="help-modal-params"><thead><tr><th scope="col">Parameter</th><th scope="col">Waarde</th><th scope="col">Aanpasbaar?</th></tr></thead><tbody>';for(let i of a.rows){let o=i.adjustable?`<span class="adj-yes" aria-label="Aanpasbaar">\u2713 ${W(i.note??"via UI")}</span>`:`<span class="adj-no" aria-label="Vast">\xB7 ${W(i.note??"Vast (fondsparameter)")}</span>`;r+=`<tr><td>${W(i.label)}</td><td class="num">${W(i.value)}</td><td>${o}</td></tr>`}r+="</tbody></table>"}else if("cascade"in a){a.intro&&(r+=`<p class="help-modal-section-body">${W(a.intro)}</p>`),r+='<table class="help-modal-cascade"><tbody>';let i=o=>o==="plus"?"+":o==="minus"?"\u2212":o==="subtotal"||o==="total"?"=":"";for(let o of a.cascade){let s=i(o.kind),d=o.note?`<div class="casc-note">${W(o.note)}</div>`:"";r+=`<tr class="casc-${o.kind}"><td class="casc-sign">${s}</td><td class="casc-label">${W(o.label)}${d}</td><td class="casc-val num">${W(o.value)}</td></tr>`}r+="</tbody></table>",a.outro&&(r+=`<p class="help-modal-section-body casc-outro">${W(a.outro)}</p>`)}else if("tableRows"in a){a.intro&&(r+=`<p class="help-modal-section-body">${W(a.intro)}</p>`),r+='<table class="help-modal-simpletable"><thead><tr>';for(let i of a.tableHeaders)r+=`<th scope="col">${W(i)}</th>`;r+="</tr></thead><tbody>";for(let i of a.tableRows){r+="<tr>";for(let o of i)r+=`<td>${W(o)}</td>`;r+="</tr>"}r+="</tbody></table>",a.outro&&(r+=`<p class="help-modal-section-body">${W(a.outro)}</p>`)}else r+=`<p class="help-modal-section-body">${W(a.body)}</p>`;n.footerLink&&(r+=`<div class="help-modal-footer-link"><button type="button" class="help-modal-link-btn" data-help-link="${W(n.footerLink.key)}">${W(n.footerLink.label)} \u2192</button></div>`),kr().open({title:n.title,bodyHTML:r})}function Vi(t){wt().open({title:"Hoe verandert uw aandeel met de dekkingsgraad?",bodyHTML:Wn(t)})}function Li(t){wt().open({title:"Wat levert een hogere of lagere werkgevers-bijdrage op?",bodyHTML:Yn(t),onAfterMount:e=>Jn(e,t)})}function Ii(t){wt().open({title:"Hoe verdeelt het overschot zich over de populatie?",bodyHTML:tr(t)})}function Ci(t){wt().open({title:"Invaren of hard sluiten \u2014 wat is het alternatief?",bodyHTML:rr(t)})}function Fi(t){let e=u.parameters_m2.alternatieveInvaarmethode,n=t.growthRateSource==="pi",r=n&&e!==void 0?{rateMin:e.piMin,rateMax:e.piMax}:{rateMin:.005,rateMax:.04};wt().open({title:"Hoe verhoudt de verhoging zich tot indexatie over de tijd?",bodyHTML:Qn(t,r),onAfterMount:a=>{let i=a.querySelector("#modal-pi-alt"),o=a.querySelector("#modal-pi-value"),s=a.querySelector("#indexed-body-content");if(!i||!s)return;let d=t;i.addEventListener("input",()=>{let l=Number(i.value)/100;if(Number.isFinite(l))if(n){let c=u.parameters_m2.alternatieveInvaarmethode;if(c===void 0)return;let p=Math.max(c.piMin,Math.min(c.piMax,l));if(u.parameters_m2={...u.parameters_m2,alternatieveInvaarmethode:{...c,piDefault:p}},de(),!u.lastM1||!u.lastM2)return;d=gn(u.deelnemer,u.lastM1,u.lastM2,u.parameters_m1,u.parameters_m2,u.invaarmethode),o&&(o.textContent=(p*100).toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%"),s.innerHTML=Jt(d),Re()}else{let c=Math.max(r.rateMin,Math.min(r.rateMax,l));d=Xn(d,c),o&&(o.textContent=(c*100).toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%"),s.innerHTML=Jt(d)}})}})}var fr=!1;function Bi(){fr||(fr=!0,document.addEventListener("click",t=>{let e=t.target,n=e.closest("[data-help-link]");if(n){t.preventDefault(),t.stopPropagation();let i=n.dataset.helpLink;i&&mr(i);return}let r=e.closest(".help-icon")||e.closest("[data-help]");if(!r)return;t.preventDefault(),t.stopPropagation();let a=r.dataset.help;a&&mr(a)}))}function Lt(){let t=document.getElementById("app");t&&(t.innerHTML=zi()+Zi(),Gi())}function Re(){let t=document.querySelector(".pane-m1 .output");t&&(t.innerHTML=br());let e=document.querySelector('[data-lifeexp-for="in-dob"]');e&&(e.textContent=u.lastM1?`Verwachte sterfleeftijd: ${Xt(u.lastM1.lifeExp_x0,1)} jaar`:"");let n=document.querySelector('[data-lifeexp-for="in-dob-partner"]');n&&(n.textContent=u.lastM1&&u.lastM1.lifeExp_partner!==null?`Verwachte sterfleeftijd: ${Xt(u.lastM1.lifeExp_partner,1)} jaar`:"");let r=document.querySelector(".pane-m2 .m2-output");r&&u.lastM1&&u.lastM2&&u.parameters_m2.fondsvermogen!==null?r.innerHTML=mn(u.lastM1,u.lastM2,u.deelnemer.pen,u.invaarmethode):r&&u.lastM2Error&&(r.innerHTML=`<div class="error">Fout bij M2: ${W(u.lastM2Error)}</div>`);let a=document.querySelector(".rente-control label.slider-label-stand strong");a&&(a.textContent=at(u.parameters_m1.r));let i=document.querySelector('label[for="in-x0"] strong');i&&(i.textContent=u.deelnemer.x0+" jaar");let o=document.querySelector('label[for="in-pen"] strong');o&&(o.textContent="\u20AC "+Math.round(u.deelnemer.pen).toLocaleString("nl-NL"));let s=document.querySelector('label[for="in-x_partner"] strong');s&&(s.textContent=(u.deelnemer.x_partner??0)+" jaar");let d=document.querySelector('label[for="in-y0"] strong');d&&(d.textContent="\u20AC "+Math.round(u.deelnemer.y0??0).toLocaleString("nl-NL"));let l=document.querySelector('label[for="m2-dekkingsgraad"] strong');l&&(l.textContent=at(u.parameters_m2.dekkingsgraad,1));let c=document.querySelector('label[for="m2-vpvaftrekpct"] strong');c&&(c.textContent=(u.parameters_m2.vpvAftrekPct*100).toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%")}function Hi(){let t=document.querySelector(".partner-fields");t&&(u.deelnemer.heeftPartner?t.removeAttribute("hidden"):t.setAttribute("hidden",""))}function Ki(){document.querySelectorAll(".kpi-card").forEach(t=>{let e=t;e.classList.remove("flash"),e.offsetWidth,e.classList.add("flash")})}function Gi(){let t=typeof requestAnimationFrame<"u"?requestAnimationFrame:i=>setTimeout(()=>i(0),16);let e=null,n=()=>{e&&clearTimeout(e),e=setTimeout(()=>{e=null,de(),Re()},150)},r=()=>{e&&(clearTimeout(e),e=null),de(),Re(),Ki()};document.querySelectorAll("[data-field]").forEach(i=>{let o=s=>{let d=s.target,l=d.dataset.field,c=d instanceof HTMLInputElement&&d.type==="checkbox"?d.checked:d.value,p=c;if(typeof c=="string"&&d instanceof HTMLInputElement&&(d.type==="number"||d.type==="range")&&(p=c===""?null:Number(c)),(l==="hooglaagActief"||l==="heeftPartner")&&(d instanceof HTMLSelectElement||d instanceof HTMLInputElement&&d.type==="radio")&&(p=c==="true"),u.deelnemer[l]=p,l==="heeftPartner"){u.deelnemer.heeftPartner&&(u.deelnemer.y0===null&&(u.deelnemer.y0=Math.round(u.deelnemer.pen*.7/500)*500),u.deelnemer.x_partner===null&&(u.deelnemer.x_partner=65),u.deelnemer.dob_partner===null&&(u.deelnemer.dob_partner=hr(65,ne))),Hi(),de(),Lt();return}if(l==="hooglaagActief"){let m=document.querySelector(".hooglaag-fields");m&&(m.style.display=u.deelnemer.hooglaagActief?"":"none");let g=document.querySelector("[data-pen-label]");if(g&&(g.textContent=u.deelnemer.hooglaagActief?"Pensioen tot knip":"U krijgt zolang u leeft"),u.deelnemer.hooglaagActief){if(u.deelnemer.pen_laag===null){u.deelnemer.pen_laag=Math.round(u.deelnemer.pen*.8/500)*500;let k=document.getElementById("in-pen-laag");k&&(k.value=String(u.deelnemer.pen_laag));let v=document.querySelector('label[for="in-pen-laag"] strong');v&&(v.textContent="\u20AC "+Math.round(u.deelnemer.pen_laag).toLocaleString("nl-NL"))}if(u.deelnemer.dob_knip===null){let k=new Date(ne);k.setFullYear(k.getFullYear()+10),u.deelnemer.dob_knip=k.toISOString().slice(0,10);let v=document.getElementById("in-dob-knip");v&&(v.value=u.deelnemer.dob_knip)}}de(),Re();return}if(d instanceof HTMLSelectElement){de(),Re();return}if(d instanceof HTMLInputElement&&d.type==="radio"){de(),Re();return}if(d instanceof HTMLInputElement&&d.type==="date"){u.deelnemer[l]=c;let m=document.querySelector(`[data-age-for="${d.id}"]`);if(m)if(l==="dob_knip")if(String(c)<=ne)m.innerHTML='<span class="hooglaag-warn">Knip-datum ligt in het verleden \u2014 vul het bedrag dat u nu ontvangt in als pensioen en zet hoog-laag uit.</span>';else{let k=(Date.parse(String(c))-Date.parse(ne))/315576e5,v=u.deelnemer.x0+k,b=Math.floor(v),h=Math.floor((v-b)*12);m.textContent=`Leeftijd op knip: ${b} jaar${h?` ${h} mnd`:""}`}else{let g=kn(String(c),ne),k=Math.floor(g),v=Math.floor((g-k)*12);m.textContent=`Leeftijd: ${k} jaar${v?` ${v} mnd`:""}`}n();return}if(d instanceof HTMLInputElement&&d.type==="range"){let m=document.querySelector(`label[for="${d.id}"] strong`);m&&(l==="x0"?m.textContent=u.deelnemer.x0+" jaar":l==="pen"?m.textContent="\u20AC "+Math.round(u.deelnemer.pen).toLocaleString("nl-NL"):l==="x_partner"?m.textContent=(u.deelnemer.x_partner??0)+" jaar":l==="y0"?m.textContent="\u20AC "+Math.round(u.deelnemer.y0??0).toLocaleString("nl-NL"):l==="pen_laag"&&(m.textContent="\u20AC "+Math.round(u.deelnemer.pen_laag??0).toLocaleString("nl-NL")))}n()};i.addEventListener("input",o),i.addEventListener("change",o),i.addEventListener("keydown",s=>{let d=s;d.key==="Enter"&&(d.preventDefault(),r())}),i.addEventListener("blur",()=>{e&&r()})});let a=document.getElementById("in-r");if(a){let i=!1;a.addEventListener("input",()=>{u.parameters_m1={...u.parameters_m1,r:Number(a.value)/100},i||(i=!0,t(()=>{i=!1,de(),Re()}))})}document.querySelectorAll("[data-m2field]").forEach(i=>{let o=i,s=!1;o.addEventListener("input",()=>{let d=o.dataset.m2field;if(d==="invaarmethode"){u.invaarmethode=o.value==="alternatief"?"alternatief":"standaard",de(),Lt();return}u.parameters_m2=Un(u.parameters_m2,d,o.value),s||(s=!0,t(()=>{s=!1,de(),Re()}))})}),document.querySelectorAll("[data-co]").forEach(i=>{let o=i;o.addEventListener("input",()=>{let s=o.dataset.co,d=Number(o.value);if(Number.isFinite(d)){if(s==="fondsvermogen"||s==="bijstort"||s==="dekkingsgraad"){u.parameters_m2[s]=d;let l=u.parameters_m2.vpvTotal;l>0&&(s==="fondsvermogen"?u.parameters_m2.dekkingsgraad=d/l:s==="dekkingsgraad"&&(u.parameters_m2.fondsvermogen=d*l))}else if(s==="wettelijkeReservesPct"||s==="rdrBedrag"||s==="compensatiedepotBedrag")u.cascadeOverrides[s]=d;else return;de(),Lt()}})}),document.addEventListener("click",i=>{if(i.target?.id==="reset-cascade-btn"){u.parameters_m2.fondsvermogen=X.m2.fondsvermogen,u.parameters_m2.bijstort=X.m2.bijstort,u.parameters_m2.dekkingsgraad=X.m2.dekkingsgraad;let s=X.aanwendingsCascade;s&&(u.cascadeOverrides.wettelijkeReservesPct=s.wettelijkeReservesPct,u.cascadeOverrides.rdrBedrag=s.rdrBedrag,u.cascadeOverrides.compensatiedepotBedrag=s.compensatiedepotBedrag),de(),Lt()}})}var yt="3.0.165",Ui="16-05-2026";function Zi(){return`
+  `}var hn=null,bn=null;function kr(){return hn||(hn=vn("help-modal-overlay","help-modal-title","help-modal-body")),hn}function wt(){return bn||(bn=vn("sensitivity-modal-overlay","sensitivity-modal-title","sensitivity-modal-body")),bn}function mr(t){let e=dr[t];if(!e)return;let n=e({state:u,pct:at,euro:Yt,releaseVersion:yt}),r="";n.currentValue&&(r+=`<p class="help-modal-current">${W(n.currentValue)}</p>`);for(let a of n.sections)if(a.heading&&(r+=`<h3 class="help-modal-section-h">${W(a.heading)}</h3>`),"rows"in a){a.intro&&(r+=`<p class="help-modal-section-body">${W(a.intro)}</p>`),r+='<table class="help-modal-params"><thead><tr><th scope="col">Parameter</th><th scope="col">Waarde</th><th scope="col">Aanpasbaar?</th></tr></thead><tbody>';for(let i of a.rows){let o=i.adjustable?`<span class="adj-yes" aria-label="Aanpasbaar">\u2713 ${W(i.note??"via UI")}</span>`:`<span class="adj-no" aria-label="Vast">\xB7 ${W(i.note??"Vast (fondsparameter)")}</span>`;r+=`<tr><td>${W(i.label)}</td><td class="num">${W(i.value)}</td><td>${o}</td></tr>`}r+="</tbody></table>"}else if("cascade"in a){a.intro&&(r+=`<p class="help-modal-section-body">${W(a.intro)}</p>`),r+='<table class="help-modal-cascade"><tbody>';let i=o=>o==="plus"?"+":o==="minus"?"\u2212":o==="subtotal"||o==="total"?"=":"";for(let o of a.cascade){let s=i(o.kind),d=o.note?`<div class="casc-note">${W(o.note)}</div>`:"";r+=`<tr class="casc-${o.kind}"><td class="casc-sign">${s}</td><td class="casc-label">${W(o.label)}${d}</td><td class="casc-val num">${W(o.value)}</td></tr>`}r+="</tbody></table>",a.outro&&(r+=`<p class="help-modal-section-body casc-outro">${W(a.outro)}</p>`)}else if("tableRows"in a){a.intro&&(r+=`<p class="help-modal-section-body">${W(a.intro)}</p>`),r+='<table class="help-modal-simpletable"><thead><tr>';for(let i of a.tableHeaders)r+=`<th scope="col">${W(i)}</th>`;r+="</tr></thead><tbody>";for(let i of a.tableRows){r+="<tr>";for(let o of i)r+=`<td>${W(o)}</td>`;r+="</tr>"}r+="</tbody></table>",a.outro&&(r+=`<p class="help-modal-section-body">${W(a.outro)}</p>`)}else r+=`<p class="help-modal-section-body">${W(a.body)}</p>`;n.footerLink&&(r+=`<div class="help-modal-footer-link"><button type="button" class="help-modal-link-btn" data-help-link="${W(n.footerLink.key)}">${W(n.footerLink.label)} \u2192</button></div>`),kr().open({title:n.title,bodyHTML:r})}function Vi(t){wt().open({title:"Hoe verandert uw aandeel met de dekkingsgraad?",bodyHTML:Wn(t)})}function Li(t){wt().open({title:"Wat levert een hogere of lagere werkgevers-bijdrage op?",bodyHTML:Yn(t),onAfterMount:e=>Jn(e,t)})}function Ii(t){wt().open({title:"Hoe verdeelt het overschot zich over de populatie?",bodyHTML:tr(t)})}function Ci(t){wt().open({title:"Invaren of hard sluiten \u2014 wat is het alternatief?",bodyHTML:rr(t)})}function Fi(t){let e=u.parameters_m2.alternatieveInvaarmethode,n=t.growthRateSource==="pi",r=n&&e!==void 0?{rateMin:e.piMin,rateMax:e.piMax}:{rateMin:.005,rateMax:.04};wt().open({title:"Hoe verhoudt de verhoging zich tot indexatie over de tijd?",bodyHTML:Qn(t,r),onAfterMount:a=>{let i=a.querySelector("#modal-pi-alt"),o=a.querySelector("#modal-pi-value"),s=a.querySelector("#indexed-body-content");if(!i||!s)return;let d=t;i.addEventListener("input",()=>{let l=Number(i.value)/100;if(Number.isFinite(l))if(n){let c=u.parameters_m2.alternatieveInvaarmethode;if(c===void 0)return;let p=Math.max(c.piMin,Math.min(c.piMax,l));if(u.parameters_m2={...u.parameters_m2,alternatieveInvaarmethode:{...c,piDefault:p}},de(),!u.lastM1||!u.lastM2)return;d=gn(u.deelnemer,u.lastM1,u.lastM2,u.parameters_m1,u.parameters_m2,u.invaarmethode),o&&(o.textContent=(p*100).toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%"),s.innerHTML=Jt(d),Re()}else{let c=Math.max(r.rateMin,Math.min(r.rateMax,l));d=Xn(d,c),o&&(o.textContent=(c*100).toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%"),s.innerHTML=Jt(d)}})}})}var fr=!1;function Bi(){fr||(fr=!0,document.addEventListener("click",t=>{let e=t.target,n=e.closest("[data-help-link]");if(n){t.preventDefault(),t.stopPropagation();let i=n.dataset.helpLink;i&&mr(i);return}let r=e.closest(".help-icon")||e.closest("[data-help]");if(!r)return;t.preventDefault(),t.stopPropagation();let a=r.dataset.help;a&&mr(a)}))}function Lt(){let t=document.getElementById("app");t&&(t.innerHTML=zi()+Zi(),Gi())}function Re(){let t=document.querySelector(".pane-m1 .output");t&&(t.innerHTML=br());let e=document.querySelector('[data-lifeexp-for="in-dob"]');e&&(e.textContent=u.lastM1?`Verwachte sterfleeftijd: ${Xt(u.lastM1.lifeExp_x0,1)} jaar`:"");let n=document.querySelector('[data-lifeexp-for="in-dob-partner"]');n&&(n.textContent=u.lastM1&&u.lastM1.lifeExp_partner!==null?`Verwachte sterfleeftijd: ${Xt(u.lastM1.lifeExp_partner,1)} jaar`:"");let r=document.querySelector(".pane-m2 .m2-output");r&&u.lastM1&&u.lastM2&&u.parameters_m2.fondsvermogen!==null?r.innerHTML=mn(u.lastM1,u.lastM2,u.deelnemer.pen,u.invaarmethode):r&&u.lastM2Error&&(r.innerHTML=`<div class="error">Fout bij M2: ${W(u.lastM2Error)}</div>`);let a=document.querySelector(".rente-control label.slider-label-stand strong");a&&(a.textContent=at(u.parameters_m1.r));let i=document.querySelector('label[for="in-x0"] strong');i&&(i.textContent=u.deelnemer.x0+" jaar");let o=document.querySelector('label[for="in-pen"] strong');o&&(o.textContent="\u20AC "+Math.round(u.deelnemer.pen).toLocaleString("nl-NL"));let s=document.querySelector('label[for="in-x_partner"] strong');s&&(s.textContent=(u.deelnemer.x_partner??0)+" jaar");let d=document.querySelector('label[for="in-y0"] strong');d&&(d.textContent="\u20AC "+Math.round(u.deelnemer.y0??0).toLocaleString("nl-NL"));let l=document.querySelector('label[for="m2-dekkingsgraad"] strong');l&&(l.textContent=at(u.parameters_m2.dekkingsgraad,1));let c=document.querySelector('label[for="m2-vpvaftrekpct"] strong');c&&(c.textContent=(u.parameters_m2.vpvAftrekPct*100).toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%")}function Hi(){let t=document.querySelector(".partner-fields");t&&(u.deelnemer.heeftPartner?t.removeAttribute("hidden"):t.setAttribute("hidden",""))}function Ki(){document.querySelectorAll(".kpi-card").forEach(t=>{let e=t;e.classList.remove("flash"),e.offsetWidth,e.classList.add("flash")})}function Gi(){let t=typeof requestAnimationFrame<"u"?requestAnimationFrame:i=>setTimeout(()=>i(0),16);let e=null,n=()=>{e&&clearTimeout(e),e=setTimeout(()=>{e=null,de(),Re()},150)},r=()=>{e&&(clearTimeout(e),e=null),de(),Re(),Ki()};document.querySelectorAll("[data-field]").forEach(i=>{let o=s=>{let d=s.target,l=d.dataset.field,c=d instanceof HTMLInputElement&&d.type==="checkbox"?d.checked:d.value,p=c;if(typeof c=="string"&&d instanceof HTMLInputElement&&(d.type==="number"||d.type==="range")&&(p=c===""?null:Number(c)),(l==="hooglaagActief"||l==="heeftPartner")&&(d instanceof HTMLSelectElement||d instanceof HTMLInputElement&&d.type==="radio")&&(p=c==="true"),u.deelnemer[l]=p,l==="heeftPartner"){u.deelnemer.heeftPartner&&(u.deelnemer.y0===null&&(u.deelnemer.y0=Math.round(u.deelnemer.pen*.7/500)*500),u.deelnemer.x_partner===null&&(u.deelnemer.x_partner=65),u.deelnemer.dob_partner===null&&(u.deelnemer.dob_partner=hr(65,ne))),Hi(),de(),Lt();return}if(l==="hooglaagActief"){let m=document.querySelector(".hooglaag-fields");m&&(m.style.display=u.deelnemer.hooglaagActief?"":"none");let g=document.querySelector("[data-pen-label]");if(g&&(g.textContent=u.deelnemer.hooglaagActief?"Pensioen tot knip":"U krijgt zolang u leeft"),u.deelnemer.hooglaagActief){if(u.deelnemer.pen_laag===null){u.deelnemer.pen_laag=Math.round(u.deelnemer.pen*.8/500)*500;let k=document.getElementById("in-pen-laag");k&&(k.value=String(u.deelnemer.pen_laag));let v=document.querySelector('label[for="in-pen-laag"] strong');v&&(v.textContent="\u20AC "+Math.round(u.deelnemer.pen_laag).toLocaleString("nl-NL"))}if(u.deelnemer.dob_knip===null){let k=new Date(ne);k.setFullYear(k.getFullYear()+10),u.deelnemer.dob_knip=k.toISOString().slice(0,10);let v=document.getElementById("in-dob-knip");v&&(v.value=u.deelnemer.dob_knip)}}de(),Re();return}if(d instanceof HTMLSelectElement){de(),Re();return}if(d instanceof HTMLInputElement&&d.type==="radio"){de(),Re();return}if(d instanceof HTMLInputElement&&d.type==="date"){u.deelnemer[l]=c;let m=document.querySelector(`[data-age-for="${d.id}"]`);if(m)if(l==="dob_knip")if(String(c)<=ne)m.innerHTML='<span class="hooglaag-warn">Knip-datum ligt in het verleden \u2014 vul het bedrag dat u nu ontvangt in als pensioen en zet hoog-laag uit.</span>';else{let k=(Date.parse(String(c))-Date.parse(ne))/315576e5,v=u.deelnemer.x0+k,b=Math.floor(v),h=Math.floor((v-b)*12);m.textContent=`Leeftijd op knip: ${b} jaar${h?` ${h} mnd`:""}`}else{let g=kn(String(c),ne),k=Math.floor(g),v=Math.floor((g-k)*12);m.textContent=`Leeftijd: ${k} jaar${v?` ${v} mnd`:""}`}n();return}if(d instanceof HTMLInputElement&&d.type==="range"){let m=document.querySelector(`label[for="${d.id}"] strong`);m&&(l==="x0"?m.textContent=u.deelnemer.x0+" jaar":l==="pen"?m.textContent="\u20AC "+Math.round(u.deelnemer.pen).toLocaleString("nl-NL"):l==="x_partner"?m.textContent=(u.deelnemer.x_partner??0)+" jaar":l==="y0"?m.textContent="\u20AC "+Math.round(u.deelnemer.y0??0).toLocaleString("nl-NL"):l==="pen_laag"&&(m.textContent="\u20AC "+Math.round(u.deelnemer.pen_laag??0).toLocaleString("nl-NL")))}n()};i.addEventListener("input",o),i.addEventListener("change",o),i.addEventListener("keydown",s=>{let d=s;d.key==="Enter"&&(d.preventDefault(),r())}),i.addEventListener("blur",()=>{e&&r()})});let a=document.getElementById("in-r");if(a){let i=!1;a.addEventListener("input",()=>{u.parameters_m1={...u.parameters_m1,r:Number(a.value)/100},i||(i=!0,t(()=>{i=!1,de(),Re()}))})}document.querySelectorAll("[data-m2field]").forEach(i=>{let o=i,s=!1;o.addEventListener("input",()=>{let d=o.dataset.m2field;if(d==="invaarmethode"){u.invaarmethode=o.value==="alternatief"?"alternatief":"standaard",de(),Lt();return}u.parameters_m2=Un(u.parameters_m2,d,o.value),s||(s=!0,t(()=>{s=!1,de(),Re()}))})}),document.querySelectorAll("[data-co]").forEach(i=>{let o=i;o.addEventListener("input",()=>{let s=o.dataset.co,d=Number(o.value);if(Number.isFinite(d)){if(s==="fondsvermogen"||s==="bijstort"||s==="dekkingsgraad"){u.parameters_m2[s]=d;let l=u.parameters_m2.vpvTotal;l>0&&(s==="fondsvermogen"?u.parameters_m2.dekkingsgraad=d/l:s==="dekkingsgraad"&&(u.parameters_m2.fondsvermogen=d*l))}else if(s==="wettelijkeReservesPct"||s==="rdrBedrag"||s==="compensatiedepotBedrag")u.cascadeOverrides[s]=d;else return;de(),Lt()}})}),document.addEventListener("click",i=>{if(i.target?.id==="reset-cascade-btn"){u.parameters_m2.fondsvermogen=X.m2.fondsvermogen,u.parameters_m2.bijstort=X.m2.bijstort,u.parameters_m2.dekkingsgraad=X.m2.dekkingsgraad;let s=X.aanwendingsCascade;s&&(u.cascadeOverrides.wettelijkeReservesPct=s.wettelijkeReservesPct,u.cascadeOverrides.rdrBedrag=s.rdrBedrag,u.cascadeOverrides.compensatiedepotBedrag=s.compensatiedepotBedrag),de(),Lt()}})}var yt="3.0.168",Ui="16-05-2026";function Zi(){return`
     <footer class="site-footer">
       <p class="footer-contact">
         Vragen of opmerkingen: <a href="mailto:hans@invaarcalculator.nl">hans@invaarcalculator.nl</a>
