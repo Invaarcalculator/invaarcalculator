@@ -2024,19 +2024,34 @@
        (393px breed) — en zeker op de kleinere Android-norm 360px — werd de
        tweede cijferkolom afgekapt voor bedragen ≥ €100k (Hans-screenshot
        19 mei 2026 toonde "62.4..." voor het bruto-jaarbedrag bij €5.200
-       netto/maand). Oorzaak: cell-padding 10px 12px + font-size 16px (--num-m)
-       voor de cijfers × 3 kolommen passen niet op 360-393px.
+       netto/maand).
 
-       Drie aanpassingen samen:
-       1. Cell-padding terug van 10px/12px naar 6px/8px (bespaart 24px breedte
-          over de 3 kolommen).
-       2. Header white-space: normal toestaan zodat "netto per maand" mag
-          wrappen op 2 regels indien nodig (in plaats van afgekapt te worden).
-       3. Cijfer-kolommen behouden --num-m (16px) voor prominence — het is
-          het hoofdresultaat. Alleen labels-kolom krimpt naar --txt-m (13px).
+       v3.0.234: vervolg na een tweede Hans-screenshot (UPO-route, 23:16
+       19 mei 2026). De v3.0.233-fix loste het afkapping-probleem op voor
+       NU/NA-rijen (€100.000 / €118.458 passen), maar onder DG 135% gaf de
+       Verschil-rij "+ € 18.458" — die met "+ €"-prefix en spatie circa
+       2 tekens breder rendert dan de NU-cijfers — nog steeds een wrap-op-
+       twee-regels. Tegelijk had Hans een tweede, stilistische observatie:
+       de cap-labels (13px) en cijfers (16px) verschillen 5px in grootte,
+       wat onharmonisch oogt. En de grijze label-kolom met "PROCENTUEEL"
+       als breedste tekst nam circa 33% van de tabelbreedte in — uit
+       verhouding met de twee cijferkolommen.
 
-       Past comfortabel voor bedragen tot ~€500k op 360px-breed, ruim voldoende
-       voor SSPF-doelgroep. */
+       Drie verfijningen samen:
+       1. Cijferkolommen: --txt-xl (16px) → --txt-l (14px). "+ € 118.458"
+          past nu comfortabel in de beschikbare ruimte.
+       2. Cap-labels: --txt-l (14px) → --txt-s (12px). Gat met cijfers nu
+          2px in plaats van 5px — harmonischer, behoudt subtiele hiërarchie.
+       3. Label-kolom width: 28%. Cijferkolommen krijgen elk 36%. Browser
+          respecteert dit met de bestaande "box-sizing: border-box" reset;
+          "PROCENTUEEL" in 12px caps past met speling in de gereserveerde
+          ruimte.
+
+       Berekening op 393px viewport (iPhone 15 Pro portrait):
+         393 viewport − 24 body-pad − 32 pane-pad = 337px tabel
+         label-kol (28%) = 94px; cijfer-kol (36%) = 121px elk
+         na cell-padding (8+8): cijfer-content 105px
+         "+ € 118.458" in 14px tabular-nums ≈ 95px → past met 10px speling */
     .resultaat-tabel th,
     .resultaat-tabel td {
       padding: 6px 8px;
@@ -2045,8 +2060,13 @@
       white-space: normal;
       line-height: 1.25;
     }
-    .resultaat-tabel tbody th {
-      font-size: var(--txt-m);
+    .resultaat-tabel tbody th,
+    .resultaat-tabel thead th:first-child {
+      width: 28%;
+      font-size: var(--txt-s);
+    }
+    .resultaat-tabel tbody td {
+      font-size: var(--txt-l);
     }
   }
 
