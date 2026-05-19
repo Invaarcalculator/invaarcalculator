@@ -66,6 +66,7 @@
     color: var(--txt1);
     background: var(--bg);
     min-height: 100vh;
+    min-height: 100dvh; /* v3.0.232: dvh als progressive enhancement boven vh */
     padding: 24px 16px 48px;
     line-height: 1.45;
   }
@@ -88,12 +89,23 @@
      Implementatie: body = flex column op viewport-hoogte. Topline en
      footer (beide statische body-children, footer in HTML-template) zijn
      flex: 0 0 auto. Het middendeel #app krijgt flex: 1 1 auto +
-     overflow-y: auto en is dus de scroll-container. */
+     overflow-y: auto en is dus de scroll-container.
+
+     v3.0.232: 100vh upgegraded naar 100dvh (dynamic viewport height) met
+     vh-fallback. iOS Safari rekent 100vh als de "grote" viewport (zonder
+     URL-balk), waardoor de body op iPhone-portrait te hoog werd en de
+     footer onder de zichtbare URL-balk viel — gecombineerd met overflow:
+     hidden was de footer dan onbereikbaar. dvh schaalt mee met de URL-
+     balk. Werkt sinds iOS 15.4 (maart 2022); iOS-versies daarvoor vallen
+     terug op 100vh (gedrag identiek aan v3.0.231). Voor extra zekerheid
+     op smalle viewports: zie de mobile-override verderop. */
   body.variant-basic {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    height: 100dvh;
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 24px 16px 12px;
     overflow: hidden;
   }
@@ -1965,6 +1977,37 @@
     .kpi-breakdown { gap: 16px; }
     /* v3.0.91: kpi-value mobile-override (was 26px) verwijderd — token
        --num-l (28px) werkt cross-device. */
+
+    /* v3.0.232: basic-variant fixed-layout (zie body.variant-basic boven)
+       uitschakelen op smalle viewports. Op iPhone 15 Pro portrait (393×852
+       CSS-pt) blijft er na status-bar, Safari URL-balk en home-indicator
+       maar ~600pt effectieve hoogte over. Met topline (~50pt), footer
+       (~70pt) en de pane-inhoud paste het "net niet" en — door de
+       combinatie van height:100vh + overflow:hidden op body — was de
+       footer onbereikbaar (Hans-rapportage 19 mei 2026, iPhone 15 Pro).
+
+       Ook met de 100dvh-upgrade hierboven blijft de marge te krap op
+       smalle viewports, vooral als de URL-balk uit/inschuift. Veiligste
+       oplossing: val terug op de normale flowing layout (zoals expert).
+       Body-scroll werkt dan natuurlijk, footer komt onderaan, alle
+       inhoud is bereikbaar. Het "footer altijd zichtbaar"-effect uit
+       v3.0.179 is een desktop-luxe; op mobile is browser-scroll de
+       standaard- en verwachte UX. */
+    body.variant-basic {
+      display: block;
+      height: auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: visible;
+    }
+    body.variant-basic > #app {
+      overflow-y: visible;
+      min-height: 0;
+    }
+    body.variant-basic > .site-footer-mount {
+      margin-top: 24px;
+      padding-top: 12px;
+    }
   }
 
   /* ─── v3.0.41: Print-knop en print-rapport ───────────────────── */
