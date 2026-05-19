@@ -57,12 +57,29 @@
     --num-l: 28px;
     --num-m: 16px;
     --num-s: 12px;
+    /* v3.0.233: tekst-font-size tokens — 6-trap schaal voor alle tekst-
+       renderingen (niet-cijfers). Vervangt 10 verschillende ad-hoc sizes
+       (10/10.5/11/12/12.5/13/14/15/16/18) door één consistente schaal.
+       Pre-v3.0.233 stonden veel halve waardes (10.5px, 12.5px) en
+       1-pixel-stappen die typografisch "willekeurig" aanvoelden.
+         --txt-xs  : uppercase mini-labels (caps, letter-spaced)
+         --txt-s   : footer, captions, sub-label, disclaimer
+         --txt-m   : sub-tekst, pane-uitleg, mod-tag
+         --txt-l   : body-default, formulier-input
+         --txt-xl  : h2, kpi-tabel-getallen, primaire CTA-knop
+         --txt-2xl : h1 */
+    --txt-xs:  11px;
+    --txt-s:   12px;
+    --txt-m:   13px;
+    --txt-l:   14px;
+    --txt-xl:  16px;
+    --txt-2xl: 18px;
   }
 
   /* ─── Base ──────────────────────────────────────────────────── */
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 14px;
+    font-size: var(--txt-l);
     color: var(--txt1);
     background: var(--bg);
     min-height: 100vh;
@@ -77,7 +94,7 @@
   }
   body > .topline h1,
   body > h1 {
-    font-size: 18px;
+    font-size: var(--txt-2xl);
     font-weight: 600;
   }
   body > h1 { margin-bottom: 14px; }
@@ -149,19 +166,19 @@
   }
 
   h2 {
-    font-size: 15px;
+    font-size: var(--txt-xl);
     font-weight: 600;
     margin-bottom: 6px;
     color: var(--txt1);
   }
   h3 {
-    font-size: 13px;
+    font-size: var(--txt-m);
     font-weight: 600;
     color: var(--txt1);
     margin-top: 14px;
     margin-bottom: 8px;
   }
-  p { font-size: 13px; color: var(--txt2); line-height: 1.55; }
+  p { font-size: var(--txt-m); color: var(--txt2); line-height: 1.55; }
   a { color: var(--blue); }
 
   /* ─── View-toggle (zichtbaar wanneer audit unlocked) ────────── */
@@ -177,7 +194,7 @@
     background: var(--card);
     cursor: pointer;
     border-radius: var(--r8);
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt1);
   }
   .view-toggle button.active {
@@ -232,7 +249,7 @@
     margin-bottom: 8px;
   }
   .wizard-field label {
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt2);
     font-weight: 500;
   }
@@ -244,7 +261,7 @@
     width: 100%;
     box-sizing: border-box;
     padding: 0 12px;
-    font-size: 16px;
+    font-size: var(--txt-xl);
     font-family: inherit;
     border: 1px solid var(--bdr);
     border-radius: 4px;
@@ -262,7 +279,7 @@
      netto-route. Toont een "value" zonder echte input. */
   .wizard-field-readonly .readonly-waarde {
     padding: 0 12px;
-    font-size: 15px;
+    font-size: var(--txt-l);
     color: var(--txt1);
     background: rgba(0, 0, 0, 0.03);
     border: 1px solid var(--bdr);
@@ -278,7 +295,7 @@
     padding: 10px 12px;
     background: rgba(184, 110, 0, 0.06);
     border-left: 3px solid var(--amber);
-    font-size: 12px;
+    font-size: var(--txt-s);
     line-height: 1.45;
     color: var(--txt1);
   }
@@ -305,11 +322,11 @@
   .resultaat-tabel td {
     padding: 10px 12px;
     text-align: right;
-    font-size: 16px;
+    font-size: var(--txt-xl);
     vertical-align: middle;
   }
   .resultaat-tabel thead th {
-    font-size: 12px;
+    font-size: var(--txt-s);
     font-weight: 500;
     color: var(--txt2);
     text-transform: lowercase;
@@ -319,7 +336,7 @@
     text-align: left;
     font-weight: 500;
     color: var(--txt2);
-    font-size: 14px;
+    font-size: var(--txt-l);
   }
   .resultaat-tabel tbody td {
     color: var(--txt1);
@@ -388,7 +405,7 @@
   .pane-wizard .resultaat-subtitel {
     margin-top: -4px;
     margin-bottom: 14px;
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt2);
     line-height: 1.4;
   }
@@ -407,7 +424,7 @@
     align-items: center;
     gap: 10px;
     margin: 4px 0 12px 0;
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt2);
   }
   .pane-wizard .resultaat-dg-keuze label {
@@ -416,7 +433,7 @@
   }
   .pane-wizard .resultaat-dg-keuze select {
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt1);
     padding: 4px 8px;
     border: 1px solid var(--bdr);
@@ -432,22 +449,16 @@
      de subtitel, kleinere font. */
   .pane-wizard .resultaat-disclaimer {
     margin-top: 12px;
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     line-height: 1.4;
   }
-  .resultaat-bron {
-    margin-top: 12px !important;
-    font-size: 12px !important;
-    line-height: 1.45 !important;
-    color: var(--txt2) !important;
-  }
-  .resultaat-bron-netto {
-    padding: 8px 10px;
-    background: rgba(184, 110, 0, 0.06);
-    border-left: 3px solid var(--amber);
-    color: var(--txt1) !important;
-  }
+  /* v3.0.233: .resultaat-bron en .resultaat-bron-netto verwijderd — dode
+     CSS. Beide klassen werden nergens in src/ui.app.ts of build.calc.ts
+     toegekend; de !important-hacks erin (4 stuks) waren bovendien
+     typografisch onwenselijk. Bij toekomstige bron-toelichting onder
+     het resultaat: gebruik .resultaat-disclaimer of een nieuwe gerichte
+     klasse zonder !important. */
   .resultaat-leeg,
   .resultaat-fout {
     padding: 14px;
@@ -479,7 +490,7 @@
     border: 1px solid var(--green);
     border-radius: 4px;
     padding: 9px 18px;
-    font-size: 15px;
+    font-size: var(--txt-xl);
     font-weight: 500;
     cursor: pointer;
     font-family: inherit;
@@ -505,7 +516,7 @@
     width: 100%;
     box-sizing: border-box;
     padding: 0 12px;
-    font-size: 16px;
+    font-size: var(--txt-xl);
     font-family: inherit;
     border: 1px solid var(--bdr);
     border-radius: 4px;
@@ -591,7 +602,7 @@
   .triage-optie-subtitel {
     display: block;
     margin-top: 4px;
-    font-size: 13px;
+    font-size: var(--txt-m);
     font-weight: 400;
     color: var(--txt2);
     line-height: 1.4;
@@ -635,7 +646,7 @@
   .pane-collapsible > summary::before {
     content: "▸";
     display: inline-block;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     margin-right: 8px;
     transition: transform 0.15s ease;
@@ -654,7 +665,7 @@
   }
   .pane-m12 .m12-intro {
     color: var(--txt2);
-    font-size: 12px;
+    font-size: var(--txt-s);
     line-height: 1.4;
     margin: 0 0 12px 0;
   }
@@ -677,7 +688,7 @@
   .cascade-row .cascade-label {
     grid-column: 1;
     grid-row: 1;
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     text-transform: uppercase;
     letter-spacing: 0.4px;
@@ -751,7 +762,7 @@
   .afwijk-marker {
     display: inline-block;
     color: var(--amber);
-    font-size: 14px;
+    font-size: var(--txt-l);
     line-height: 1;
     margin: 0 4px;
     cursor: help;
@@ -760,7 +771,7 @@
     display: inline-block;
     background: var(--amber);
     color: white;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     line-height: 14px;
     padding: 2px 10px;
     border-radius: var(--r6);
@@ -782,7 +793,7 @@
     border: 1px solid var(--bdr);
     border-radius: var(--r6);
     font: inherit;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     line-height: 14px;
     padding: 2px 10px;
     margin-left: 8px;
@@ -814,7 +825,7 @@
     border-radius: var(--r8);
     cursor: pointer;
     background: var(--card);
-    font-size: 13px;
+    font-size: var(--txt-m);
     user-select: none;
   }
   .fonds-radio:hover { background: var(--surf); }
@@ -843,7 +854,7 @@
 
   .intro {
     color: var(--txt2);
-    font-size: 13px;
+    font-size: var(--txt-m);
     margin-bottom: 14px;
     line-height: 1.55;
   }
@@ -860,7 +871,7 @@
   }
   .field:last-child { border-bottom: none; }
   .field > label {
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     text-transform: uppercase;
     letter-spacing: 0.4px;
@@ -869,7 +880,7 @@
   .field input[type="text"],
   .field select {
     padding: 6px 10px;
-    font-size: 14px;
+    font-size: var(--txt-l);
     font-weight: 500;
     border: 1px solid var(--bdr2);
     border-radius: var(--r6);
@@ -903,7 +914,7 @@
     gap: 6px;
     cursor: pointer;
     user-select: none;
-    font-size: 13px;
+    font-size: var(--txt-m);
     font-weight: 500;
     color: var(--txt1);
   }
@@ -940,7 +951,7 @@
      het label-strong-paar + een kleine bron-regel. */
   .rente-vast .rente-bron {
     margin-top: 4px;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     line-height: 1.4;
   }
@@ -957,7 +968,7 @@
   }
   .pen-input-hint {
     margin-top: 4px;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     line-height: 1.4;
   }
@@ -1012,14 +1023,14 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     text-transform: uppercase;
     letter-spacing: 0.4px;
     margin-bottom: 2px;
   }
   .slider-label-stand strong {
-    font-size: 18px;
+    font-size: var(--txt-2xl);
     font-weight: 600;
     color: var(--txt1);
     letter-spacing: 0;
@@ -1044,7 +1055,7 @@
     margin-bottom: 8px;
   }
   .hooglaag-toggle .hooglaag-label {
-    font-size: 11px;
+    font-size: var(--txt-xs);
     text-transform: uppercase;
     letter-spacing: 0.4px;
     color: var(--txt2);
@@ -1052,10 +1063,10 @@
   .hooglaag-toggle .radio-pair {
     display: inline-flex;
     gap: 12px;
-    font-size: 13px;
+    font-size: var(--txt-m);
   }
   .hooglaag-toggle .radio-pair label {
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt1);
     cursor: pointer;
   }
@@ -1067,7 +1078,7 @@
   .hooglaag-warn {
     display: inline-block;
     color: var(--red);
-    font-size: 12px;
+    font-size: var(--txt-s);
     line-height: 1.4;
   }
   .pane-m1 .slider-label-stand strong { color: var(--green); }
@@ -1089,7 +1100,7 @@
   }
   .slider-label-stand .dob-input {
     font-family: inherit;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt1);
     letter-spacing: 0;
     text-transform: none;
@@ -1129,7 +1140,7 @@
      date-picker; date-picker bevat meer karakters en mag breder lezen. */
   .dropdown-pill {
     font-family: inherit;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt1);
     letter-spacing: 0;
     text-transform: none;
@@ -1158,7 +1169,7 @@
      (txt2), niet rood-thema, zodat het als afgeleide info leest. */
   .age-caption {
     margin-top: 4px;
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     line-height: 1.3;
   }
@@ -1168,7 +1179,7 @@
      één blok afgeleide info vormt met de leeftijd. */
   .lifeexp-caption {
     margin-top: 2px;
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     line-height: 1.3;
     min-height: 1.3em;
@@ -1191,12 +1202,12 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    font-size: 13px;
+    font-size: var(--txt-m);
   }
   .field-inline-radio .inline-radio-label {
     color: var(--txt2);
     text-transform: uppercase;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     letter-spacing: 0.4px;
   }
 
@@ -1214,7 +1225,7 @@
   .slider-markers {
     display: flex;
     justify-content: space-between;
-    font-size: 10px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     margin-top: 4px;
     padding: 0 2px;
@@ -1224,7 +1235,7 @@
   .slider-markers .marker-max { text-align: right; flex: 1; }
 
   .slider-help {
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     margin-top: 6px;
     line-height: 1.5;
@@ -1241,7 +1252,7 @@
     border: 0.5px solid var(--bdr2);
     background: var(--card);
     color: var(--txt2);
-    font-size: 10px;
+    font-size: var(--txt-xs);
     font-weight: 600;
     cursor: pointer;
     margin-left: 6px;
@@ -1300,7 +1311,7 @@
 
   /* sensitivity-grafiek inhoud */
   .sens-desc {
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     margin: 0 0 18px 0;
     line-height: 1.5;
@@ -1316,7 +1327,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 12px 18px;
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     padding: 12px 0 0 0;
     border-top: 0.5px solid var(--bdr);
@@ -1349,7 +1360,7 @@
   .sens-summary-row {
     display: flex;
     justify-content: space-between;
-    font-size: 13px;
+    font-size: var(--txt-m);
     padding: 3px 0;
   }
   .sens-summary-label { color: var(--txt2); }
@@ -1358,7 +1369,7 @@
     color: var(--blue);
   }
   .sens-meta-note {
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     margin: 16px 0 0 0;
     padding-top: 10px;
@@ -1383,14 +1394,14 @@
     color: var(--txt1);
   }
   .help-modal-title {
-    font-size: 16px;
+    font-size: var(--txt-xl);
     font-weight: 600;
     margin: 0 30px 12px 0;
     color: var(--txt1);
     line-height: 1.3;
   }
   .help-modal-current {
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt2);
     background: var(--surf);
     padding: 8px 12px;
@@ -1399,7 +1410,7 @@
     line-height: 1.5;
   }
   .help-modal-section-h {
-    font-size: 11px;
+    font-size: var(--txt-xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.4px;
@@ -1408,7 +1419,7 @@
   }
   .help-modal-section-h:first-child { margin-top: 0; }
   .help-modal-section-body {
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt1);
     line-height: 1.45;
     margin: 0;
@@ -1418,12 +1429,12 @@
     width: 100%;
     border-collapse: collapse;
     margin: 8px 0 4px;
-    font-size: 12.5px;
+    font-size: var(--txt-s);
   }
   .help-modal-params thead th {
     text-align: left;
     font-weight: 600;
-    font-size: 10.5px;
+    font-size: var(--txt-xs);
     text-transform: uppercase;
     letter-spacing: 0.4px;
     color: var(--txt2);
@@ -1454,7 +1465,7 @@
     width: 100%;
     border-collapse: collapse;
     margin: 8px 0 4px;
-    font-size: 12.5px;
+    font-size: var(--txt-s);
   }
   .help-modal-cascade tbody td {
     padding: 5px 8px 5px 0;
@@ -1475,7 +1486,7 @@
     font-weight: 500;
   }
   .help-modal-cascade .casc-note {
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     line-height: 1.4;
     margin-top: 2px;
@@ -1523,7 +1534,7 @@
     transition: background 0.3s ease;
   }
   .kpi-label {
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     text-transform: uppercase;
     letter-spacing: 0.4px;
@@ -1558,7 +1569,7 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 12px;
-    font-size: 14px;
+    font-size: var(--txt-l);
   }
   .kpi-formula-row .kpi-formula-label {
     color: var(--txt2);
@@ -1613,7 +1624,7 @@
     border: 0.5px solid var(--bdr);
   }
   .kpi-breakdown {
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     margin-top: 12px;
     padding-top: 10px;
@@ -1622,7 +1633,7 @@
     gap: 28px;
   }
   .kpi-sub-label {
-    font-size: 10px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     text-transform: uppercase;
     letter-spacing: 0.4px;
@@ -1673,7 +1684,7 @@
 
   /* ─── Audit-pane content ────────────────────────────────────── */
   .meta-note {
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
     margin-top: 12px;
     padding-top: 8px;
@@ -1683,7 +1694,7 @@
     border-collapse: collapse;
     width: 100%;
     margin-top: 6px;
-    font-size: 12px;
+    font-size: var(--txt-s);
   }
   th, td {
     border-bottom: 0.5px solid var(--bdr);
@@ -1694,7 +1705,7 @@
   th {
     background: var(--surf);
     font-weight: 600;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     text-transform: uppercase;
     letter-spacing: 0.4px;
     color: var(--txt2);
@@ -1729,7 +1740,7 @@
   .modtag-m2 { background: rgba(212,0,26,0.10); color: var(--red); }
   .specref {
     font-family: monospace;
-    font-size: 11px;
+    font-size: var(--txt-xs);
     color: var(--txt2);
   }
   code {
@@ -1737,16 +1748,16 @@
     background: var(--surf);
     padding: 1px 5px;
     border-radius: 3px;
-    font-size: 12px;
+    font-size: var(--txt-s);
   }
   .info {
     cursor: help;
     color: var(--amber);
-    font-size: 12px;
+    font-size: var(--txt-s);
     margin-left: 4px;
   }
   .disclosure-list {
-    font-size: 12px;
+    font-size: var(--txt-s);
     padding-left: 16px;
     line-height: 1.55;
   }
@@ -1756,7 +1767,7 @@
     color: var(--red);
     padding: 10px 12px;
     border-radius: var(--r6);
-    font-size: 13px;
+    font-size: var(--txt-m);
   }
 
   /* ─── Topline (h1 + ?-knop) ──────────────────────────────────── */
@@ -1786,7 +1797,7 @@
   }
   .topline-subtitle {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt2);
     font-weight: 400;
     line-height: 1.3;
@@ -1795,7 +1806,7 @@
      en in txt1, want het is identificerend, geen subtitle-context. */
   .topline-fondsnaam {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--txt-m);
     color: var(--txt1);
     font-weight: 500;
     line-height: 1.3;
@@ -1824,7 +1835,7 @@
     color: var(--txt1);
     border-radius: var(--r6);
     cursor: pointer;
-    font-size: 12px;
+    font-size: var(--txt-s);
     font-weight: 500;
     user-select: none;
   }
@@ -1847,7 +1858,7 @@
     width: 100%;
     border-collapse: collapse;
     margin: 12px 0;
-    font-size: 12px;
+    font-size: var(--txt-s);
   }
   .help-modal-simpletable th,
   .help-modal-simpletable td {
@@ -1878,7 +1889,7 @@
     padding: 6px 14px;
     border-radius: var(--r6);
     cursor: pointer;
-    font-size: 13px;
+    font-size: var(--txt-m);
     font-weight: 500;
   }
   .help-modal-link-btn:hover {
@@ -1892,7 +1903,7 @@
     margin-top: 28px;
     padding-top: 14px;
     border-top: 0.5px dashed var(--bdr);
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     max-width: 960px;
     margin-left: auto;
@@ -1915,7 +1926,7 @@
     padding: 6px 10px;
     border: 1px solid var(--bdr2);
     border-radius: var(--r6);
-    font-size: 13px;
+    font-size: var(--txt-m);
     flex: 1;
     min-width: 160px;
     font-family: inherit;
@@ -1927,7 +1938,7 @@
     border: none;
     border-radius: var(--r6);
     cursor: pointer;
-    font-size: 12px;
+    font-size: var(--txt-s);
     font-weight: 500;
   }
   .audit-unlock-form button:hover { background: #000; }
@@ -1938,14 +1949,14 @@
   .site-footer {
     margin-top: 32px;
     padding-top: 16px;
-    font-size: 12px;
+    font-size: var(--txt-s);
     color: var(--txt2);
     text-align: center;
     line-height: 1.6;
   }
-  .site-footer p { margin: 3px 0; font-size: 12px; color: var(--txt2); }
+  .site-footer p { margin: 3px 0; font-size: var(--txt-s); color: var(--txt2); }
   .site-footer .footer-disclaimer { color: var(--txt1); }
-  .site-footer .footer-meta { color: var(--txt2); font-size: 11px; }
+  .site-footer .footer-meta { color: var(--txt2); font-size: var(--txt-xs); }
 
   /* ─── KPI-flash (subtiele animatie bij Enter-bevestig) ──────── */
   .kpi-card.flash { animation: kpi-flash 0.45s ease-out; }
@@ -1965,7 +1976,7 @@
   @media (max-width: 640px) {
     body { padding: 16px 12px 40px; }
     body > .topline h1,
-    body > h1 { font-size: 16px; }
+    body > h1 { font-size: var(--txt-xl); }
     .pane { padding: 14px 16px; }
     .field {
       grid-template-columns: 1fr;
@@ -2008,6 +2019,35 @@
       margin-top: 24px;
       padding-top: 12px;
     }
+
+    /* v3.0.233: resultaat-tabel mobile-override. Op iPhone 15 Pro portrait
+       (393px breed) — en zeker op de kleinere Android-norm 360px — werd de
+       tweede cijferkolom afgekapt voor bedragen ≥ €100k (Hans-screenshot
+       19 mei 2026 toonde "62.4..." voor het bruto-jaarbedrag bij €5.200
+       netto/maand). Oorzaak: cell-padding 10px 12px + font-size 16px (--num-m)
+       voor de cijfers × 3 kolommen passen niet op 360-393px.
+
+       Drie aanpassingen samen:
+       1. Cell-padding terug van 10px/12px naar 6px/8px (bespaart 24px breedte
+          over de 3 kolommen).
+       2. Header white-space: normal toestaan zodat "netto per maand" mag
+          wrappen op 2 regels indien nodig (in plaats van afgekapt te worden).
+       3. Cijfer-kolommen behouden --num-m (16px) voor prominence — het is
+          het hoofdresultaat. Alleen labels-kolom krimpt naar --txt-m (13px).
+
+       Past comfortabel voor bedragen tot ~€500k op 360px-breed, ruim voldoende
+       voor SSPF-doelgroep. */
+    .resultaat-tabel th,
+    .resultaat-tabel td {
+      padding: 6px 8px;
+    }
+    .resultaat-tabel thead th {
+      white-space: normal;
+      line-height: 1.25;
+    }
+    .resultaat-tabel tbody th {
+      font-size: var(--txt-m);
+    }
   }
 
   /* ─── v3.0.41: Print-knop en print-rapport ───────────────────── */
@@ -2042,7 +2082,7 @@
        zodat alle action-btn's in beide panes dezelfde afmetingen hebben. */
     padding: 6px 10px;
     min-width: 13em;
-    font-size: 13px;
+    font-size: var(--txt-m);
     font-weight: 500;
     cursor: pointer;
     font-family: inherit;
@@ -2077,7 +2117,7 @@
   </div>
 </div>
 
-<div id="js-error-display" style="display:none;background:#fee;border:1px solid #c00;color:#900;padding:12px;border-radius:8px;margin:12px 0;font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;"></div>
+<div id="js-error-display" style="display:none;background:#fee;border:1px solid #c00;color:#900;padding:12px;border-radius:8px;margin:12px 0;font-family:monospace;font-size:var(--txt-s);white-space:pre-wrap;line-height:1.5;"></div>
 
 <div id="app"></div>
 
@@ -2536,7 +2576,7 @@
       14 april 2026. Indicatief denkkader; aan de cijfers kunnen geen
       rechten worden ontleend.
     </p>
-  `}var _i=({state:t})=>({title:"Uw geboortedatum",currentValue:`Uw huidige stand: ${t.deelnemer.x0} jaar`,sections:[{heading:"WAT VULT U IN?",body:"Vul uw geboortedatum in. Uw leeftijd wordt hieruit afgeleid en gebruikt in de berekening."}]}),ji=({state:t})=>({title:"Uw pensioen",currentValue:`Uw huidige stand: \u20AC ${Math.round(t.deelnemer.pen).toLocaleString("nl-NL")} per jaar`,sections:[{heading:"WAAR VINDT U DIT OP UW UPO?",body:'Bij SSPF onder de vraag "Hoeveel pensioen krijgt u?". Daar staat: "U krijgt vanaf [datum] zolang u leeft \u20AC \u2026 bruto per jaar". Dat bedrag vult u hier in.'}]}),Mi=({state:t})=>({title:"Geboortedatum partner",currentValue:`Uw huidige stand: ${t.deelnemer.x_partner??0} jaar`,sections:[{heading:"WAT VULT U IN?",body:"Vul de geboortedatum van uw partner in. De leeftijd van uw partner wordt hieruit afgeleid."}]}),Si=({state:t})=>({title:"Partnerpensioen na uw overlijden",currentValue:`Uw huidige stand: \u20AC ${Math.round(t.deelnemer.y0??0).toLocaleString("nl-NL")} per jaar`,sections:[{heading:"WAAR VINDT U DIT OP UW UPO?",body:'Bij SSPF onder de vraag "Wat krijgen uw eventuele partner en eventuele kinderen als u overlijdt?". Daar staat: "Als u overlijdt, krijgt uw partner van ons: vanaf uw overlijden zolang hij/zij leeft \u20AC \u2026 bruto per jaar". Dat bedrag vult u hier in.'}]}),va={x0:_i,pen:ji,x_partner:Mi,y0:Si};var Ti=({state:t,pct:e})=>({title:"Rekenrente",currentValue:`Uw huidige stand: ${e(t.parameters_m1.r)}`,sections:[{heading:"WAT DOET DE REKENRENTE?",body:"De rekenrente bepaalt hoe toekomstige pensioenuitkeringen worden teruggerekend naar een waarde van vandaag. Bij een hogere rekenrente wordt de huidige waarde van uw aanspraak lager: \xE9\xE9n euro pensioen volgend jaar wordt dan met een grotere korting teruggerekend. Bij een lagere rekenrente is uw aanspraak vandaag meer waard."},{heading:"WAT KUNT U INSTELLEN?",body:"Verschuif de slider om een rekenrente te kiezen tussen 0% en 5%."}]}),Ei=({state:t,pct:e})=>({title:"Dekkingsgraad",currentValue:`Uw huidige stand: ${e(t.parameters_m2.dekkingsgraad,1)}`,sections:[{heading:"WAT KUNT U INSTELLEN?",body:"Verschuif de slider om een dekkingsgraad te kiezen tussen 100% en 170%."}]}),Pi=()=>({title:"Aftrek voor reserveringen",sections:[{heading:"VERVANGEN DOOR M1/2-PANE",body:'De aftrek-componenten staan nu zichtbaar in de cascade-tabel "Wat is er te verdelen?". Schuif daar de drie componenten (operationele reserve, risicodelingsreserve, compensatiedepot) om hun effect op uw persoonlijk pensioenvermogen te zien.'}]}),$i=({state:t})=>({title:"Spreidingstermijn",currentValue:`Uw huidige stand: ${t.parameters_m2.spreidingN>=1e3?"oneindig (levenslang)":t.parameters_m2.spreidingN+" jaar"}`,sections:[{heading:"WAT DOET DE SPREIDINGSTERMIJN?",body:"De spreidingstermijn N is een parameter binnen de wettelijke standaardregel (Bijlage 2a Regeling Pensioenwet). Hij bepaalt het cohort-gewicht in de verdeling van het verdeelbare overschot: voor een kasstroom op looptijd h binnen N geldt q(h,N) = h/N; voor h \u2265 N geldt q = 1. De wettelijke default is 10 jaar."},{heading:"WAT IS HET MATERI\xCBLE EFFECT?",body:"Onder N = 10 worden alle deelnemers met meer dan 10 jaar uitkeringshorizon op gelijk gewicht (q = 1) gezet. Onder N \u2192 \u221E groeit q lineair met de horizon, waardoor lange-horizon-jaren naar verhouding meer wegen. Resultaat: levenslange spreiding verschuift het verdelingszwaartepunt naar jongeren, ten koste van gepensioneerden. SSPF heeft in het implementatieplan gekozen voor levenslange spreiding, in afwijking van de wettelijke default van 10 jaar."},{heading:"ONDER ALTERNATIEVE METHODE: GEEN KPI-EFFECT",body:"Onder de alternatieve invaarmethode heeft de spreidingstermijn geen effect op het persoonlijk pensioenvermogen \u2014 die methode kent geen spreidings-parameter. Uw keuze blijft wel bewaard en wordt direct actief zodra u terugschakelt naar Standaardregel."},{heading:"WAT KUNT U INSTELLEN?",body:"Kies tussen 10 jaar (wettelijke default) of Oneindig (SSPF-keuze)."}]}),Ai=({state:t})=>({title:"Invaarmethode",currentValue:`Uw huidige keuze: ${t.invaarmethode==="alternatief"?"Alternatieve methode":"Standaardregel"}`,sections:[{heading:"STANDAARDREGEL (SSPF-KEUZE)",body:"Het SSPF-implementatieplan is helder: invaren gebeurt via de wettelijke standaardregel (Bijlage 2a Regeling Pensioenwet) met levenslange spreiding. Het verdeelbare overschot wordt via een cohort-staircase met spreidings-parameter N verdeeld \u2014 zie de help bij de spreidingstermijn-keuze."},{heading:"ALTERNATIEVE METHODE",body:"In het Ortec Uitgangspuntendocument Transitierapportage SSPF/SNPS (versie 2024.1, \xA76) staat een andere verdeelmethode beschreven: elke deelnemer krijgt zijn nominale aanspraak terug, plus een aandeel x% van de toekomstige inflatie-claim (x = fonds-buffer / totale indexatie-claim van het fonds). Wij hebben deze methode in de calculator opgenomen ter vergelijking."},{heading:"WAT IS HET VERSCHIL IN UITKOMST?",body:"Beide methoden verdelen exact dezelfde fonds-buffer; alleen de wegingsfactor per individu verschilt. Voor het UI-default-scenario (70M, \u20AC100.000 pensioen, geen partner): Standaardregel + levenslange spreiding geeft een aandeel van \u20AC270k (+19,6% van KV); de alternatieve methode \u20AC433k (+31,5%). De alternatieve methode is voor gepensioneerden gunstiger; voor jonge actieven omgekeerd. U kunt de scenario's naast elkaar zien door deze dropdown en de spreidingstermijn-dropdown te combineren."},{heading:"BEPERKINGEN BIJ DE ALTERNATIEVE METHODE",body:'Onze implementatie is een deterministische proxy: we benaderen de risiconeutrale optimalisatie op "gelijk delta netto profijt" door de eenvoudige formule "nominale aanspraak + x% \xD7 inflatie-CW". De volledige methode heeft daarnaast een 2/3-scenario-correctie voor individuele uitschieters, die een stochastische scenario-set vereist die wij niet hebben. Het fonds-totaal klopt; individuele uitkomsten kunnen iets afwijken.'}]}),Di=()=>({title:"Alternatieve invaarmethode (SSPF/Ortec)",sections:[{heading:"WAT IS DE ALTERNATIEVE METHODE?",body:"De wettelijke standaardregel (Bijlage 2a Regeling Pensioenwet) verdeelt het overschot via een cohort-staircase (q-spreiding over de spreidingstermijn). SSPF gebruikt in de Ortec-transitierapportages een andere methode: iedereen krijgt zijn nominale aanspraak mee, plus een aandeel x% van de toekomstige inflatieverwachting (waarbij x = buffer / totale indexatie-claim van het fonds; x kan groter zijn dan 100% als de buffer groter is dan de geprijsde indexatie-ambitie). Bron: Ortec Finance Uitgangspuntendocument Transitierapportage SSPF/SNPS versie 2024.1 (26 mei 2024), \xA76."},{heading:"BEPERKINGEN",body:'Onze implementatie is een deterministische proxy van de Ortec-methode: we benaderen de risiconeutrale optimalisatie op "gelijk delta netto profijt" door de eenvoudige formule "nominale aanspraak + x% \xD7 inflatie-CW". De volledige Ortec-methode heeft daarnaast een 2/3-scenario-correctie voor individuele uitschieters; daarvoor is een stochastische scenario-set nodig die wij niet hebben.'}]}),Ni=({state:t,pct:e})=>{let n=t.parameters_m2.alternatieveInvaarmethode?.piDefault??.02;return{title:"Verwachte prijsinflatie",currentValue:`Uw huidige stand: ${e(n,1)}`,sections:[{heading:"WAT IS DEZE AANNAME?",body:"De verwachte prijsinflatie is de aanname over hoeveel de prijzen jaarlijks zullen stijgen op de lange termijn. De default 2% sluit aan bij de ECB-/DNB-doelinflatie en is consistent met Ortec's eigen aanname in het Uitgangspuntendocument."},{heading:"WAAR WORDT HET VOOR GEBRUIKT?",body:'Deze aanname speelt twee rollen tegelijk. Ten eerste: in de Ortec-formule wordt uw "indexatie-CW" berekend als de contante waarde van het pensioen-met-\u03C0-indexatie, en de fonds-buffer wordt over deze indexatie-claims verdeeld. Dat effect op uw persoonlijk pensioenvermogen is gering, omdat \u03C0 zowel in de teller (uw eigen claim) als de noemer (fonds-totale claim) staat. Ten tweede: in de grafiek "Hoe verhoudt de verhoging zich tot indexatie over de tijd?" wordt dezelfde \u03C0 gebruikt als groeivoet voor de groene lijn \u2014 de hypothetische situatie waarin u in het oude regime was gebleven met \u03C0% prijsindexatie per jaar. Daar heeft de slider w\xE9l direct visueel effect: een hogere \u03C0 laat de groene lijn steiler groeien.'},{heading:"WAT KUNT U INSTELLEN?",body:"Schuif tussen 0,5% en 4,0% inflatie-verwachting. Onder 0,5% wordt de methode numeriek instabiel."}]}},ha={r:Ti,dekkingsgraad:Ei,vpvAftrekPct:Pi,spreidingN:$i,invaarmethode:Ai,alternatieveInvaarmethode:Di,piAlternatief:Ni};var Ri=({state:t})=>({title:"Transitiebijdrage werkgever",currentValue:`Uw huidige stand: \u20AC ${t.parameters_m2.bijstort.toLocaleString("nl-NL")} mln`,sections:[{heading:"WAT IS DIT?",body:"De transitiebijdrage is een eenmalige storting van de werkgever bij invaren, als compensatie voor het vervallen van de sponsorgarantie. Dit bedrag verhoogt het fondsvermogen v\xF3\xF3r de aftrek voor reserves en compensatie, en werkt daarmee door in het verdeelbaar overschot."},{heading:"HOE HOOG IS HET BEDRAG?",body:"Volgens het SSPF-implementatieplan van 15-07-2025 hangt het bedrag af van de dekkingsgraad op het invaarmoment: bij DG \u2265 135% \u20AC 500 mln, bij DG 130\u2013135% \u20AC 650 mln, bij DG 125\u2013130% \u20AC 850 mln. Hoe lager de dekkingsgraad, hoe hoger de transitiebijdrage \u2014 de werkgever vult meer aan als het fonds er minder ruim voor staat."},{heading:"LET OP",body:"Deze calculator past het bedrag niet automatisch aan wanneer u de dekkingsgraad-slider verschuift. De standaardwaarde \u20AC 500 mln hoort bij de huidige SSPF-DG (\u2265 135%). Schuif desgewenst de transitiebijdrage-slider handmatig naar het bedrag dat bij de door u gekozen DG hoort."}]}),zi=()=>({title:"Per jaar pensioen levenslang",sections:[{heading:"WAT BETEKENT DIT BEDRAG?",body:"Het bedrag is een rekenwiskunde-omrekening: uw aandeel verdeelbaar overschot, vertaald naar een jaarlijkse uitkering op basis van uw verwachte levensduur (volgens AG2024-sterftekansen) en de huidige rekenrente. Het is een wiskundig equivalent, geen toezegging."},{heading:"EN ALS U EEN PARTNER HEEFT?",body:"Het persoonlijk pensioenvermogen wordt na uw overlijden gebruikt om partnerpensioen te financieren. Bij de omrekening wordt die verplichting meegenomen: hetzelfde vermogen moet zowel uw OP-uitkering dragen zolang u leeft, als het PP-uitkering aan uw partner n\xE1 uw overlijden. Daardoor ligt het jaarbedrag lager dan zonder partner \u2014 dit is geen verlies maar de reservering voor uw partner."},{heading:"WAT GEBEURT ER MET HET PARTNERPENSIOEN BIJ INVAREN?",body:"Bij invaren wordt het persoonlijk pensioenvermogen via de standaardregel (Bijlage 2a Regeling Pensioenwet) verhoogd of verlaagd ten opzichte van uw huidige aanspraak. SSPF kiest in zijn implementatieplan voor een levenslange spreiding van het verdeelbare overschot. Het gevolg: een verhoging van het persoonlijk vermogen werkt proportioneel door op zowel uw ouderdomspensioen als het partnerpensioen voor uw partner n\xE1 uw overlijden. Bij bijvoorbeeld een verhoging van 30% groeit zowel uw OP-uitkering als de aanspraak op partnerpensioen voor uw partner met circa 30%. Onder de wettelijke standaardspreiding van 10 jaar zou deze proportionaliteit niet exact gelden; de keuze van SSPF voor levenslange spreiding is dus bepalend."},{heading:'WAT BETEKENT "LEVENSLANG"?',body:"Levenslang is geen vaste sterfdatum, maar een statistische verwachting. Als u langer leeft dan gemiddeld, krijgt u dit bedrag toch elk jaar \u2014 dat wordt collectief gefinancierd door deelnemers die korter leven. Als u eerder overlijdt, stopt de uitkering bij overlijden (tenzij er een partner-pensioen is)."},{heading:"GEEN RECHTEN TE ONTLENEN",body:"De daadwerkelijke jaarlijkse uitkering in het nieuwe pensioenstelsel hangt af van fonds-rendementen, rentestand, indexatie en fondsbeleidsbeslissingen. Aan dit bedrag kunnen geen rechten worden ontleend."}]}),Oi=()=>({title:"Hoog-laag-uitkering",sections:[{heading:"WAT VULT U IN?",body:'Bij "Pensioen tot knip" vult u het hoge bedrag in dat u nu nog ontvangt. Bij "Pensioen na knip" het bedrag dat u na de overstap krijgt. Bij "Datum waarop pensioen wijzigt" de datum die op uw UPO staat. Als die datum al voorbij is, zet de toggle uit en vul alleen het lage bedrag in als pensioen.'}]}),ba={bijstort:Ri,jaarequivalent:zi,hooglaag:Oi};var Vi=()=>({title:"Privacy",sections:[{heading:"GEEN INVOER VERLAAT UW BROWSER",body:"Deze tool werkt volledig lokaal in uw browser. Uw invoer (leeftijd, jaarpensioen, partnergegevens, en alle andere parameters die u aanpast) wordt niet verstuurd naar een server, niet opgeslagen, niet gedeeld met derden, en niet gebruikt voor analyse of profilering. De berekeningen vinden plaats in JavaScript-code die met de webpagina is meegestuurd; sluiten van het tabblad of de browser wist alle gegevens."},{heading:"GEEN COOKIES, GEEN TRACKING",body:"De tool plaatst geen cookies, gebruikt geen webanalyse, en bevat geen externe tracking-scripts."},{heading:"HOSTING VIA GITHUB PAGES",body:"Deze tool wordt gehost via GitHub Pages (een dienst van GitHub, Inc., onderdeel van Microsoft). Bij het ophalen van de pagina door uw browser legt GitHub standaard HTTP-server-gegevens vast \u2014 IP-adres, gebruikte browser, tijdstip van bezoek, opgevraagde bestanden \u2014 voor beveiligings- en infrastructuurdoeleinden. Dit gebeurt buiten invloed van de auteur. Voor het privacy-beleid van GitHub: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement."}]}),Li=()=>({title:"Uitleg",sections:[{heading:"",body:"De Wet toekomst pensioenen (Wtp) hervormt het Nederlandse pensioenstelsel. Uw huidige pensioenrecht wordt omgezet naar een persoonlijk pensioenvermogen op uw naam, dat na invaren meebeweegt met de beleggingsresultaten van uw fonds."},{heading:"VOOR WIE IS DEZE REKENTOOL?",body:`Voor wie ${q.shortLabel??""}-pensioen ontvangt na de AOW-leeftijd. Wie nog werkt, vervroegd pensioen tot de AOW heeft, of een aanspraak heeft die nog niet uitkeert, valt buiten deze berekening.`},{heading:"WAT BEREKENT DEZE REKENTOOL?",body:"De rekentool laat zien wat invaren voor u zou betekenen op het invaarmoment zelf. U ziet twee bedragen: uw huidige pensioenaanspraak (de waarde vandaag van uw lopende pensioen) en uw persoonlijk pensioenvermogen na invaren (wat hiervan aan u zou worden toebedeeld volgens de wettelijke standaardregel). Hoe uw jaarlijkse uitkering zich na invaren ontwikkelt, zit nog niet in deze versie."},{heading:"WAT KUNT U HIER DOEN?",body:"U vult uw gegevens uit het Uniform Pensioenoverzicht (UPO) in: leeftijd, geslacht, bruto jaarpensioen en eventueel partnergegevens. Heeft u nu een hoog-laag-uitkering \u2014 een tijdelijk hoger pensioen tot een afgesproken knip-datum, daarna een lager bedrag levenslang \u2014 vul dan ook het lage bedrag en de knip-datum in. De fondsparameters staan al op de actuele waarden, dus na invoer van uw UPO-gegevens bent u meteen klaar. Wilt u onderzoeken hoe gevoelig uw uitkomst is voor verschillende aannames, dan verschuift u de fondsparameters via de sliders om bijvoorbeeld een andere dekkingsgraad te beproeven. Een Reset-knop verschijnt zodra u afwijkt van de fonds-uitgangswaarden."}]}),Ii=({releaseVersion:t})=>({title:`Verantwoording bij de Invaarcalculator (versie ${t})`,sections:[{heading:"1. WAT IS DEZE TOOL EN WAT IS HET NIET?",body:"Deze Invaarcalculator is een onafhankelijk, niet door Stichting Shell Pensioenfonds (SSPF) erkend of gevalideerd reken-instrument dat poogt de orde van grootte zichtbaar te maken van de invaareffecten voor een SSPF-deelnemer onder de Wet toekomst pensioenen (Wtp). De tool implementeert de wettelijke standaardregel (Bijlage 2a Regeling Pensioenwet) op basis van uitsluitend publiek beschikbare bronnen en redelijke aannames waar publieke informatie ontbreekt. De uitkomsten zijn per definitie niet identiek aan wat SSPF voor u individueel berekent. SSPF beschikt over niet-publieke gegevens (uw werkelijke aanspraak in de pensioenadministratie, fondsspecifieke uitvoeringskeuzes uit de actuari\xEBle en bedrijfstechnische nota (ABTN), de definitieve dekkingsgraad op invaardatum, de exacte populatiesamenstelling, eventuele afwijkingen van de standaardregel die in het transitieplan zijn vastgelegd) waar deze tool geen toegang toe heeft. Aan de uitkomsten kunnen geen rechten worden ontleend. Voor uw werkelijke invaarpositie zijn alleen de transitiebrief en de definitieve berekening van SSPF zelf maatgevend."},{heading:"2. DOOR WIE EN WAAROM IS DEZE TOOL GEMAAKT?",body:"Deze tool is ontwikkeld door drs. ing. H. Haringa (Innovation Nestor) als publiek en onafhankelijk studieproject. De aanleiding ligt in de SSPF-transitie naar de Wtp en de constatering dat fondsleden \u2014 gepensioneerden, actieven en slapers \u2014 geen instrument tot hun beschikking hebben om de fondscommunicatie zelfstandig te toetsen."},{heading:"DE AANLEIDING",body:'Op 14 april 2026 stemde de Algemene Ledenvergadering (ALV) van Voeks (vereniging van Shell-gepensioneerden) over een ledenmotie "Toetsbare onderbouwing van een aantoonbaar toereikende en evenwichtige transitiebijdrage als compensatie voor het vervallen van de sponsorgarantie". De motie werd verworpen (41 voor, 64 tegen). De inhoudelijke kern bleef daarmee onbeantwoord: een kwantitatieve onderbouwing van de hoogte van de aangeboden transitiebijdrage \u2014 bezien tegen de waarde van de vervallende sponsorgarantie \u2014 is publiek niet beschikbaar. Fondsleden worden geacht een ingrijpend en onomkeerbaar besluit te accepteren zonder zelf over een toetsmiddel te beschikken.'},{heading:"EEN BREDERE OBSERVATIE",body:'Bijna geen enkel Nederlands pensioenfonds biedt zijn deelnemers op het moment van invaren een "digital twin" \u2014 een interactief reken-instrument waarmee deelnemers de invaareffecten op hun eigen situatie kunnen verkennen. De rekenmethodiek uit Bijlage 2a Regeling Pensioenwet is publiek beschreven; de individuele uitwerking blijft voor de deelnemer een zwarte doos waarvan alleen de eindstand zichtbaar wordt \u2014 en pas n\xE1 de transitie definitief. Dat dwingt deelnemers in een passieve positie: vertrouwen op het fonds, of accepteren zonder verificatie. Voor een transitie van deze omvang \u2014 waarbij het renterisico, beleggingsrisico en levensduurrisico goeddeels van fonds naar deelnemer verschuift \u2014 is dat een onbevredigende situatie. Deze tool is een eerste poging die leemte voor SSPF-deelnemers te dichten.'},{heading:"WAARTOE DE TOOL DIENT \u2014 TYPE VRAGEN DIE ERMEE ONDERBOUWD KUNNEN WORDEN",body:'De auteur heeft de tool zelf gebruikt als rekenkundige onderbouwing voor drie documenten gericht aan SSPF respectievelijk De Nederlandsche Bank (DNB). Het eerste is een zienswijze aan DNB van 1 september 2025 over het wegvallen van de Shell-sponsorgarantie en de ontoereikendheid van de Shell-bijdrage als afkoop daarvan. Het tweede is een vragenbrief aan SSPF van 2 mei 2026 met vijf kwantitatieve vragen over de keuze voor een levenslange spreidingsperiode in plaats van de wettelijke standaard van tien jaar (hoofdstuk 5.6 van het implementatieplan). Die vragenbrief verzoekt om vergelijkende doorrekening van transitiemaatstaven, kwantificering van de buffer-toedeling per cohort, het effect op de Shell-bijdrage onder beide spreidingsregimes, uitsplitsing naar deelnemersgroepen, en de vraag of de risicodelingsreserve (RDR) feitelijk fungeert als compensatie voor het lagere bufferaandeel. Het derde document is een aanvullende zienswijze aan DNB van 2 mei 2026 met drie verzoeken: om de wettelijke tweeledige onderbouwingsplicht voor afwijking van de standaard spreidingstermijn te toetsen, om het ontbreken van een vergelijkende kwantitatieve onderbouwing te betrekken bij de invaartoetsing, en om de evenwichtige belangenafweging voor de spreidingstermijnkeuze zelfstandig te toetsen. Deze documenten zijn opvraagbaar via het e-mailadres in de footer van deze tool. Zij illustreren welk soort vragen met deze calculator inhoudelijk kan worden voorbereid: niet "wat wordt mijn precieze uitkering" \u2014 dat blijft voorbehouden aan SSPF \u2014 maar "is de orde van grootte plausibel, en welke parameterkeuzes verklaren het verschil tussen mijn verwachting en het fondsresultaat". Voor een bredere achtergrond bij de problematiek die deze tool aan de orde stelt, zie ook het publieke LinkedIn-artikel van de auteur: "Communicatie Stichting Shell Pensioenfonds (SSPF) over transitie roept ergernis op" (9 februari 2026), via https://www.linkedin.com/pulse/communicatie-stichting-shell-pensioenfonds-sspf-over-roept-haringa-2yxee. Dit artikel beschrijft het patroon van eenrichtings-communicatie dat de directe aanleiding vormde voor het bouwen van een onafhankelijk reken-instrument.'},{heading:"HOE DE TOOL TOT STAND IS GEKOMEN",body:"Code, modelspecificatie, helpteksten en deze verantwoording zijn iteratief tot stand gekomen in dialoog met meerdere generatieve-AI-assistenten en bronnen: Anthropic Claude (diverse versies, waaronder eerdere generaties Sonnet en Opus en de huidige Claude 4-familie tot en met Opus 4.7) \u2014 primair voor TypeScript-implementatie van rekenkern en UI, modelspecificatie-redactie en architectuurkeuzes; Anthropic Claude Excel-add-in \u2014 voor controleberekeningen in een rekenblad en parallelle handberekeningen; PensioenGPT (custom GPT beschikbaar binnen ChatGPT) \u2014 voor domeinspecifieke navigatie van Pensioenwet, Bijlage 2a en transitieplan-praktijk; Mistral \u2014 voor afstemming en kruiscontrole van interpretaties; diverse browser-gebaseerde AI-assistenten \u2014 voor losse onderzoeksvragen en bronverificatie. Het gebruik van AI-assistenten betekent dat de auteur de wiskundige uitwerking, code en tekst kritisch heeft beoordeeld, maar dat aanwezigheid van fouten \u2014 in interpretatie van de Pensioenwet, in actuari\xEBle formules, in code, of in numerieke uitkomsten \u2014 niet kan worden uitgesloten en op een aantal punten statistisch waarschijnlijk is. Daarbij geldt dat verschillende AI-assistenten op identieke vragen niet altijd identieke antwoorden geven; waar mogelijk is met meerdere bronnen gecontroleerd, maar absolute zekerheid is daarmee niet bereikt. De tool is bewust open-source en transparant; de modelspecificatie en broncode zijn meegeleverd zodat onafhankelijke verificatie mogelijk is. De broncode is publiek beschikbaar via https://github.com/Invaarcalculator/invaarcalculator.git; de tool zelf wordt gehost via GitHub Pages (zie de Privacy-link in de footer voor de implicaties daarvan). De tool is niet beoordeeld door een gecertificeerde actuaris, niet getoetst door SSPF, niet getoetst door DNB, en niet voorzien van een vergunning van de Autoriteit Financi\xEBle Markten (AFM) voor financieel advies. De tool geeft geen persoonlijk financieel advies en is niet bedoeld als grondslag voor financi\xEBle beslissingen."},{heading:"3. HOE ONTSTAAT DE AFWIJKING TUSSEN CALCULATOR EN WERKELIJKHEID?",body:"De afwijking tussen wat deze calculator berekent en wat SSPF voor u individueel zal berekenen, heeft drie hoofdoorzaken die zich op verschillende schermen anders uiten."},{heading:"OORZAAK A \u2014 AANNAMES WAAR PUBLIEKE INFORMATIE ONTBREEKT",body:'Voor onder meer de ervaringssterftefactor, de exacte populatiesamenstelling van het deelnemersbestand, de uitvoering van de bundle-aftrekcascade (de afsplitsingen voorafgaand aan toepassing van de standaardregel) en de eventuele toepassing van een "zachte landing" voor pensioengerechtigden gebruikt de tool plausibele aannames op basis van publieke gegevens. Belangrijkste bronnen: SSPF-transitieplan juli 2024 (Bijlage 8 demografie), Ortec Finance Uitgangspuntendocument Transitierapportage SSPF/SNPS versie 2024.1 (Bijlage B ervaringssterfte), CBS levensverwachting-data, SSPF-implementatieplan juli 2025 en publieke presentatie 14 april 2026. De werkelijke ABTN van SSPF bevat hier specifiekere waarden waar de tool geen toegang toe heeft.'},{heading:"OORZAAK B \u2014 VEREENVOUDIGINGEN TEN OPZICHTE VAN EEN VOLLEDIGE UITVOERINGSPRAKTIJK",body:"Niet gemodelleerd zijn onder andere: stochastische scenario-analyse (goed/mediaan/slecht-weerscenario's), de rendementsdynamiek na invaren met vijfjaars-spreiding van schokken zoals voorzien in de Wtp, de leeftijdsafhankelijke beleggingsmix (lifecycle), de dempingswerking van de risicodelingsreserve (RDR) na invaren, het exacte moment van de invaardatum (1 januari 2027) versus de peildatum van de dekkingsgraad die in de tool wordt gehanteerd, en de zogenoemde 67%-randvoorwaarde uit artikel 150n lid 4 Pensioenwet (Pw) die de toedeling tussen cohorten beperkt."},{heading:"OORZAAK C \u2014 UW EIGEN INPUT",body:"Leeftijd, jaarpensioen, eventueel hoog-laag-bedragen, partner-aanwezigheid en partner-leeftijd vult u zelf in. Als deze afwijken van uw werkelijke Uniform Pensioenoverzicht (UPO) of pensioenadministratie, dan klopt de berekening voor uw werkelijke situatie niet \u2014 ook al doet de tool wiskundig wat hij hoort te doen. Vergelijk uw invoer daarom vooraf met uw UPO."},{heading:"4. IMPLICATIES PER SCHERM EN BRONNEN VAN ONNAUWKEURIGHEID",body:'Onderstaand wordt per uitvoerblok in de calculator aangegeven welke parameters de uitkomst het sterkst be\xEFnvloeden en welke onzekerheidsbronnen actief zijn. Er worden bewust geen harde foutmarges genoemd. Dat zou valse precisie suggereren, want voor de meeste uitkomsten is geen empirische kalibratie tegen werkelijke SSPF-uitkomsten beschikbaar \u2014 die uitkomsten worden immers pas zichtbaar in de individuele transitiebrieven na invaardatum. In plaats daarvan kan de gebruiker zelf de gevoeligheid verkennen: via sliders en invoervelden voor parameters waarbij de gebruiker zelf de waarde kiest (leeftijd, jaarpensioen, partner-aanwezigheid, partner-leeftijd en partnerpensioen, hoog-laag-regeling, rekenrente, en in het tweede pane de cascade-componenten); via de keuzelijst "Spreidingstermijn" in het derde pane (keuze tussen "10 jaar" en "Oneindig"); en via drie knoppen onderaan die een grafische visualisatie tonen ("Verhoging vs. indexatie" voor het tijdspad van uw uitkering; "Effect dekkingsgraad" en "Effect werkgevers-bijdrage" als doorlopen over een parameterbereik), plus een vierde knop "Modelspecificatie" die een PDF-rapport opent met de formele uitwerking van het rekenmodel.'},{heading:"STARTSITUATIE EN RESET",body:'Bij eerste opening van de tool zijn alle parameters ingesteld op de SSPF-standaardwaarden: deelnemer 70 jaar man, jaarpensioen \u20AC 100.000, geen partner; fondsvermogen \u20AC 26.000 mln, dekkingsgraad 136,1%, bijstort \u20AC 500 mln, spreidingstermijn "Oneindig". U vult uw eigen gegevens in het bovenste pane in. De fondsparameters in het pane "Tekort of overschot" staan op de actuele SSPF-waarden. Zodra een fondsparameter afwijkt van de SSPF-standaardwaarde verschijnt in de header van dat pane een "Bewerkt"-label met een Reset-knop, waarmee alle cascade-componenten met \xE9\xE9n klik terug naar de fondsuitgangswaarden gaan. De uitvoerblokken worden hieronder besproken in dezelfde volgorde als zij in de calculator verschijnen.'},{heading:'PANE "UW HUIDIGE PENSIOENAANSPRAAK"',body:"Dit pane bevat de invoervelden voor uw persoonlijke gegevens en toont onderaan de huidige waarde van uw aanspraak, opgebouwd uit ouderdomspensioen en, indien van toepassing, partnerpensioen. Wiskundig is dit het meest robuuste blok: de annu\xEFteits-mechaniek volgt rechtstreeks uit de AG2024-prognosetafel van het Koninklijk Actuarieel Genootschap (KAG) en de gekozen disconteringsvoet. De belangrijkste onzekerheidsbron is de ervaringssterfte-factor (in dit model vlakke f=0,76, gekalibreerd zodat het fonds-totaal annu\xEFteitsbedrag onder onze vlakke f gelijk is aan dat onder Bijlage B van het Ortec Uitgangspuntendocument 2024.1 voor de SSPF-populatie. Bijlage B specificeert de \xE9chte SSPF-ervaringssterfte per leeftijd \xD7 geslacht: voor mannen 15-54 zou f=0,50 zijn, oplopend met de leeftijd naar f=1,0 rond 96; voor vrouwen 15-64 f=0,70, oplopend naar f=1,0 rond 100. Onze vlakke benadering is daarmee voor jongere deelnemers (<50) iets te conservatief en voor de oudste cohorten (>85) iets te aggressief, maar voor de meest gebruikte scenario's (65-75) zit het er dicht op). De tweede onzekerheidsbron is de vlakke rekenrente versus de werkelijke rentetermijnstructuur (RTS) per looptijd zoals gepubliceerd door DNB. Voor een individu met correcte invoer is dit blok robuust in orde-van-grootte; absolute kalibratie tegen SSPF-administratie is niet mogelijk omdat die niet publiek is. De rekenrente is via de slider direct aanpasbaar voor wie de RTS-gevoeligheid wil verkennen."},{heading:'PANE "TEKORT OF OVERSCHOT"',body:"Dit pane toont de cascade waarmee het beschikbare fondsvermogen na afsplitsing van operationele en bestemmingsreserves leidt tot het verdeelbare overschot dat via de standaardregel over deelnemers wordt verdeeld. De dominante onzekerheidsbron is de bundle-aftrekcascade zelf: het transitieplan beschrijft de bestemmingen (operationele reserve, RDR, compensatiedepot), maar niet de exacte allocatiebedragen op invaardatum. De tool gebruikt voor de cascade-componenten de waarden die SSPF in de publieke communicatie noemt (operationele reserve 2%, RDR \u20AC 500 mln, compensatiedepot \u20AC 400 mln), maar deze kunnen op de werkelijke invaardatum (1 januari 2027) afwijken van de stand die nu in de tool is opgenomen. Een tweede onzekerheidsbron is de dekkingsgraad zelf: de tool gebruikt de stand eind februari 2026 (136,1%); de werkelijke invaardekkingsgraad ligt op invaardatum vast. Beide onzekerheden zijn via de sliders in dit pane direct te verkennen; afwijkingen van de fondsstandaardwaarde zijn terug te zetten via de Reset-knop die dan verschijnt."},{heading:'PANE "UW PERSOONLIJK PENSIOENVERMOGEN NA INVAREN"',body:'Dit pane toont in drie gekleurde regels onder elkaar hoe het persoonlijk pensioenvermogen tot stand komt, plus daaronder een regel die het jaarpensioen-equivalent aangeeft. Eerste regel (groen, "Uw huidige pensioenaanspraak"): identiek aan de uitkomst van het eerste pane; herhaald hier als startwaarde. Tweede regel (amber, "Uw aandeel verdeelbaar overschot"): toont wat aan uw huidige aanspraak wordt toegevoegd; per definitie het verschil van twee onzekere getallen, en daarmee relatief het meest gevoelig voor onnauwkeurigheid. Voor kleine verdeelbare overschotten kan een kleine absolute afwijking in \xE9\xE9n van beide invoergetallen een grote relatieve afwijking in het aandeel opleveren. Bij negatief saldo verandert het label naar "Uw aandeel verdeelbaar tekort". Derde regel (rood, "Uw persoonlijk pensioenvermogen", totaal na invaren): erft de onzekerheid van de twee voorgaande regels en voegt \xE9\xE9n modelaanname toe \u2014 de keuze van spreidingstermijn (de tool implementeert de keuze van SSPF voor levenslang via de keuzelijst-optie "Oneindig"). Een aanvullende structurele onzekerheid is de cohort-demografie: de tool gebruikt een voorinstelling "gesloten"; werkelijke SSPF-aantallen zijn niet publiek.'},{heading:"JAARPENSIOEN-EQUIVALENT-REGEL",body:'De regel onder de drie gekleurde regels ("\u2248 + \u20AC X extra ... per jaar pensioen levenslang") erft de onzekerheid van het aandeel verdeelbaar overschot en voegt \xE9\xE9n modelaanname toe: proportionele doorwerking van ouderdomspensioen en partnerpensioen onder de keuze van SSPF voor levenslange spreiding. Onder de wettelijke standaardspreiding van tien jaar zou deze proportionaliteit niet exact gelden (zie helptekst van dit veld en \xA79 van de Modelspecificatie); de keuze van SSPF maakt de aanname robuust binnen de SSPF-context. Het helptekst-icoon naast deze regel bevat verdere uitleg over hoe het partnerpensioen meestijgt bij verhoging van het persoonlijk pensioenvermogen.'},{heading:'KNOP "VERHOGING VS. INDEXATIE" (EERSTE KNOP)',body:'Opent een pedagogische "wat-als"-grafiek. Toont de vlakke "ingevroren" uitkering na invaren versus een hypothetische voortzetting met indexatie. De werkelijke uitkeringspaden onder de Wtp zijn variabel (rendement, levensverwachting, solidariteits- of risicodelingsreserve-werking, lifecycle-mix per cohort) en niet door deze grafiek te voorspellen. Gebruik de grafiek strikt qua richting \u2014 voor het verkrijgen van inzicht in het kruispunt waarboven indexatie de vlakke uitkering inhaalt, niet als kwantitatieve voorspelling.'},{heading:'KNOP "EFFECT DEKKINGSGRAAD" (TWEEDE KNOP)',body:'Toont de gevoeligheid van het persoonlijk pensioenvermogen voor de invaardekkingsgraad over een doorlooptraject. De helling van de curve volgt direct uit de mechaniek van de standaardregel en is wiskundig hard; de absolute uitlees-waarden erven de onzekerheid van "Uw persoonlijk pensioenvermogen". Gebruik primair de helling, niet de absolute waarden.'},{heading:'KNOP "EFFECT WERKGEVERS-BIJDRAGE" (DERDE KNOP)',body:"De bijstort is door de gebruiker zelf in te stellen via slider in het tweede pane (0\u20132500 mln). De grafiek toont correct het effect van die specifieke bijstort op het persoonlijk pensioenvermogen. De staffel uit implementatieplan \xA75.5 (\u20AC 500m bij dekkingsgraad \u2265135%, \u20AC 650m bij 130\u2013135%, \u20AC 850m bij 125\u2013130%) is bewust niet automatisch gekoppeld aan de dekkingsgraad-slider \u2014 de gebruiker stelt zelf de combinatie dekkingsgraad/bijstort in die hij/zij wil modelleren. Bij correcte handmatige invoer is de grafiek zowel qua richting als kwantitatief informatief."},{heading:'KNOP "MODELSPECIFICATIE" (VIERDE KNOP)',body:"Opent een PDF met de formele uitwerking van wat de calculator doet \u2014 niet wat SSPF doet. Heeft zelf geen bandbreedte; geeft daarentegen de gebruiker (of een derde \u2014 actuaris, lid van het verantwoordingsorgaan, journalist) de mogelijkheid om de implementatie regel voor regel te toetsen."},{heading:"ONAFHANKELIJKE VERIFICATIE VIA ABN AMRO PENSIOENFONDS",body:`Een concreet referentiepunt voor de plausibiliteit van de calculator-uitkomsten is de vergelijking met publieke deelnemerscommunicatie van ABN AMRO Pensioenfonds (hierna: ABN). ABN heeft in zijn transitieplan (17 oktober 2024) en implementatieplan (22 september 2025) per leeftijdscohort en dekkingsgraad een transparant overzicht van invaareffecten gepubliceerd; deze cijfers zijn tevens opgenomen in de uitspraak van het College voor de Rechten van de Mens d.d. 4 maart 2026 (oordeelnummer 2026-34). ABN hanteert de wettelijke standaardspreidingstermijn van tien jaar. Onderstaande twee tabellen tonen voor pensioengerechtigden bij invaardekkingsgraad 135% de procentuele verhoging van het persoonlijk pensioenvermogen op transitiedatum, berekend met de productie-rekenkern van deze calculator (versie ${t}). Tabel A vergelijkt een scenario zonder partner met de publieke cohort-cijfers van ABN; Tabel B toont dezelfde berekening met partner volgens de SSPF-standaardwaarden.`},{heading:"TABEL A \u2014 ZONDER PARTNER (VERGELIJKBAAR MET ABN-PUBLIEKE COHORT-CIJFERS)",tableHeaders:["Leeftijd","ABN spreiding 10 jaar (publiek)","SSPF spreiding 10 jaar (rekenkern)","SSPF spreiding oneindig (rekenkern, keuze SSPF)","\u0394 10 \u2192 oneindig"],tableRows:[["65 jaar","24%","+29,7%","+28,8%","\u22120,9 pp"],["75 jaar","20%","+24,4%","+19,5%","\u22124,9 pp"],["85 jaar","17%","+16,1%","+11,3%","\u22124,8 pp"],["95 jaar","12%","+8,7%","+5,9%","\u22122,8 pp"]]},{heading:"TABEL B \u2014 MET PARTNER (VROUW 3J JONGER, PARTNERPENSIOEN \u20AC 70.000)",tableHeaders:["Leeftijd","Partner","SSPF spreiding 10 jaar (rekenkern)","SSPF spreiding oneindig (rekenkern, keuze SSPF)","\u0394 10 \u2192 oneindig"],tableRows:[["65 jaar","62V","+31,8%","+34,2%","+2,4 pp"],["75 jaar","72V","+27,8%","+24,3%","\u22123,5 pp"],["85 jaar","82V","+20,5%","+15,0%","\u22125,4 pp"],["95 jaar","92V","+11,8%","+8,0%","\u22123,7 pp"]]},{heading:"DRIE OBSERVATIES BIJ DEZE CIJFERS \u2014 LEERZAME WAARDE VAN DE TOOL",body:'Eerste observatie: in de vergelijking zonder partner (Tabel A) komt de SSPF-rekenkern voor jongere pensioencohorten hoger uit dan ABN (+5,7 pp bij 65 jaar, +4,4 pp bij 75 jaar), is nagenoeg gelijk bij 85 jaar, en komt lager uit bij 95 jaar (\u22123,3 pp). Dat afwijkende patroon \u2014 geen uniforme over- of onderschatting \u2014 is verklaarbaar door fondsspecifieke parameters waarop SSPF en ABN substantieel verschillen: SSPF heeft een kleinere bundle-aftrek (cascade-gewogen 6,71% versus de door ABN gerapporteerde circa 10%) plus een transitiebijdrage van \u20AC 500 mln die ABN niet kent in deze vorm. Voor oudere cohorten domineren demografie en spreidingsmechaniek. Tweede observatie: in Tabel A is het effect van spreiding 10 jaar \u2192 spreiding oneindig leeftijdsafhankelijk: bijna verwaarloosbaar bij 65 jaar (\u22120,9 pp), groter rond 75\u201385 jaar (circa \u22125 pp), kleiner bij 95 jaar (\u22122,8 pp). Het zwaartepunt van het nadeel ligt bij de cohorten waar de SSPF-pensioenverplichting concentreert (75\u201385 jarigen). Derde observatie \u2014 de "verrassing": in Tabel B met partner draait het teken om voor het jongste cohort: voor een 65-jarige met 62-jarige partner geeft spreiding oneindig een hogere opslag dan spreiding 10 jaar (+2,4 pp voordeel in plaats van nadeel). Verklaring: het zwaartepunt van de partnerpensioen-kasstromen ligt ver in de toekomst (15 tot 30 jaar \u2014 periode waarin de partner nog leeft na overlijden van de gepensioneerde). Onder spreiding 10 jaar wordt die kasstroom volledig meegenomen in de aanpassing; onder spreiding oneindig fractioneel \u2014 maar de schalingsfactor is dan navenant hoger om hetzelfde fondsvermogen te verdelen. Voor lange horizonnen \u2014 die een jonge partner garandeert \u2014 werkt spreiding oneindig dan netto gunstig uit. Deze derde observatie illustreert de leerzame waarde van de tool: de claim dat "alle pensioengerechtigden worden benadeeld door de spreidingskeuze" is een te simpele samenvatting; de werkelijkheid is leeftijds- en partnersituatie-afhankelijk.'},{heading:"TOT SLOT BIJ DEZE VERGELIJKING",body:"Het feit dat ABN een dergelijke transparante cohort-tabel \xFCberhaupt publiek heeft gemaakt, terwijl SSPF cohort-specifieke doorrekeningen niet beschikbaar stelt aan zijn deelnemers, raakt de kern van het probleem dat deze tool aan de orde stelt. Een fondsdeelnemer bij ABN kan zonder hulpmiddelen zien wat hij of zij ongeveer kan verwachten; een SSPF-deelnemer is voor diezelfde informatie aangewezen op een onafhankelijke reconstructie zoals deze calculator."},{heading:"5. WAT U WEL UIT DEZE TOOL KUNT HALEN",body:"Ondanks de in \xA73 en \xA74 benoemde beperkingen biedt de tool naar de mening van de auteur drie soorten waarde. Eerste waarde \u2014 begrip van de mechaniek: de tool toont wat de standaardregel uit Bijlage 2a Regeling Pensioenwet doet, welke parameters daarin een rol spelen, en hoe dekkingsgraad, transitiebijdrage en spreidingstermijn op elkaar inwerken. Een SSPF-deelnemer die anders alleen een eindbedrag in een transitiebrief zou zien, kan met deze tool zelfstandig nagaan welke stappen dat eindbedrag opbouwen. Tweede waarde \u2014 gevoeligheidsbesef: de drie visualisatie-knoppen, in combinatie met de sliders in de drie panes, laten zien aan welke parameters de uitkomst gevoelig is en aan welke niet. Derde waarde \u2014 gespreksvoorbereiding: met een richtindicatie van de orde van grootte kan de gebruiker het gesprek aangaan met SSPF, met collega's, in het verantwoordingsorgaan, in de ALV van Voeks of een andere belangenvereniging, of in correspondentie met DNB. De tool helpt om gerichte vragen te formuleren over de keuzes die SSPF in het transitie- en implementatieplan heeft gemaakt \u2014 niet om die keuzes te bestrijden zonder feitelijke basis, maar om ze toetsbaar te maken. Bij elk van deze drie soorten waarde geldt dat de tool een hulpmiddel is om vragen scherper te stellen, niet om ze definitief te beantwoorden."},{heading:"6. WAT U EXPLICIET NIET UIT DEZE TOOL KUNT HALEN",body:`De tool is niet ontworpen voor andere pensioenfondsen dan SSPF. Binnen de SSPF-context geldt het volgende. De tool geeft geen voorspelling van uw werkelijke pensioenuitkering per maand of jaar na invaren \u2014 die wordt bepaald door SSPF op basis van de definitieve invaardekkingsgraad, de werkelijke fondsbalans op invaardatum, en uw individuele aanspraak zoals geregistreerd in de pensioenadministratie. Evenmin levert de tool een voorspelling over het verloop van uw pensioen in de tijd. Voor een bezwaarprocedure biedt de tool geen onderbouwing: onder de Wtp is een individueel bezwaarrecht tegen invaren wettelijk niet voorzien; de besluitvorming is collectief via sociale partners en het fondsbestuur, met toetsing door DNB op evenwichtigheid voor groepen, niet voor individuen. Wel kan de tool dienen als rekenkundige onderbouwing voor een zienswijze richting DNB of een vraag aan het fondsbestuur. Een grondslag voor financi\xEBle planning of individuele beslissingen omtrent eerder stoppen met werken, partnerverlof, aanvullende verzekeringen of fiscale optimalisatie wordt evenmin geboden. Voor dat soort beslissingen zijn de transitiebrief van SSPF, persoonlijk financieel advies van een gecertificeerd adviseur, en (waar relevant) overleg met uw werkgever of een belastingadviseur de juiste bronnen. Niet inbegrepen is informatie over de evenwichtigheidstoets die SSPF tussen verschillende cohorten heeft uitgevoerd. Die toets vereist toegang tot transitiematen (netto profijt per cohort, pensioenverwachting in goed-mediaan-slechtweer-scenario's, gemiddelde kortingskans over 15 jaar) die in het implementatieplan zijn opgenomen voor de SSPF-gekozen spreiding maar niet vergelijkend zijn doorgerekend voor andere parameterkeuzes \u2014 een aspect dat in de zienswijze aan DNB van 2 mei 2026 uitdrukkelijk wordt gevraagd. Tot slot ontbreekt informatie over fondskeuzes die buiten de standaardregel vallen, zoals de zogenoemde "zachte landing" of egalisatie-correctie binnen het cohort gepensioneerden, de exacte toepassing van de 67%-randvoorwaarde uit artikel 150n lid 4 Pensioenwet, en de wijze waarop de RDR na invaren wordt aangewend ter demping van kortingen.`},{heading:"7. BRONNEN EN VERSIES",body:'Wet- en regelgeving: de Wtp (Staatsblad 2023, 217), de Pensioenwet zoals gewijzigd door de Wtp, het Besluit uitvoering Pensioenwet en Wet verplichte beroepspensioenregeling (specifiek artikel 46 lid 2), de Regeling Pensioenwet en Wet verplichte beroepspensioenregeling met name Bijlage 2a (de "standaardregel"; laatstelijk gewijzigd Staatscourant 2025, 15094), en de Q&A "Onderbouwing spreidingstermijn standaardregel" gepubliceerd door DNB op 23 juni 2025. Toezichts- en sectordocumenten: de DNB-factsheet "Omrekenmethoden en aanwenden vermogen pensioenfonds bij invaren", het servicedocument van de Pensioenfederatie over nabestaandenpensioen onder de Wtp, en de KAG-prognosetafels AG2024 (publicatie 12 september 2024). SSPF-specifieke documenten: het transitieplan, het op 15 juli 2025 vastgestelde Wtp-implementatieplan SSPF, de SSPF-presentatie van 14 april 2026, en het SSPF-jaarverslag 2024. Niet-publieke documenten waar SSPF wel over beschikt en die de tool niet kan benutten: de ABTN, de individuele pensioenadministratie per deelnemer, en de cohort-specifieke transitiematen. Vergelijkende bronnen: het ABN AMRO Pensioenfonds-transitieplan van 17 oktober 2024, het ABN AMRO Pensioenfonds-implementatieplan van 22 september 2025, en de uitspraak van het College voor de Rechten van de Mens van 4 maart 2026 (oordeelnummer 2026-34). Analyses en commentaar: Willis Towers Watson, "Uiteenlopende invullingen van de eerbiediging van partnerpensioen" in Pensioen Update (februari 2025); Ortec Finance, "De standaardmethode voor invaren wordt de norm" en "Spreidingsperiode bij toepassing standaardmethode"; diverse publieke transitie-communicaties van Nederlandse pensioenfondsen (Pensioenfonds Zorg en Welzijn, PMT, bpfBOUW, PME, ABP en andere) ten behoeve van vergelijking. Versies en peildatums: de calculator-versie en de bouwdatum staan onderaan elk scherm. De rekenkern krijgt een nieuwe versie bij elke wijziging; de modelspecificatie (toegankelijk via de knop "Modelspecificatie") volgt dezelfde versionering. De ingebedde modelspecificatie-PDF wordt periodiek bijgewerkt en kan tijdelijk een versie achterlopen op de UI. De peildatum voor SSPF-fondsgegevens (dekkingsgraad 136,1%, fondsvermogen \u20AC 26.000 mln) is eind februari 2026. De werkelijke invaardatum is per 1 januari 2027; de calculator-uitkomsten zijn een momentopname die op invaardatum afwijkt naarmate de dekkingsgraad of fondsbalans zich in de tussentijd anders ontwikkelt.'},{heading:"8. CONTACT EN FEEDBACK",body:"Voor inhoudelijke opmerkingen, ontdekte fouten of suggesties voor verbetering kunt u contact opnemen via het e-mailadres in de footer van deze tool. De auteur waardeert correcties, parameter-bronverwijzingen en gevoeligheidsanalyses die de tool verder kunnen verbeteren, en stelt updates van de tool in het vooruitzicht zodra significante nieuwe publieke informatie beschikbaar komt \u2014 bijvoorbeeld na de DNB-uitspraak over de SSPF-invaarmelding, of na publicatie van de individuele transitiebrieven aan SSPF-deelnemers per 1 januari 2027. Voor uw eigen pensioenvragen, vragen over uw werkelijke aanspraak, of bezwaren tegen onderdelen van uw transitie verwijst de auteur naar SSPF, via de kanalen die het fonds zelf aanwijst. Deze tool is geen vervanging van SSPF-communicatie en biedt geen mogelijkheid om individuele dossiers te behandelen. De drie documenten en het LinkedIn-artikel zoals genoemd in \xA72 zijn opvraagbaar via hetzelfde e-mailadres."}]}),ka={privacy:Vi,uitleg:Li,verantwoording:Ii};var ya={...va,...ha,...ba,...ka};var Mt=[],wa=!1;function Fi(){wa||(wa=!0,document.addEventListener("keydown",t=>{if(t.key!=="Escape")return;let e=Mt[Mt.length-1];e&&e.close()}))}function xa(t,e){let n=document.body;if(n)for(let a of Array.from(n.children))a!==t&&a.tagName!=="SCRIPT"&&(e?a.setAttribute("inert",""):a.removeAttribute("inert"))}var Ci=["a[href]","button:not([disabled])","input:not([disabled])","select:not([disabled])","textarea:not([disabled])",'[tabindex]:not([tabindex="-1"])'].join(",");function _a(t){return Array.from(t.querySelectorAll(Ci)).filter(n=>!n.hasAttribute("hidden"))}function wn(t,e,n){if(typeof document>"u")return{open(){},close(){},get isOpen(){return!1}};let a=document.getElementById(t),r=e?document.getElementById(e):null,i=document.getElementById(n);if(!a||!i)return{open(){},close(){},get isOpen(){return!1}};let o=null,s=!1,l={open(u){if(!s){let g=document.activeElement;g instanceof HTMLElement&&g!==document.body?o=g:o=null}r&&u.title!==void 0&&(r.textContent=u.title),i.innerHTML=u.bodyHTML,u.onAfterMount&&u.onAfterMount(i),a.style.display="flex",s||(xa(a,!0),Mt.push(l),s=!0);let m=_a(a);m.length>0?m[0].focus():(a.hasAttribute("tabindex")||a.setAttribute("tabindex","-1"),a.focus())},close(){if(!s)return;a.style.display="none",s=!1;let u=Mt.lastIndexOf(l);if(u>=0&&Mt.splice(u,1),Mt.length===0&&xa(a,!1),o&&typeof o.focus=="function")try{o.focus()}catch{}o=null},get isOpen(){return s}};return a.addEventListener("click",u=>{u.target===a&&l.close()}),a.addEventListener("keydown",u=>{if(u.key!=="Tab"||!s)return;let m=_a(a);if(m.length===0){u.preventDefault();return}let g=m[0],p=m[m.length-1],b=document.activeElement;u.shiftKey?(b===g||!a.contains(b))&&(u.preventDefault(),p.focus()):(b===p||!a.contains(b))&&(u.preventDefault(),g.focus())}),a.querySelector('[aria-label="Sluiten"]')?.addEventListener("click",()=>l.close()),Fi(),l}var ja="toast-container";function Bi(){let t=document.getElementById(ja);return t||(t=document.createElement("div"),t.id=ja,t.style.cssText=["position: fixed","top: 16px","right: 16px","z-index: 9999","display: flex","flex-direction: column","gap: 8px","max-width: min(420px, calc(100vw - 32px))","pointer-events: none"].join(";"),document.body.appendChild(t),t)}function pe(t,e={}){let n=e.kind??"error",a=e.duration??4e3,r=Bi(),i=document.createElement("div");i.className=`toast toast-${n}`,i.setAttribute("role",n==="error"?"alert":"status");let o=n==="error";i.style.cssText=["pointer-events: auto",`background: ${o?"#fee":"#eef"}`,`border: 1px solid ${o?"#c00":"#066"}`,`color: ${o?"#900":"#036"}`,"padding: 12px 36px 12px 12px","border-radius: 8px","font-size: 14px","line-height: 1.4","box-shadow: 0 2px 8px rgba(0,0,0,0.15)","position: relative","opacity: 1","transition: opacity 200ms ease","word-wrap: break-word"].join(";"),i.textContent=t;let s=document.createElement("button");s.type="button",s.textContent="\xD7",s.setAttribute("aria-label","Sluiten"),s.className="toast-close",s.style.cssText=["position: absolute","top: 4px","right: 8px","background: transparent","border: 0","font-size: 20px","line-height: 1","cursor: pointer","color: inherit","padding: 4px"].join(";");let l=!1,d=()=>{l||(l=!0,i.style.opacity="0",setTimeout(()=>i.remove(),220))};s.addEventListener("click",d),i.appendChild(s),r.insertBefore(i,r.firstChild),a>0&&setTimeout(d,a)}var Hi={x0:"Uw leeftijd",pen:"Jaarlijks bruto ouderdomspensioen (\u20AC)",g:"Uw geslacht",heeftPartner:"Heeft u een partnerpensioen?",y0:"Jaarlijks bruto nabestaandenpensioen (\u20AC)",x_partner:"Leeftijd partner",g_y:"Geslacht partner",hooglaagActief:"Heeft u een hoog-laag-uitkering?"};function Ki(t){let e=t;for(;e instanceof v.ZodOptional||e instanceof v.ZodDefault||e instanceof v.ZodNullable;)e=e._def.innerType;return e}function Pa(t){let e=Ki(t);return e instanceof v.ZodNumber?"getal":e instanceof v.ZodBoolean?"ja/nee":e instanceof v.ZodString?"tekst":e instanceof v.ZodEnum?e._def.values.join(" | "):e instanceof v.ZodLiteral?String(e._def.value):e instanceof v.ZodUnion?e._def.options.map(n=>Pa(n)).join(" | "):"onbekend"}function Gi(t){let e=t;for(;e instanceof v.ZodOptional||e instanceof v.ZodNullable;)e=e._def.innerType;if(e instanceof v.ZodDefault){let n=e._def.defaultValue;return typeof n=="function"?n():n}}function Ui(t){let e=t;for(;e instanceof v.ZodOptional||e instanceof v.ZodDefault;)e=e._def.innerType;return e instanceof v.ZodNullable}function Zi(t,e){let n=t instanceof v.ZodEffects?t.innerType():t;if(!(n instanceof v.ZodObject))return[];let a=n.shape,r=[];for(let[i,o]of Object.entries(a)){let s=`${e}.${i}`,l=Jt.find(d=>d.path===s);l&&r.push({name:i,path:s,meta:l.meta,typeLabel:Pa(o),default:Gi(o),nullable:Ui(o)})}return r}function jn(t,e){let n=Date.parse(t),a=Date.parse(e);if(!Number.isFinite(n)||!Number.isFinite(a))return 70;let i=(a-n)/(1e3*60*60*24)/365.25,o=Math.floor(i),s=i-o;return s>.998?o+1:s<.002?o:i}var de=new Date().toISOString().slice(0,10);function $a(t,e){let n=new Date(e),a=new Date(n);return a.setFullYear(n.getFullYear()-t),a.toISOString().slice(0,10)}var c={deelnemer:{x0:70,pen:J.features.penInputMode==="number-maand"?0:1e5,g:"M",heeftPartner:!1,y0:null,x_partner:null,g_y:"V",dob:$a(70,de),dob_partner:null,hooglaagActief:!1,pen_laag:null,x_knip:null,dob_knip:null,netto_invulwaarde:null},parameters_m1:{...q.m1},parameters_m2:{...q.m2},cascadeOverrides:{wettelijkeReservesPct:q.aanwendingsCascade?.wettelijkeReservesPct??.02,rdrBedrag:q.aanwendingsCascade?.rdrBedrag??0,compensatiedepotBedrag:q.aanwendingsCascade?.compensatiedepotBedrag??0},invaarmethode:"standaard",triage:{situatie:J.id==="expert"?"op":null,stap:"persoonlijk",upoRoute:null}};function nn(t,e=0){return"\u20AC "+t.toLocaleString("nl-NL",{minimumFractionDigits:e,maximumFractionDigits:e})}function an(t,e=2){return t===null||!Number.isFinite(t)?"\u2014":t.toLocaleString("nl-NL",{minimumFractionDigits:e,maximumFractionDigits:e})}function Ke(t,e=2){return(t*100).toLocaleString("nl-NL",{minimumFractionDigits:e,maximumFractionDigits:e})+"%"}function te(){let t=c.parameters_m2,e=c.cascadeOverrides,n=t.vpvTotal>0?t.vpvTotal:t.fondsvermogen/t.dekkingsgraad;if(t.vpvAftrekPct=e.wettelijkeReservesPct+(e.rdrBedrag+e.compensatiedepotBedrag)/n,c.deelnemer.x0=jn(c.deelnemer.dob,de),c.deelnemer.x_partner=c.deelnemer.heeftPartner&&c.deelnemer.dob_partner?jn(c.deelnemer.dob_partner,de):null,!J.features.showRenteSlider){let o=qn(c.deelnemer.x0);o!==null&&(c.parameters_m1={...c.parameters_m1,r:o})}let a=!1;if(c.deelnemer.hooglaagActief&&c.deelnemer.dob_knip)if(c.deelnemer.dob_knip>de){let o=Date.parse(de),l=(Date.parse(c.deelnemer.dob_knip)-o)/(1e3*60*60*24*365.25);c.deelnemer.x_knip=c.deelnemer.x0+l}else c.deelnemer.x_knip=null,a=!0;else c.deelnemer.x_knip=null;let r,i;try{i=Le.parameterset.parse(c.parameters_m2),r=i.spreidingN}catch{}try{let o=_t.deelnemer.parse(c.deelnemer),s=_t.parameterset.parse(c.parameters_m1);c.lastM1=r!==void 0?Ht(o,s,{spreidingN:r}):Ht(o,s),c.lastM1Error=void 0}catch(o){c.lastM1Error=o instanceof Error?o.message:String(o),c.lastM1=void 0,c.lastM2=void 0,c.lastM2Error=void 0;return}if(i===void 0){c.lastM2Error="M2-parameters ongeldig (zie audit-log)",c.lastM2=void 0;return}if(a){c.lastM2Error="Knip-datum ligt in het verleden \u2014 corrigeer de hoog-laag-instellingen.",c.lastM2=void 0;return}try{let o=_t.deelnemer.parse(c.deelnemer),s=Le.ketenInput.parse({KV:c.lastM1.KV,KV_OP:c.lastM1.KV_OP,KV_NP:c.lastM1.KV_NP,cw_star_op:c.lastM1.cw_star_op??0,cw_star_np:c.lastM1.cw_star_np??0});c.lastM2=ut(o,s,i),c.lastM2Error=void 0}catch(o){c.lastM2Error=o instanceof Error?o.message:String(o),c.lastM2=void 0}}function Wi(t){return na(t,c.deelnemer,Hi)}function Aa(){if(c.lastM1Error)return`<div class="error">Fout bij M1-berekening: ${W(c.lastM1Error)}</div>`;if(!c.lastM1)return"";let t=c.lastM1;return`
+  `}var _i=({state:t})=>({title:"Uw geboortedatum",currentValue:`Uw huidige stand: ${t.deelnemer.x0} jaar`,sections:[{heading:"WAT VULT U IN?",body:"Vul uw geboortedatum in. Uw leeftijd wordt hieruit afgeleid en gebruikt in de berekening."}]}),ji=({state:t})=>({title:"Uw pensioen",currentValue:`Uw huidige stand: \u20AC ${Math.round(t.deelnemer.pen).toLocaleString("nl-NL")} per jaar`,sections:[{heading:"WAAR VINDT U DIT OP UW UPO?",body:'Bij SSPF onder de vraag "Hoeveel pensioen krijgt u?". Daar staat: "U krijgt vanaf [datum] zolang u leeft \u20AC \u2026 bruto per jaar". Dat bedrag vult u hier in.'}]}),Mi=({state:t})=>({title:"Geboortedatum partner",currentValue:`Uw huidige stand: ${t.deelnemer.x_partner??0} jaar`,sections:[{heading:"WAT VULT U IN?",body:"Vul de geboortedatum van uw partner in. De leeftijd van uw partner wordt hieruit afgeleid."}]}),Si=({state:t})=>({title:"Partnerpensioen na uw overlijden",currentValue:`Uw huidige stand: \u20AC ${Math.round(t.deelnemer.y0??0).toLocaleString("nl-NL")} per jaar`,sections:[{heading:"WAAR VINDT U DIT OP UW UPO?",body:'Bij SSPF onder de vraag "Wat krijgen uw eventuele partner en eventuele kinderen als u overlijdt?". Daar staat: "Als u overlijdt, krijgt uw partner van ons: vanaf uw overlijden zolang hij/zij leeft \u20AC \u2026 bruto per jaar". Dat bedrag vult u hier in.'}]}),va={x0:_i,pen:ji,x_partner:Mi,y0:Si};var Ti=({state:t,pct:e})=>({title:"Rekenrente",currentValue:`Uw huidige stand: ${e(t.parameters_m1.r)}`,sections:[{heading:"WAT DOET DE REKENRENTE?",body:"De rekenrente bepaalt hoe toekomstige pensioenuitkeringen worden teruggerekend naar een waarde van vandaag. Bij een hogere rekenrente wordt de huidige waarde van uw aanspraak lager: \xE9\xE9n euro pensioen volgend jaar wordt dan met een grotere korting teruggerekend. Bij een lagere rekenrente is uw aanspraak vandaag meer waard."},{heading:"WAT KUNT U INSTELLEN?",body:"Verschuif de slider om een rekenrente te kiezen tussen 0% en 5%."}]}),Ei=({state:t,pct:e})=>({title:"Dekkingsgraad",currentValue:`Uw huidige stand: ${e(t.parameters_m2.dekkingsgraad,1)}`,sections:[{heading:"WAT KUNT U INSTELLEN?",body:"Verschuif de slider om een dekkingsgraad te kiezen tussen 100% en 170%."}]}),Pi=()=>({title:"Aftrek voor reserveringen",sections:[{heading:"VERVANGEN DOOR M1/2-PANE",body:'De aftrek-componenten staan nu zichtbaar in de cascade-tabel "Wat is er te verdelen?". Schuif daar de drie componenten (operationele reserve, risicodelingsreserve, compensatiedepot) om hun effect op uw persoonlijk pensioenvermogen te zien.'}]}),$i=({state:t})=>({title:"Spreidingstermijn",currentValue:`Uw huidige stand: ${t.parameters_m2.spreidingN>=1e3?"oneindig (levenslang)":t.parameters_m2.spreidingN+" jaar"}`,sections:[{heading:"WAT DOET DE SPREIDINGSTERMIJN?",body:"De spreidingstermijn N is een parameter binnen de wettelijke standaardregel (Bijlage 2a Regeling Pensioenwet). Hij bepaalt het cohort-gewicht in de verdeling van het verdeelbare overschot: voor een kasstroom op looptijd h binnen N geldt q(h,N) = h/N; voor h \u2265 N geldt q = 1. De wettelijke default is 10 jaar."},{heading:"WAT IS HET MATERI\xCBLE EFFECT?",body:"Onder N = 10 worden alle deelnemers met meer dan 10 jaar uitkeringshorizon op gelijk gewicht (q = 1) gezet. Onder N \u2192 \u221E groeit q lineair met de horizon, waardoor lange-horizon-jaren naar verhouding meer wegen. Resultaat: levenslange spreiding verschuift het verdelingszwaartepunt naar jongeren, ten koste van gepensioneerden. SSPF heeft in het implementatieplan gekozen voor levenslange spreiding, in afwijking van de wettelijke default van 10 jaar."},{heading:"ONDER ALTERNATIEVE METHODE: GEEN KPI-EFFECT",body:"Onder de alternatieve invaarmethode heeft de spreidingstermijn geen effect op het persoonlijk pensioenvermogen \u2014 die methode kent geen spreidings-parameter. Uw keuze blijft wel bewaard en wordt direct actief zodra u terugschakelt naar Standaardregel."},{heading:"WAT KUNT U INSTELLEN?",body:"Kies tussen 10 jaar (wettelijke default) of Oneindig (SSPF-keuze)."}]}),Ai=({state:t})=>({title:"Invaarmethode",currentValue:`Uw huidige keuze: ${t.invaarmethode==="alternatief"?"Alternatieve methode":"Standaardregel"}`,sections:[{heading:"STANDAARDREGEL (SSPF-KEUZE)",body:"Het SSPF-implementatieplan is helder: invaren gebeurt via de wettelijke standaardregel (Bijlage 2a Regeling Pensioenwet) met levenslange spreiding. Het verdeelbare overschot wordt via een cohort-staircase met spreidings-parameter N verdeeld \u2014 zie de help bij de spreidingstermijn-keuze."},{heading:"ALTERNATIEVE METHODE",body:"In het Ortec Uitgangspuntendocument Transitierapportage SSPF/SNPS (versie 2024.1, \xA76) staat een andere verdeelmethode beschreven: elke deelnemer krijgt zijn nominale aanspraak terug, plus een aandeel x% van de toekomstige inflatie-claim (x = fonds-buffer / totale indexatie-claim van het fonds). Wij hebben deze methode in de calculator opgenomen ter vergelijking."},{heading:"WAT IS HET VERSCHIL IN UITKOMST?",body:"Beide methoden verdelen exact dezelfde fonds-buffer; alleen de wegingsfactor per individu verschilt. Voor het UI-default-scenario (70M, \u20AC100.000 pensioen, geen partner): Standaardregel + levenslange spreiding geeft een aandeel van \u20AC270k (+19,6% van KV); de alternatieve methode \u20AC433k (+31,5%). De alternatieve methode is voor gepensioneerden gunstiger; voor jonge actieven omgekeerd. U kunt de scenario's naast elkaar zien door deze dropdown en de spreidingstermijn-dropdown te combineren."},{heading:"BEPERKINGEN BIJ DE ALTERNATIEVE METHODE",body:'Onze implementatie is een deterministische proxy: we benaderen de risiconeutrale optimalisatie op "gelijk delta netto profijt" door de eenvoudige formule "nominale aanspraak + x% \xD7 inflatie-CW". De volledige methode heeft daarnaast een 2/3-scenario-correctie voor individuele uitschieters, die een stochastische scenario-set vereist die wij niet hebben. Het fonds-totaal klopt; individuele uitkomsten kunnen iets afwijken.'}]}),Di=()=>({title:"Alternatieve invaarmethode (SSPF/Ortec)",sections:[{heading:"WAT IS DE ALTERNATIEVE METHODE?",body:"De wettelijke standaardregel (Bijlage 2a Regeling Pensioenwet) verdeelt het overschot via een cohort-staircase (q-spreiding over de spreidingstermijn). SSPF gebruikt in de Ortec-transitierapportages een andere methode: iedereen krijgt zijn nominale aanspraak mee, plus een aandeel x% van de toekomstige inflatieverwachting (waarbij x = buffer / totale indexatie-claim van het fonds; x kan groter zijn dan 100% als de buffer groter is dan de geprijsde indexatie-ambitie). Bron: Ortec Finance Uitgangspuntendocument Transitierapportage SSPF/SNPS versie 2024.1 (26 mei 2024), \xA76."},{heading:"BEPERKINGEN",body:'Onze implementatie is een deterministische proxy van de Ortec-methode: we benaderen de risiconeutrale optimalisatie op "gelijk delta netto profijt" door de eenvoudige formule "nominale aanspraak + x% \xD7 inflatie-CW". De volledige Ortec-methode heeft daarnaast een 2/3-scenario-correctie voor individuele uitschieters; daarvoor is een stochastische scenario-set nodig die wij niet hebben.'}]}),Ni=({state:t,pct:e})=>{let n=t.parameters_m2.alternatieveInvaarmethode?.piDefault??.02;return{title:"Verwachte prijsinflatie",currentValue:`Uw huidige stand: ${e(n,1)}`,sections:[{heading:"WAT IS DEZE AANNAME?",body:"De verwachte prijsinflatie is de aanname over hoeveel de prijzen jaarlijks zullen stijgen op de lange termijn. De default 2% sluit aan bij de ECB-/DNB-doelinflatie en is consistent met Ortec's eigen aanname in het Uitgangspuntendocument."},{heading:"WAAR WORDT HET VOOR GEBRUIKT?",body:'Deze aanname speelt twee rollen tegelijk. Ten eerste: in de Ortec-formule wordt uw "indexatie-CW" berekend als de contante waarde van het pensioen-met-\u03C0-indexatie, en de fonds-buffer wordt over deze indexatie-claims verdeeld. Dat effect op uw persoonlijk pensioenvermogen is gering, omdat \u03C0 zowel in de teller (uw eigen claim) als de noemer (fonds-totale claim) staat. Ten tweede: in de grafiek "Hoe verhoudt de verhoging zich tot indexatie over de tijd?" wordt dezelfde \u03C0 gebruikt als groeivoet voor de groene lijn \u2014 de hypothetische situatie waarin u in het oude regime was gebleven met \u03C0% prijsindexatie per jaar. Daar heeft de slider w\xE9l direct visueel effect: een hogere \u03C0 laat de groene lijn steiler groeien.'},{heading:"WAT KUNT U INSTELLEN?",body:"Schuif tussen 0,5% en 4,0% inflatie-verwachting. Onder 0,5% wordt de methode numeriek instabiel."}]}},ha={r:Ti,dekkingsgraad:Ei,vpvAftrekPct:Pi,spreidingN:$i,invaarmethode:Ai,alternatieveInvaarmethode:Di,piAlternatief:Ni};var Ri=({state:t})=>({title:"Transitiebijdrage werkgever",currentValue:`Uw huidige stand: \u20AC ${t.parameters_m2.bijstort.toLocaleString("nl-NL")} mln`,sections:[{heading:"WAT IS DIT?",body:"De transitiebijdrage is een eenmalige storting van de werkgever bij invaren, als compensatie voor het vervallen van de sponsorgarantie. Dit bedrag verhoogt het fondsvermogen v\xF3\xF3r de aftrek voor reserves en compensatie, en werkt daarmee door in het verdeelbaar overschot."},{heading:"HOE HOOG IS HET BEDRAG?",body:"Volgens het SSPF-implementatieplan van 15-07-2025 hangt het bedrag af van de dekkingsgraad op het invaarmoment: bij DG \u2265 135% \u20AC 500 mln, bij DG 130\u2013135% \u20AC 650 mln, bij DG 125\u2013130% \u20AC 850 mln. Hoe lager de dekkingsgraad, hoe hoger de transitiebijdrage \u2014 de werkgever vult meer aan als het fonds er minder ruim voor staat."},{heading:"LET OP",body:"Deze calculator past het bedrag niet automatisch aan wanneer u de dekkingsgraad-slider verschuift. De standaardwaarde \u20AC 500 mln hoort bij de huidige SSPF-DG (\u2265 135%). Schuif desgewenst de transitiebijdrage-slider handmatig naar het bedrag dat bij de door u gekozen DG hoort."}]}),zi=()=>({title:"Per jaar pensioen levenslang",sections:[{heading:"WAT BETEKENT DIT BEDRAG?",body:"Het bedrag is een rekenwiskunde-omrekening: uw aandeel verdeelbaar overschot, vertaald naar een jaarlijkse uitkering op basis van uw verwachte levensduur (volgens AG2024-sterftekansen) en de huidige rekenrente. Het is een wiskundig equivalent, geen toezegging."},{heading:"EN ALS U EEN PARTNER HEEFT?",body:"Het persoonlijk pensioenvermogen wordt na uw overlijden gebruikt om partnerpensioen te financieren. Bij de omrekening wordt die verplichting meegenomen: hetzelfde vermogen moet zowel uw OP-uitkering dragen zolang u leeft, als het PP-uitkering aan uw partner n\xE1 uw overlijden. Daardoor ligt het jaarbedrag lager dan zonder partner \u2014 dit is geen verlies maar de reservering voor uw partner."},{heading:"WAT GEBEURT ER MET HET PARTNERPENSIOEN BIJ INVAREN?",body:"Bij invaren wordt het persoonlijk pensioenvermogen via de standaardregel (Bijlage 2a Regeling Pensioenwet) verhoogd of verlaagd ten opzichte van uw huidige aanspraak. SSPF kiest in zijn implementatieplan voor een levenslange spreiding van het verdeelbare overschot. Het gevolg: een verhoging van het persoonlijk vermogen werkt proportioneel door op zowel uw ouderdomspensioen als het partnerpensioen voor uw partner n\xE1 uw overlijden. Bij bijvoorbeeld een verhoging van 30% groeit zowel uw OP-uitkering als de aanspraak op partnerpensioen voor uw partner met circa 30%. Onder de wettelijke standaardspreiding van 10 jaar zou deze proportionaliteit niet exact gelden; de keuze van SSPF voor levenslange spreiding is dus bepalend."},{heading:'WAT BETEKENT "LEVENSLANG"?',body:"Levenslang is geen vaste sterfdatum, maar een statistische verwachting. Als u langer leeft dan gemiddeld, krijgt u dit bedrag toch elk jaar \u2014 dat wordt collectief gefinancierd door deelnemers die korter leven. Als u eerder overlijdt, stopt de uitkering bij overlijden (tenzij er een partner-pensioen is)."},{heading:"GEEN RECHTEN TE ONTLENEN",body:"De daadwerkelijke jaarlijkse uitkering in het nieuwe pensioenstelsel hangt af van fonds-rendementen, rentestand, indexatie en fondsbeleidsbeslissingen. Aan dit bedrag kunnen geen rechten worden ontleend."}]}),Oi=()=>({title:"Hoog-laag-uitkering",sections:[{heading:"WAT VULT U IN?",body:'Bij "Pensioen tot knip" vult u het hoge bedrag in dat u nu nog ontvangt. Bij "Pensioen na knip" het bedrag dat u na de overstap krijgt. Bij "Datum waarop pensioen wijzigt" de datum die op uw UPO staat. Als die datum al voorbij is, zet de toggle uit en vul alleen het lage bedrag in als pensioen.'}]}),ba={bijstort:Ri,jaarequivalent:zi,hooglaag:Oi};var Vi=()=>({title:"Privacy",sections:[{heading:"GEEN INVOER VERLAAT UW BROWSER",body:"Deze tool werkt volledig lokaal in uw browser. Uw invoer (leeftijd, jaarpensioen, partnergegevens, en alle andere parameters die u aanpast) wordt niet verstuurd naar een server, niet opgeslagen, niet gedeeld met derden, en niet gebruikt voor analyse of profilering. De berekeningen vinden plaats in JavaScript-code die met de webpagina is meegestuurd; sluiten van het tabblad of de browser wist alle gegevens."},{heading:"GEEN COOKIES, GEEN TRACKING",body:"De tool plaatst geen cookies, gebruikt geen webanalyse, en bevat geen externe tracking-scripts."},{heading:"HOSTING VIA GITHUB PAGES",body:"Deze tool wordt gehost via GitHub Pages (een dienst van GitHub, Inc., onderdeel van Microsoft). Bij het ophalen van de pagina door uw browser legt GitHub standaard HTTP-server-gegevens vast \u2014 IP-adres, gebruikte browser, tijdstip van bezoek, opgevraagde bestanden \u2014 voor beveiligings- en infrastructuurdoeleinden. Dit gebeurt buiten invloed van de auteur. Voor het privacy-beleid van GitHub: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement."}]}),Li=()=>({title:"Uitleg",sections:[{heading:"",body:"De Wet toekomst pensioenen (Wtp) hervormt het Nederlandse pensioenstelsel. Uw huidige pensioenrecht wordt omgezet naar een persoonlijk pensioenvermogen op uw naam, dat na invaren meebeweegt met de beleggingsresultaten van uw fonds."},{heading:"VOOR WIE IS DEZE REKENTOOL?",body:`Voor wie ${q.shortLabel??""}-pensioen ontvangt na de AOW-leeftijd. Wie nog werkt, vervroegd pensioen tot de AOW heeft, of een aanspraak heeft die nog niet uitkeert, valt buiten deze berekening.`},{heading:"WAT BEREKENT DEZE REKENTOOL?",body:"De rekentool laat zien wat invaren voor u zou betekenen op het invaarmoment zelf. U ziet twee bedragen: uw huidige pensioenaanspraak (de waarde vandaag van uw lopende pensioen) en uw persoonlijk pensioenvermogen na invaren (wat hiervan aan u zou worden toebedeeld volgens de wettelijke standaardregel). Hoe uw jaarlijkse uitkering zich na invaren ontwikkelt, zit nog niet in deze versie."},{heading:"WAT KUNT U HIER DOEN?",body:"U vult uw gegevens uit het Uniform Pensioenoverzicht (UPO) in: leeftijd, geslacht, bruto jaarpensioen en eventueel partnergegevens. Heeft u nu een hoog-laag-uitkering \u2014 een tijdelijk hoger pensioen tot een afgesproken knip-datum, daarna een lager bedrag levenslang \u2014 vul dan ook het lage bedrag en de knip-datum in. De fondsparameters staan al op de actuele waarden, dus na invoer van uw UPO-gegevens bent u meteen klaar. Wilt u onderzoeken hoe gevoelig uw uitkomst is voor verschillende aannames, dan verschuift u de fondsparameters via de sliders om bijvoorbeeld een andere dekkingsgraad te beproeven. Een Reset-knop verschijnt zodra u afwijkt van de fonds-uitgangswaarden."}]}),Ii=({releaseVersion:t})=>({title:`Verantwoording bij de Invaarcalculator (versie ${t})`,sections:[{heading:"1. WAT IS DEZE TOOL EN WAT IS HET NIET?",body:"Deze Invaarcalculator is een onafhankelijk, niet door Stichting Shell Pensioenfonds (SSPF) erkend of gevalideerd reken-instrument dat poogt de orde van grootte zichtbaar te maken van de invaareffecten voor een SSPF-deelnemer onder de Wet toekomst pensioenen (Wtp). De tool implementeert de wettelijke standaardregel (Bijlage 2a Regeling Pensioenwet) op basis van uitsluitend publiek beschikbare bronnen en redelijke aannames waar publieke informatie ontbreekt. De uitkomsten zijn per definitie niet identiek aan wat SSPF voor u individueel berekent. SSPF beschikt over niet-publieke gegevens (uw werkelijke aanspraak in de pensioenadministratie, fondsspecifieke uitvoeringskeuzes uit de actuari\xEBle en bedrijfstechnische nota (ABTN), de definitieve dekkingsgraad op invaardatum, de exacte populatiesamenstelling, eventuele afwijkingen van de standaardregel die in het transitieplan zijn vastgelegd) waar deze tool geen toegang toe heeft. Aan de uitkomsten kunnen geen rechten worden ontleend. Voor uw werkelijke invaarpositie zijn alleen de transitiebrief en de definitieve berekening van SSPF zelf maatgevend."},{heading:"2. DOOR WIE EN WAAROM IS DEZE TOOL GEMAAKT?",body:"Deze tool is ontwikkeld door drs. ing. H. Haringa (Innovation Nestor) als publiek en onafhankelijk studieproject. De aanleiding ligt in de SSPF-transitie naar de Wtp en de constatering dat fondsleden \u2014 gepensioneerden, actieven en slapers \u2014 geen instrument tot hun beschikking hebben om de fondscommunicatie zelfstandig te toetsen."},{heading:"DE AANLEIDING",body:'Op 14 april 2026 stemde de Algemene Ledenvergadering (ALV) van Voeks (vereniging van Shell-gepensioneerden) over een ledenmotie "Toetsbare onderbouwing van een aantoonbaar toereikende en evenwichtige transitiebijdrage als compensatie voor het vervallen van de sponsorgarantie". De motie werd verworpen (41 voor, 64 tegen). De inhoudelijke kern bleef daarmee onbeantwoord: een kwantitatieve onderbouwing van de hoogte van de aangeboden transitiebijdrage \u2014 bezien tegen de waarde van de vervallende sponsorgarantie \u2014 is publiek niet beschikbaar. Fondsleden worden geacht een ingrijpend en onomkeerbaar besluit te accepteren zonder zelf over een toetsmiddel te beschikken.'},{heading:"EEN BREDERE OBSERVATIE",body:'Bijna geen enkel Nederlands pensioenfonds biedt zijn deelnemers op het moment van invaren een "digital twin" \u2014 een interactief reken-instrument waarmee deelnemers de invaareffecten op hun eigen situatie kunnen verkennen. De rekenmethodiek uit Bijlage 2a Regeling Pensioenwet is publiek beschreven; de individuele uitwerking blijft voor de deelnemer een zwarte doos waarvan alleen de eindstand zichtbaar wordt \u2014 en pas n\xE1 de transitie definitief. Dat dwingt deelnemers in een passieve positie: vertrouwen op het fonds, of accepteren zonder verificatie. Voor een transitie van deze omvang \u2014 waarbij het renterisico, beleggingsrisico en levensduurrisico goeddeels van fonds naar deelnemer verschuift \u2014 is dat een onbevredigende situatie. Deze tool is een eerste poging die leemte voor SSPF-deelnemers te dichten.'},{heading:"WAARTOE DE TOOL DIENT \u2014 TYPE VRAGEN DIE ERMEE ONDERBOUWD KUNNEN WORDEN",body:'De auteur heeft de tool zelf gebruikt als rekenkundige onderbouwing voor drie documenten gericht aan SSPF respectievelijk De Nederlandsche Bank (DNB). Het eerste is een zienswijze aan DNB van 1 september 2025 over het wegvallen van de Shell-sponsorgarantie en de ontoereikendheid van de Shell-bijdrage als afkoop daarvan. Het tweede is een vragenbrief aan SSPF van 2 mei 2026 met vijf kwantitatieve vragen over de keuze voor een levenslange spreidingsperiode in plaats van de wettelijke standaard van tien jaar (hoofdstuk 5.6 van het implementatieplan). Die vragenbrief verzoekt om vergelijkende doorrekening van transitiemaatstaven, kwantificering van de buffer-toedeling per cohort, het effect op de Shell-bijdrage onder beide spreidingsregimes, uitsplitsing naar deelnemersgroepen, en de vraag of de risicodelingsreserve (RDR) feitelijk fungeert als compensatie voor het lagere bufferaandeel. Het derde document is een aanvullende zienswijze aan DNB van 2 mei 2026 met drie verzoeken: om de wettelijke tweeledige onderbouwingsplicht voor afwijking van de standaard spreidingstermijn te toetsen, om het ontbreken van een vergelijkende kwantitatieve onderbouwing te betrekken bij de invaartoetsing, en om de evenwichtige belangenafweging voor de spreidingstermijnkeuze zelfstandig te toetsen. Deze documenten zijn opvraagbaar via het e-mailadres in de footer van deze tool. Zij illustreren welk soort vragen met deze calculator inhoudelijk kan worden voorbereid: niet "wat wordt mijn precieze uitkering" \u2014 dat blijft voorbehouden aan SSPF \u2014 maar "is de orde van grootte plausibel, en welke parameterkeuzes verklaren het verschil tussen mijn verwachting en het fondsresultaat". Voor een bredere achtergrond bij de problematiek die deze tool aan de orde stelt, zie ook het publieke LinkedIn-artikel van de auteur: "Communicatie Stichting Shell Pensioenfonds (SSPF) over transitie roept ergernis op" (9 februari 2026), via https://www.linkedin.com/pulse/communicatie-stichting-shell-pensioenfonds-sspf-over-roept-haringa-2yxee. Dit artikel beschrijft het patroon van eenrichtings-communicatie dat de directe aanleiding vormde voor het bouwen van een onafhankelijk reken-instrument.'},{heading:"HOE DE TOOL TOT STAND IS GEKOMEN",body:"Code, modelspecificatie, helpteksten en deze verantwoording zijn iteratief tot stand gekomen in dialoog met meerdere generatieve-AI-assistenten en bronnen: Anthropic Claude (diverse versies, waaronder eerdere generaties Sonnet en Opus en de huidige Claude 4-familie tot en met Opus 4.7) \u2014 primair voor TypeScript-implementatie van rekenkern en UI, modelspecificatie-redactie en architectuurkeuzes; Anthropic Claude Excel-add-in \u2014 voor controleberekeningen in een rekenblad en parallelle handberekeningen; PensioenGPT (custom GPT beschikbaar binnen ChatGPT) \u2014 voor domeinspecifieke navigatie van Pensioenwet, Bijlage 2a en transitieplan-praktijk; Mistral \u2014 voor afstemming en kruiscontrole van interpretaties; diverse browser-gebaseerde AI-assistenten \u2014 voor losse onderzoeksvragen en bronverificatie. Het gebruik van AI-assistenten betekent dat de auteur de wiskundige uitwerking, code en tekst kritisch heeft beoordeeld, maar dat aanwezigheid van fouten \u2014 in interpretatie van de Pensioenwet, in actuari\xEBle formules, in code, of in numerieke uitkomsten \u2014 niet kan worden uitgesloten en op een aantal punten statistisch waarschijnlijk is. Daarbij geldt dat verschillende AI-assistenten op identieke vragen niet altijd identieke antwoorden geven; waar mogelijk is met meerdere bronnen gecontroleerd, maar absolute zekerheid is daarmee niet bereikt. De tool is bewust open-source en transparant; de modelspecificatie en broncode zijn meegeleverd zodat onafhankelijke verificatie mogelijk is. De broncode is publiek beschikbaar via https://github.com/Invaarcalculator/invaarcalculator.git; de tool zelf wordt gehost via GitHub Pages (zie de Privacy-link in de footer voor de implicaties daarvan). De tool is niet beoordeeld door een gecertificeerde actuaris, niet getoetst door SSPF, niet getoetst door DNB, en niet voorzien van een vergunning van de Autoriteit Financi\xEBle Markten (AFM) voor financieel advies. De tool geeft geen persoonlijk financieel advies en is niet bedoeld als grondslag voor financi\xEBle beslissingen."},{heading:"3. HOE ONTSTAAT DE AFWIJKING TUSSEN CALCULATOR EN WERKELIJKHEID?",body:"De afwijking tussen wat deze calculator berekent en wat SSPF voor u individueel zal berekenen, heeft drie hoofdoorzaken die zich op verschillende schermen anders uiten."},{heading:"OORZAAK A \u2014 AANNAMES WAAR PUBLIEKE INFORMATIE ONTBREEKT",body:'Voor onder meer de ervaringssterftefactor, de exacte populatiesamenstelling van het deelnemersbestand, de uitvoering van de bundle-aftrekcascade (de afsplitsingen voorafgaand aan toepassing van de standaardregel) en de eventuele toepassing van een "zachte landing" voor pensioengerechtigden gebruikt de tool plausibele aannames op basis van publieke gegevens. Belangrijkste bronnen: SSPF-transitieplan juli 2024 (Bijlage 8 demografie), Ortec Finance Uitgangspuntendocument Transitierapportage SSPF/SNPS versie 2024.1 (Bijlage B ervaringssterfte), CBS levensverwachting-data, SSPF-implementatieplan juli 2025 en publieke presentatie 14 april 2026. De werkelijke ABTN van SSPF bevat hier specifiekere waarden waar de tool geen toegang toe heeft.'},{heading:"OORZAAK B \u2014 VEREENVOUDIGINGEN TEN OPZICHTE VAN EEN VOLLEDIGE UITVOERINGSPRAKTIJK",body:"Niet gemodelleerd zijn onder andere: stochastische scenario-analyse (goed/mediaan/slecht-weerscenario's), de rendementsdynamiek na invaren met vijfjaars-spreiding van schokken zoals voorzien in de Wtp, de leeftijdsafhankelijke beleggingsmix (lifecycle), de dempingswerking van de risicodelingsreserve (RDR) na invaren, het exacte moment van de invaardatum (1 januari 2027) versus de peildatum van de dekkingsgraad die in de tool wordt gehanteerd, en de zogenoemde 67%-randvoorwaarde uit artikel 150n lid 4 Pensioenwet (Pw) die de toedeling tussen cohorten beperkt."},{heading:"OORZAAK C \u2014 UW EIGEN INPUT",body:"Leeftijd, jaarpensioen, eventueel hoog-laag-bedragen, partner-aanwezigheid en partner-leeftijd vult u zelf in. Als deze afwijken van uw werkelijke Uniform Pensioenoverzicht (UPO) of pensioenadministratie, dan klopt de berekening voor uw werkelijke situatie niet \u2014 ook al doet de tool wiskundig wat hij hoort te doen. Vergelijk uw invoer daarom vooraf met uw UPO."},{heading:"4. IMPLICATIES PER SCHERM EN BRONNEN VAN ONNAUWKEURIGHEID",body:'Onderstaand wordt per uitvoerblok in de calculator aangegeven welke parameters de uitkomst het sterkst be\xEFnvloeden en welke onzekerheidsbronnen actief zijn. Er worden bewust geen harde foutmarges genoemd. Dat zou valse precisie suggereren, want voor de meeste uitkomsten is geen empirische kalibratie tegen werkelijke SSPF-uitkomsten beschikbaar \u2014 die uitkomsten worden immers pas zichtbaar in de individuele transitiebrieven na invaardatum. In plaats daarvan kan de gebruiker zelf de gevoeligheid verkennen: via sliders en invoervelden voor parameters waarbij de gebruiker zelf de waarde kiest (leeftijd, jaarpensioen, partner-aanwezigheid, partner-leeftijd en partnerpensioen, hoog-laag-regeling, rekenrente, en in het tweede pane de cascade-componenten); via de keuzelijst "Spreidingstermijn" in het derde pane (keuze tussen "10 jaar" en "Oneindig"); en via drie knoppen onderaan die een grafische visualisatie tonen ("Verhoging vs. indexatie" voor het tijdspad van uw uitkering; "Effect dekkingsgraad" en "Effect werkgevers-bijdrage" als doorlopen over een parameterbereik), plus een vierde knop "Modelspecificatie" die een PDF-rapport opent met de formele uitwerking van het rekenmodel.'},{heading:"STARTSITUATIE EN RESET",body:'Bij eerste opening van de tool zijn alle parameters ingesteld op de SSPF-standaardwaarden: deelnemer 70 jaar man, jaarpensioen \u20AC 100.000, geen partner; fondsvermogen \u20AC 26.000 mln, dekkingsgraad 136,1%, bijstort \u20AC 500 mln, spreidingstermijn "Oneindig". U vult uw eigen gegevens in het bovenste pane in. De fondsparameters in het pane "Tekort of overschot" staan op de actuele SSPF-waarden. Zodra een fondsparameter afwijkt van de SSPF-standaardwaarde verschijnt in de header van dat pane een "Bewerkt"-label met een Reset-knop, waarmee alle cascade-componenten met \xE9\xE9n klik terug naar de fondsuitgangswaarden gaan. De uitvoerblokken worden hieronder besproken in dezelfde volgorde als zij in de calculator verschijnen.'},{heading:'PANE "UW HUIDIGE PENSIOENAANSPRAAK"',body:"Dit pane bevat de invoervelden voor uw persoonlijke gegevens en toont onderaan de huidige waarde van uw aanspraak, opgebouwd uit ouderdomspensioen en, indien van toepassing, partnerpensioen. Wiskundig is dit het meest robuuste blok: de annu\xEFteits-mechaniek volgt rechtstreeks uit de AG2024-prognosetafel van het Koninklijk Actuarieel Genootschap (KAG) en de gekozen disconteringsvoet. De belangrijkste onzekerheidsbron is de ervaringssterfte-factor (in dit model vlakke f=0,76, gekalibreerd zodat het fonds-totaal annu\xEFteitsbedrag onder onze vlakke f gelijk is aan dat onder Bijlage B van het Ortec Uitgangspuntendocument 2024.1 voor de SSPF-populatie. Bijlage B specificeert de \xE9chte SSPF-ervaringssterfte per leeftijd \xD7 geslacht: voor mannen 15-54 zou f=0,50 zijn, oplopend met de leeftijd naar f=1,0 rond 96; voor vrouwen 15-64 f=0,70, oplopend naar f=1,0 rond 100. Onze vlakke benadering is daarmee voor jongere deelnemers (<50) iets te conservatief en voor de oudste cohorten (>85) iets te aggressief, maar voor de meest gebruikte scenario's (65-75) zit het er dicht op). De tweede onzekerheidsbron is de vlakke rekenrente versus de werkelijke rentetermijnstructuur (RTS) per looptijd zoals gepubliceerd door DNB. Voor een individu met correcte invoer is dit blok robuust in orde-van-grootte; absolute kalibratie tegen SSPF-administratie is niet mogelijk omdat die niet publiek is. De rekenrente is via de slider direct aanpasbaar voor wie de RTS-gevoeligheid wil verkennen."},{heading:'PANE "TEKORT OF OVERSCHOT"',body:"Dit pane toont de cascade waarmee het beschikbare fondsvermogen na afsplitsing van operationele en bestemmingsreserves leidt tot het verdeelbare overschot dat via de standaardregel over deelnemers wordt verdeeld. De dominante onzekerheidsbron is de bundle-aftrekcascade zelf: het transitieplan beschrijft de bestemmingen (operationele reserve, RDR, compensatiedepot), maar niet de exacte allocatiebedragen op invaardatum. De tool gebruikt voor de cascade-componenten de waarden die SSPF in de publieke communicatie noemt (operationele reserve 2%, RDR \u20AC 500 mln, compensatiedepot \u20AC 400 mln), maar deze kunnen op de werkelijke invaardatum (1 januari 2027) afwijken van de stand die nu in de tool is opgenomen. Een tweede onzekerheidsbron is de dekkingsgraad zelf: de tool gebruikt de stand eind februari 2026 (136,1%); de werkelijke invaardekkingsgraad ligt op invaardatum vast. Beide onzekerheden zijn via de sliders in dit pane direct te verkennen; afwijkingen van de fondsstandaardwaarde zijn terug te zetten via de Reset-knop die dan verschijnt."},{heading:'PANE "UW PERSOONLIJK PENSIOENVERMOGEN NA INVAREN"',body:'Dit pane toont in drie gekleurde regels onder elkaar hoe het persoonlijk pensioenvermogen tot stand komt, plus daaronder een regel die het jaarpensioen-equivalent aangeeft. Eerste regel (groen, "Uw huidige pensioenaanspraak"): identiek aan de uitkomst van het eerste pane; herhaald hier als startwaarde. Tweede regel (amber, "Uw aandeel verdeelbaar overschot"): toont wat aan uw huidige aanspraak wordt toegevoegd; per definitie het verschil van twee onzekere getallen, en daarmee relatief het meest gevoelig voor onnauwkeurigheid. Voor kleine verdeelbare overschotten kan een kleine absolute afwijking in \xE9\xE9n van beide invoergetallen een grote relatieve afwijking in het aandeel opleveren. Bij negatief saldo verandert het label naar "Uw aandeel verdeelbaar tekort". Derde regel (rood, "Uw persoonlijk pensioenvermogen", totaal na invaren): erft de onzekerheid van de twee voorgaande regels en voegt \xE9\xE9n modelaanname toe \u2014 de keuze van spreidingstermijn (de tool implementeert de keuze van SSPF voor levenslang via de keuzelijst-optie "Oneindig"). Een aanvullende structurele onzekerheid is de cohort-demografie: de tool gebruikt een voorinstelling "gesloten"; werkelijke SSPF-aantallen zijn niet publiek.'},{heading:"JAARPENSIOEN-EQUIVALENT-REGEL",body:'De regel onder de drie gekleurde regels ("\u2248 + \u20AC X extra ... per jaar pensioen levenslang") erft de onzekerheid van het aandeel verdeelbaar overschot en voegt \xE9\xE9n modelaanname toe: proportionele doorwerking van ouderdomspensioen en partnerpensioen onder de keuze van SSPF voor levenslange spreiding. Onder de wettelijke standaardspreiding van tien jaar zou deze proportionaliteit niet exact gelden (zie helptekst van dit veld en \xA79 van de Modelspecificatie); de keuze van SSPF maakt de aanname robuust binnen de SSPF-context. Het helptekst-icoon naast deze regel bevat verdere uitleg over hoe het partnerpensioen meestijgt bij verhoging van het persoonlijk pensioenvermogen.'},{heading:'KNOP "VERHOGING VS. INDEXATIE" (EERSTE KNOP)',body:'Opent een pedagogische "wat-als"-grafiek. Toont de vlakke "ingevroren" uitkering na invaren versus een hypothetische voortzetting met indexatie. De werkelijke uitkeringspaden onder de Wtp zijn variabel (rendement, levensverwachting, solidariteits- of risicodelingsreserve-werking, lifecycle-mix per cohort) en niet door deze grafiek te voorspellen. Gebruik de grafiek strikt qua richting \u2014 voor het verkrijgen van inzicht in het kruispunt waarboven indexatie de vlakke uitkering inhaalt, niet als kwantitatieve voorspelling.'},{heading:'KNOP "EFFECT DEKKINGSGRAAD" (TWEEDE KNOP)',body:'Toont de gevoeligheid van het persoonlijk pensioenvermogen voor de invaardekkingsgraad over een doorlooptraject. De helling van de curve volgt direct uit de mechaniek van de standaardregel en is wiskundig hard; de absolute uitlees-waarden erven de onzekerheid van "Uw persoonlijk pensioenvermogen". Gebruik primair de helling, niet de absolute waarden.'},{heading:'KNOP "EFFECT WERKGEVERS-BIJDRAGE" (DERDE KNOP)',body:"De bijstort is door de gebruiker zelf in te stellen via slider in het tweede pane (0\u20132500 mln). De grafiek toont correct het effect van die specifieke bijstort op het persoonlijk pensioenvermogen. De staffel uit implementatieplan \xA75.5 (\u20AC 500m bij dekkingsgraad \u2265135%, \u20AC 650m bij 130\u2013135%, \u20AC 850m bij 125\u2013130%) is bewust niet automatisch gekoppeld aan de dekkingsgraad-slider \u2014 de gebruiker stelt zelf de combinatie dekkingsgraad/bijstort in die hij/zij wil modelleren. Bij correcte handmatige invoer is de grafiek zowel qua richting als kwantitatief informatief."},{heading:'KNOP "MODELSPECIFICATIE" (VIERDE KNOP)',body:"Opent een PDF met de formele uitwerking van wat de calculator doet \u2014 niet wat SSPF doet. Heeft zelf geen bandbreedte; geeft daarentegen de gebruiker (of een derde \u2014 actuaris, lid van het verantwoordingsorgaan, journalist) de mogelijkheid om de implementatie regel voor regel te toetsen."},{heading:"ONAFHANKELIJKE VERIFICATIE VIA ABN AMRO PENSIOENFONDS",body:`Een concreet referentiepunt voor de plausibiliteit van de calculator-uitkomsten is de vergelijking met publieke deelnemerscommunicatie van ABN AMRO Pensioenfonds (hierna: ABN). ABN heeft in zijn transitieplan (17 oktober 2024) en implementatieplan (22 september 2025) per leeftijdscohort en dekkingsgraad een transparant overzicht van invaareffecten gepubliceerd; deze cijfers zijn tevens opgenomen in de uitspraak van het College voor de Rechten van de Mens d.d. 4 maart 2026 (oordeelnummer 2026-34). ABN hanteert de wettelijke standaardspreidingstermijn van tien jaar. Onderstaande twee tabellen tonen voor pensioengerechtigden bij invaardekkingsgraad 135% de procentuele verhoging van het persoonlijk pensioenvermogen op transitiedatum, berekend met de productie-rekenkern van deze calculator (versie ${t}). Tabel A vergelijkt een scenario zonder partner met de publieke cohort-cijfers van ABN; Tabel B toont dezelfde berekening met partner volgens de SSPF-standaardwaarden.`},{heading:"TABEL A \u2014 ZONDER PARTNER (VERGELIJKBAAR MET ABN-PUBLIEKE COHORT-CIJFERS)",tableHeaders:["Leeftijd","ABN spreiding 10 jaar (publiek)","SSPF spreiding 10 jaar (rekenkern)","SSPF spreiding oneindig (rekenkern, keuze SSPF)","\u0394 10 \u2192 oneindig"],tableRows:[["65 jaar","24%","+29,7%","+28,8%","\u22120,9 pp"],["75 jaar","20%","+24,4%","+19,5%","\u22124,9 pp"],["85 jaar","17%","+16,1%","+11,3%","\u22124,8 pp"],["95 jaar","12%","+8,7%","+5,9%","\u22122,8 pp"]]},{heading:"TABEL B \u2014 MET PARTNER (VROUW 3J JONGER, PARTNERPENSIOEN \u20AC 70.000)",tableHeaders:["Leeftijd","Partner","SSPF spreiding 10 jaar (rekenkern)","SSPF spreiding oneindig (rekenkern, keuze SSPF)","\u0394 10 \u2192 oneindig"],tableRows:[["65 jaar","62V","+31,8%","+34,2%","+2,4 pp"],["75 jaar","72V","+27,8%","+24,3%","\u22123,5 pp"],["85 jaar","82V","+20,5%","+15,0%","\u22125,4 pp"],["95 jaar","92V","+11,8%","+8,0%","\u22123,7 pp"]]},{heading:"DRIE OBSERVATIES BIJ DEZE CIJFERS \u2014 LEERZAME WAARDE VAN DE TOOL",body:'Eerste observatie: in de vergelijking zonder partner (Tabel A) komt de SSPF-rekenkern voor jongere pensioencohorten hoger uit dan ABN (+5,7 pp bij 65 jaar, +4,4 pp bij 75 jaar), is nagenoeg gelijk bij 85 jaar, en komt lager uit bij 95 jaar (\u22123,3 pp). Dat afwijkende patroon \u2014 geen uniforme over- of onderschatting \u2014 is verklaarbaar door fondsspecifieke parameters waarop SSPF en ABN substantieel verschillen: SSPF heeft een kleinere bundle-aftrek (cascade-gewogen 6,71% versus de door ABN gerapporteerde circa 10%) plus een transitiebijdrage van \u20AC 500 mln die ABN niet kent in deze vorm. Voor oudere cohorten domineren demografie en spreidingsmechaniek. Tweede observatie: in Tabel A is het effect van spreiding 10 jaar \u2192 spreiding oneindig leeftijdsafhankelijk: bijna verwaarloosbaar bij 65 jaar (\u22120,9 pp), groter rond 75\u201385 jaar (circa \u22125 pp), kleiner bij 95 jaar (\u22122,8 pp). Het zwaartepunt van het nadeel ligt bij de cohorten waar de SSPF-pensioenverplichting concentreert (75\u201385 jarigen). Derde observatie \u2014 de "verrassing": in Tabel B met partner draait het teken om voor het jongste cohort: voor een 65-jarige met 62-jarige partner geeft spreiding oneindig een hogere opslag dan spreiding 10 jaar (+2,4 pp voordeel in plaats van nadeel). Verklaring: het zwaartepunt van de partnerpensioen-kasstromen ligt ver in de toekomst (15 tot 30 jaar \u2014 periode waarin de partner nog leeft na overlijden van de gepensioneerde). Onder spreiding 10 jaar wordt die kasstroom volledig meegenomen in de aanpassing; onder spreiding oneindig fractioneel \u2014 maar de schalingsfactor is dan navenant hoger om hetzelfde fondsvermogen te verdelen. Voor lange horizonnen \u2014 die een jonge partner garandeert \u2014 werkt spreiding oneindig dan netto gunstig uit. Deze derde observatie illustreert de leerzame waarde van de tool: de claim dat "alle pensioengerechtigden worden benadeeld door de spreidingskeuze" is een te simpele samenvatting; de werkelijkheid is leeftijds- en partnersituatie-afhankelijk.'},{heading:"TOT SLOT BIJ DEZE VERGELIJKING",body:"Het feit dat ABN een dergelijke transparante cohort-tabel \xFCberhaupt publiek heeft gemaakt, terwijl SSPF cohort-specifieke doorrekeningen niet beschikbaar stelt aan zijn deelnemers, raakt de kern van het probleem dat deze tool aan de orde stelt. Een fondsdeelnemer bij ABN kan zonder hulpmiddelen zien wat hij of zij ongeveer kan verwachten; een SSPF-deelnemer is voor diezelfde informatie aangewezen op een onafhankelijke reconstructie zoals deze calculator."},{heading:"5. WAT U WEL UIT DEZE TOOL KUNT HALEN",body:"Ondanks de in \xA73 en \xA74 benoemde beperkingen biedt de tool naar de mening van de auteur drie soorten waarde. Eerste waarde \u2014 begrip van de mechaniek: de tool toont wat de standaardregel uit Bijlage 2a Regeling Pensioenwet doet, welke parameters daarin een rol spelen, en hoe dekkingsgraad, transitiebijdrage en spreidingstermijn op elkaar inwerken. Een SSPF-deelnemer die anders alleen een eindbedrag in een transitiebrief zou zien, kan met deze tool zelfstandig nagaan welke stappen dat eindbedrag opbouwen. Tweede waarde \u2014 gevoeligheidsbesef: de drie visualisatie-knoppen, in combinatie met de sliders in de drie panes, laten zien aan welke parameters de uitkomst gevoelig is en aan welke niet. Derde waarde \u2014 gespreksvoorbereiding: met een richtindicatie van de orde van grootte kan de gebruiker het gesprek aangaan met SSPF, met collega's, in het verantwoordingsorgaan, in de ALV van Voeks of een andere belangenvereniging, of in correspondentie met DNB. De tool helpt om gerichte vragen te formuleren over de keuzes die SSPF in het transitie- en implementatieplan heeft gemaakt \u2014 niet om die keuzes te bestrijden zonder feitelijke basis, maar om ze toetsbaar te maken. Bij elk van deze drie soorten waarde geldt dat de tool een hulpmiddel is om vragen scherper te stellen, niet om ze definitief te beantwoorden."},{heading:"6. WAT U EXPLICIET NIET UIT DEZE TOOL KUNT HALEN",body:`De tool is niet ontworpen voor andere pensioenfondsen dan SSPF. Binnen de SSPF-context geldt het volgende. De tool geeft geen voorspelling van uw werkelijke pensioenuitkering per maand of jaar na invaren \u2014 die wordt bepaald door SSPF op basis van de definitieve invaardekkingsgraad, de werkelijke fondsbalans op invaardatum, en uw individuele aanspraak zoals geregistreerd in de pensioenadministratie. Evenmin levert de tool een voorspelling over het verloop van uw pensioen in de tijd. Voor een bezwaarprocedure biedt de tool geen onderbouwing: onder de Wtp is een individueel bezwaarrecht tegen invaren wettelijk niet voorzien; de besluitvorming is collectief via sociale partners en het fondsbestuur, met toetsing door DNB op evenwichtigheid voor groepen, niet voor individuen. Wel kan de tool dienen als rekenkundige onderbouwing voor een zienswijze richting DNB of een vraag aan het fondsbestuur. Een grondslag voor financi\xEBle planning of individuele beslissingen omtrent eerder stoppen met werken, partnerverlof, aanvullende verzekeringen of fiscale optimalisatie wordt evenmin geboden. Voor dat soort beslissingen zijn de transitiebrief van SSPF, persoonlijk financieel advies van een gecertificeerd adviseur, en (waar relevant) overleg met uw werkgever of een belastingadviseur de juiste bronnen. Niet inbegrepen is informatie over de evenwichtigheidstoets die SSPF tussen verschillende cohorten heeft uitgevoerd. Die toets vereist toegang tot transitiematen (netto profijt per cohort, pensioenverwachting in goed-mediaan-slechtweer-scenario's, gemiddelde kortingskans over 15 jaar) die in het implementatieplan zijn opgenomen voor de SSPF-gekozen spreiding maar niet vergelijkend zijn doorgerekend voor andere parameterkeuzes \u2014 een aspect dat in de zienswijze aan DNB van 2 mei 2026 uitdrukkelijk wordt gevraagd. Tot slot ontbreekt informatie over fondskeuzes die buiten de standaardregel vallen, zoals de zogenoemde "zachte landing" of egalisatie-correctie binnen het cohort gepensioneerden, de exacte toepassing van de 67%-randvoorwaarde uit artikel 150n lid 4 Pensioenwet, en de wijze waarop de RDR na invaren wordt aangewend ter demping van kortingen.`},{heading:"7. BRONNEN EN VERSIES",body:'Wet- en regelgeving: de Wtp (Staatsblad 2023, 217), de Pensioenwet zoals gewijzigd door de Wtp, het Besluit uitvoering Pensioenwet en Wet verplichte beroepspensioenregeling (specifiek artikel 46 lid 2), de Regeling Pensioenwet en Wet verplichte beroepspensioenregeling met name Bijlage 2a (de "standaardregel"; laatstelijk gewijzigd Staatscourant 2025, 15094), en de Q&A "Onderbouwing spreidingstermijn standaardregel" gepubliceerd door DNB op 23 juni 2025. Toezichts- en sectordocumenten: de DNB-factsheet "Omrekenmethoden en aanwenden vermogen pensioenfonds bij invaren", het servicedocument van de Pensioenfederatie over nabestaandenpensioen onder de Wtp, en de KAG-prognosetafels AG2024 (publicatie 12 september 2024). SSPF-specifieke documenten: het transitieplan, het op 15 juli 2025 vastgestelde Wtp-implementatieplan SSPF, de SSPF-presentatie van 14 april 2026, en het SSPF-jaarverslag 2024. Niet-publieke documenten waar SSPF wel over beschikt en die de tool niet kan benutten: de ABTN, de individuele pensioenadministratie per deelnemer, en de cohort-specifieke transitiematen. Vergelijkende bronnen: het ABN AMRO Pensioenfonds-transitieplan van 17 oktober 2024, het ABN AMRO Pensioenfonds-implementatieplan van 22 september 2025, en de uitspraak van het College voor de Rechten van de Mens van 4 maart 2026 (oordeelnummer 2026-34). Analyses en commentaar: Willis Towers Watson, "Uiteenlopende invullingen van de eerbiediging van partnerpensioen" in Pensioen Update (februari 2025); Ortec Finance, "De standaardmethode voor invaren wordt de norm" en "Spreidingsperiode bij toepassing standaardmethode"; diverse publieke transitie-communicaties van Nederlandse pensioenfondsen (Pensioenfonds Zorg en Welzijn, PMT, bpfBOUW, PME, ABP en andere) ten behoeve van vergelijking. Versies en peildatums: de calculator-versie en de bouwdatum staan onderaan elk scherm. De rekenkern krijgt een nieuwe versie bij elke wijziging; de modelspecificatie (toegankelijk via de knop "Modelspecificatie") volgt dezelfde versionering. De ingebedde modelspecificatie-PDF wordt periodiek bijgewerkt en kan tijdelijk een versie achterlopen op de UI. De peildatum voor SSPF-fondsgegevens (dekkingsgraad 136,1%, fondsvermogen \u20AC 26.000 mln) is eind februari 2026. De werkelijke invaardatum is per 1 januari 2027; de calculator-uitkomsten zijn een momentopname die op invaardatum afwijkt naarmate de dekkingsgraad of fondsbalans zich in de tussentijd anders ontwikkelt.'},{heading:"8. CONTACT EN FEEDBACK",body:"Voor inhoudelijke opmerkingen, ontdekte fouten of suggesties voor verbetering kunt u contact opnemen via het e-mailadres in de footer van deze tool. De auteur waardeert correcties, parameter-bronverwijzingen en gevoeligheidsanalyses die de tool verder kunnen verbeteren, en stelt updates van de tool in het vooruitzicht zodra significante nieuwe publieke informatie beschikbaar komt \u2014 bijvoorbeeld na de DNB-uitspraak over de SSPF-invaarmelding, of na publicatie van de individuele transitiebrieven aan SSPF-deelnemers per 1 januari 2027. Voor uw eigen pensioenvragen, vragen over uw werkelijke aanspraak, of bezwaren tegen onderdelen van uw transitie verwijst de auteur naar SSPF, via de kanalen die het fonds zelf aanwijst. Deze tool is geen vervanging van SSPF-communicatie en biedt geen mogelijkheid om individuele dossiers te behandelen. De drie documenten en het LinkedIn-artikel zoals genoemd in \xA72 zijn opvraagbaar via hetzelfde e-mailadres."}]}),ka={privacy:Vi,uitleg:Li,verantwoording:Ii};var ya={...va,...ha,...ba,...ka};var Mt=[],wa=!1;function Fi(){wa||(wa=!0,document.addEventListener("keydown",t=>{if(t.key!=="Escape")return;let e=Mt[Mt.length-1];e&&e.close()}))}function xa(t,e){let n=document.body;if(n)for(let a of Array.from(n.children))a!==t&&a.tagName!=="SCRIPT"&&(e?a.setAttribute("inert",""):a.removeAttribute("inert"))}var Ci=["a[href]","button:not([disabled])","input:not([disabled])","select:not([disabled])","textarea:not([disabled])",'[tabindex]:not([tabindex="-1"])'].join(",");function _a(t){return Array.from(t.querySelectorAll(Ci)).filter(n=>!n.hasAttribute("hidden"))}function wn(t,e,n){if(typeof document>"u")return{open(){},close(){},get isOpen(){return!1}};let a=document.getElementById(t),r=e?document.getElementById(e):null,i=document.getElementById(n);if(!a||!i)return{open(){},close(){},get isOpen(){return!1}};let o=null,s=!1,l={open(u){if(!s){let g=document.activeElement;g instanceof HTMLElement&&g!==document.body?o=g:o=null}r&&u.title!==void 0&&(r.textContent=u.title),i.innerHTML=u.bodyHTML,u.onAfterMount&&u.onAfterMount(i),a.style.display="flex",s||(xa(a,!0),Mt.push(l),s=!0);let m=_a(a);m.length>0?m[0].focus():(a.hasAttribute("tabindex")||a.setAttribute("tabindex","-1"),a.focus())},close(){if(!s)return;a.style.display="none",s=!1;let u=Mt.lastIndexOf(l);if(u>=0&&Mt.splice(u,1),Mt.length===0&&xa(a,!1),o&&typeof o.focus=="function")try{o.focus()}catch{}o=null},get isOpen(){return s}};return a.addEventListener("click",u=>{u.target===a&&l.close()}),a.addEventListener("keydown",u=>{if(u.key!=="Tab"||!s)return;let m=_a(a);if(m.length===0){u.preventDefault();return}let g=m[0],p=m[m.length-1],b=document.activeElement;u.shiftKey?(b===g||!a.contains(b))&&(u.preventDefault(),p.focus()):(b===p||!a.contains(b))&&(u.preventDefault(),g.focus())}),a.querySelector('[aria-label="Sluiten"]')?.addEventListener("click",()=>l.close()),Fi(),l}var ja="toast-container";function Bi(){let t=document.getElementById(ja);return t||(t=document.createElement("div"),t.id=ja,t.style.cssText=["position: fixed","top: 16px","right: 16px","z-index: 9999","display: flex","flex-direction: column","gap: 8px","max-width: min(420px, calc(100vw - 32px))","pointer-events: none"].join(";"),document.body.appendChild(t),t)}function pe(t,e={}){let n=e.kind??"error",a=e.duration??4e3,r=Bi(),i=document.createElement("div");i.className=`toast toast-${n}`,i.setAttribute("role",n==="error"?"alert":"status");let o=n==="error";i.style.cssText=["pointer-events: auto",`background: ${o?"#fee":"#eef"}`,`border: 1px solid ${o?"#c00":"#066"}`,`color: ${o?"#900":"#036"}`,"padding: 12px 36px 12px 12px","border-radius: 8px","font-size: var(--txt-l)","line-height: 1.4","box-shadow: 0 2px 8px rgba(0,0,0,0.15)","position: relative","opacity: 1","transition: opacity 200ms ease","word-wrap: break-word"].join(";"),i.textContent=t;let s=document.createElement("button");s.type="button",s.textContent="\xD7",s.setAttribute("aria-label","Sluiten"),s.className="toast-close",s.style.cssText=["position: absolute","top: 4px","right: 8px","background: transparent","border: 0","font-size: 20px","line-height: 1","cursor: pointer","color: inherit","padding: 4px"].join(";");let l=!1,d=()=>{l||(l=!0,i.style.opacity="0",setTimeout(()=>i.remove(),220))};s.addEventListener("click",d),i.appendChild(s),r.insertBefore(i,r.firstChild),a>0&&setTimeout(d,a)}var Hi={x0:"Uw leeftijd",pen:"Jaarlijks bruto ouderdomspensioen (\u20AC)",g:"Uw geslacht",heeftPartner:"Heeft u een partnerpensioen?",y0:"Jaarlijks bruto nabestaandenpensioen (\u20AC)",x_partner:"Leeftijd partner",g_y:"Geslacht partner",hooglaagActief:"Heeft u een hoog-laag-uitkering?"};function Ki(t){let e=t;for(;e instanceof v.ZodOptional||e instanceof v.ZodDefault||e instanceof v.ZodNullable;)e=e._def.innerType;return e}function Pa(t){let e=Ki(t);return e instanceof v.ZodNumber?"getal":e instanceof v.ZodBoolean?"ja/nee":e instanceof v.ZodString?"tekst":e instanceof v.ZodEnum?e._def.values.join(" | "):e instanceof v.ZodLiteral?String(e._def.value):e instanceof v.ZodUnion?e._def.options.map(n=>Pa(n)).join(" | "):"onbekend"}function Gi(t){let e=t;for(;e instanceof v.ZodOptional||e instanceof v.ZodNullable;)e=e._def.innerType;if(e instanceof v.ZodDefault){let n=e._def.defaultValue;return typeof n=="function"?n():n}}function Ui(t){let e=t;for(;e instanceof v.ZodOptional||e instanceof v.ZodDefault;)e=e._def.innerType;return e instanceof v.ZodNullable}function Zi(t,e){let n=t instanceof v.ZodEffects?t.innerType():t;if(!(n instanceof v.ZodObject))return[];let a=n.shape,r=[];for(let[i,o]of Object.entries(a)){let s=`${e}.${i}`,l=Jt.find(d=>d.path===s);l&&r.push({name:i,path:s,meta:l.meta,typeLabel:Pa(o),default:Gi(o),nullable:Ui(o)})}return r}function jn(t,e){let n=Date.parse(t),a=Date.parse(e);if(!Number.isFinite(n)||!Number.isFinite(a))return 70;let i=(a-n)/(1e3*60*60*24)/365.25,o=Math.floor(i),s=i-o;return s>.998?o+1:s<.002?o:i}var de=new Date().toISOString().slice(0,10);function $a(t,e){let n=new Date(e),a=new Date(n);return a.setFullYear(n.getFullYear()-t),a.toISOString().slice(0,10)}var c={deelnemer:{x0:70,pen:J.features.penInputMode==="number-maand"?0:1e5,g:"M",heeftPartner:!1,y0:null,x_partner:null,g_y:"V",dob:$a(70,de),dob_partner:null,hooglaagActief:!1,pen_laag:null,x_knip:null,dob_knip:null,netto_invulwaarde:null},parameters_m1:{...q.m1},parameters_m2:{...q.m2},cascadeOverrides:{wettelijkeReservesPct:q.aanwendingsCascade?.wettelijkeReservesPct??.02,rdrBedrag:q.aanwendingsCascade?.rdrBedrag??0,compensatiedepotBedrag:q.aanwendingsCascade?.compensatiedepotBedrag??0},invaarmethode:"standaard",triage:{situatie:J.id==="expert"?"op":null,stap:"persoonlijk",upoRoute:null}};function nn(t,e=0){return"\u20AC "+t.toLocaleString("nl-NL",{minimumFractionDigits:e,maximumFractionDigits:e})}function an(t,e=2){return t===null||!Number.isFinite(t)?"\u2014":t.toLocaleString("nl-NL",{minimumFractionDigits:e,maximumFractionDigits:e})}function Ke(t,e=2){return(t*100).toLocaleString("nl-NL",{minimumFractionDigits:e,maximumFractionDigits:e})+"%"}function te(){let t=c.parameters_m2,e=c.cascadeOverrides,n=t.vpvTotal>0?t.vpvTotal:t.fondsvermogen/t.dekkingsgraad;if(t.vpvAftrekPct=e.wettelijkeReservesPct+(e.rdrBedrag+e.compensatiedepotBedrag)/n,c.deelnemer.x0=jn(c.deelnemer.dob,de),c.deelnemer.x_partner=c.deelnemer.heeftPartner&&c.deelnemer.dob_partner?jn(c.deelnemer.dob_partner,de):null,!J.features.showRenteSlider){let o=qn(c.deelnemer.x0);o!==null&&(c.parameters_m1={...c.parameters_m1,r:o})}let a=!1;if(c.deelnemer.hooglaagActief&&c.deelnemer.dob_knip)if(c.deelnemer.dob_knip>de){let o=Date.parse(de),l=(Date.parse(c.deelnemer.dob_knip)-o)/(1e3*60*60*24*365.25);c.deelnemer.x_knip=c.deelnemer.x0+l}else c.deelnemer.x_knip=null,a=!0;else c.deelnemer.x_knip=null;let r,i;try{i=Le.parameterset.parse(c.parameters_m2),r=i.spreidingN}catch{}try{let o=_t.deelnemer.parse(c.deelnemer),s=_t.parameterset.parse(c.parameters_m1);c.lastM1=r!==void 0?Ht(o,s,{spreidingN:r}):Ht(o,s),c.lastM1Error=void 0}catch(o){c.lastM1Error=o instanceof Error?o.message:String(o),c.lastM1=void 0,c.lastM2=void 0,c.lastM2Error=void 0;return}if(i===void 0){c.lastM2Error="M2-parameters ongeldig (zie audit-log)",c.lastM2=void 0;return}if(a){c.lastM2Error="Knip-datum ligt in het verleden \u2014 corrigeer de hoog-laag-instellingen.",c.lastM2=void 0;return}try{let o=_t.deelnemer.parse(c.deelnemer),s=Le.ketenInput.parse({KV:c.lastM1.KV,KV_OP:c.lastM1.KV_OP,KV_NP:c.lastM1.KV_NP,cw_star_op:c.lastM1.cw_star_op??0,cw_star_np:c.lastM1.cw_star_np??0});c.lastM2=ut(o,s,i),c.lastM2Error=void 0}catch(o){c.lastM2Error=o instanceof Error?o.message:String(o),c.lastM2=void 0}}function Wi(t){return na(t,c.deelnemer,Hi)}function Aa(){if(c.lastM1Error)return`<div class="error">Fout bij M1-berekening: ${W(c.lastM1Error)}</div>`;if(!c.lastM1)return"";let t=c.lastM1;return`
     <div class="kpi-card kpi-m1">
       <div class="kpi-label">Huidige waarde van uw pensioenaanspraak</div>
       <div class="kpi-value">${nn(t.KV)}</div>
