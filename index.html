@@ -371,7 +371,7 @@
   }
   .resultaat-tabel th:first-child,
   .resultaat-tabel td:first-child {
-    width: 37%;
+    white-space: nowrap;
   }
   .resultaat-tabel th,
   .resultaat-tabel td {
@@ -465,13 +465,6 @@
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-  }
-  /* v3.4.15: eerste kolom even breed als de hoofdtabel (37%), zodat de
-     grijze labelkolom van beide tabellen uitlijnt. De resterende breedte
-     verdeelt over de drie waardekolommen. */
-  .resultaat-rente-tabel th:first-child,
-  .resultaat-rente-tabel td:first-child {
-    width: 37%;
   }
   .resultaat-rente-tabel thead th {
     font-size: var(--txt-s);
@@ -2695,17 +2688,14 @@
     }
     .resultaat-tabel tbody th,
     .resultaat-tabel thead th:first-child {
-      width: 28%;
       font-size: var(--txt-l);
     }
     .resultaat-tabel tbody td {
       font-size: var(--txt-l);
     }
-    /* v3.4.15: rente-bandbreedte-tabel heeft VIER kolommen (rekenrente +
-       maand + jaar + t.o.v. nu) — één meer dan de hoofdtabel. Op smalle
-       schermen (393px) passen vier eurobedragen alleen met kleine cijfers
-       (--txt-s, 12px), krappe padding en nowrap, zodat "€ 124.146" niet over
-       twee regels breekt. Kolommen: label 18%, drie waardekolommen ~27%. */
+    /* v3.4.15: rente-bandbreedte-tabel heeft VIER kolommen. Kolombreedtes
+       staan in <colgroup> (19/27/27/27%); hier alleen lettergrootte, padding
+       en nowrap zodat de eurobedragen op 393px niet over twee regels breken. */
     .resultaat-rente-tabel th,
     .resultaat-rente-tabel td {
       padding: 8px 4px;
@@ -2713,7 +2703,6 @@
     }
     .resultaat-rente-tabel th:first-child,
     .resultaat-rente-tabel td:first-child {
-      width: 18%;
       padding-left: 0;
     }
     .resultaat-rente-tabel tbody th {
@@ -3163,7 +3152,7 @@
         Vanaf ${d.deelnemer.dob_knip?tn(d.deelnemer.dob_knip):"de knipdatum"} daalt uw pensioen volgens uw hoog/laag regeling.
       </p>`),`
     <div class="pane casual ${xe()} pane-resultaat">
-      <h2>Uw pensioen op de invaardatum</h2>
+      <h2><button type="button" class="resultaat-na-knop" data-help="na-invaren-disclaimer" aria-label="Uitleg bij dit resultaat">Uw pensioen op de invaardatum</button></h2>
       <p class="${z}">${h}</p>
       <div class="resultaat-dg-keuze">
         <label for="in-dg-keuze">Dekkingsgraad op invaardatum:</label>
@@ -3176,6 +3165,11 @@
         </select>
       </div>
       <table class="${x}">
+        <colgroup>
+          <col style="width:34%">
+          <col style="width:33%">
+          <col style="width:33%">
+        </colgroup>
         <thead>
           <tr>
             <th></th>
@@ -3190,7 +3184,7 @@
             <td>${P(l)}</td>
           </tr>
           <tr class="resultaat-row-na">
-            <th><button type="button" class="resultaat-na-knop" data-help="na-invaren-disclaimer" aria-label="Uitleg bij dit resultaat">Na invaren</button></th>
+            <th>Na invaren</th>
             <td>${P(s)}</td>
             <td>${P(c)}</td>
           </tr>
@@ -3212,6 +3206,12 @@
           <button type="button" class="resultaat-na-knop" data-help="pensioen-na-invaren-indicatie" aria-label="Uitleg bij deze indicatie">Indicatie van uw pensioen na invaren</button>
         </h3>
         <table class="resultaat-rente-tabel">
+          <colgroup>
+            <col style="width:19%">
+            <col style="width:27%">
+            <col style="width:27%">
+            <col style="width:27%">
+          </colgroup>
           <thead>
             <tr>
               <th>Rekenrente<br>&nbsp;</th>
