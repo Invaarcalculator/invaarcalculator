@@ -627,6 +627,23 @@
     color: var(--txt1);
     font-weight: 500;
   }
+  /* v3.9.2: op smal scherm passen de jaarbedragen (bv. "+ € 31.159") niet in de
+     drie DG-kolommen; nowrap-tekst liep dan over de celrand. Kleinere letter +
+     krappere horizontale padding zodat ze fitten zonder overlap. De hoek-
+     dropdown blijft ongemoeid. */
+  @media (max-width: 640px) {
+    .rgm-matrix {
+      font-size: var(--txt-xs);
+    }
+    .rgm-matrix th,
+    .rgm-matrix td {
+      padding: 5px 2px;
+    }
+    .rgm-matrix .rgm-colh,
+    .rgm-matrix .rgm-rate {
+      font-size: var(--txt-xs);
+    }
+  }
   /* v3.4.15: resultaat-pane titels iets kleiner (--txt-l i.p.v. --txt-xl) —
      past beter en houdt de langere tweede titel eerder op één regel. */
   .pane-resultaat h2 {
