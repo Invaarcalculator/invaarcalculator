@@ -1,0 +1,751 @@
+% ============================================================================
+% Modelspecificatie — Basic-variant Invaarcalculator v3.9.2
+%
+% Geschikt voor Overleaf met pdfLaTeX (standaard compiler).
+%
+% Dit document beschrijft de werking van de gratis basic-variant van de
+% Invaarcalculator, bedoeld voor SSPF-gepensioneerden. Het is een
+% verkorte, toegankelijker versie van de volledige actuariële
+% modelspecificatie (BIJLAGE2_MODELSPECIFICATIE_…). Voor onderwerpen die
+% in basic niet aanpasbaar zijn — fondsbalans-decompositie, cohort-
+% sommatie, alternatieve invaarmethode, gevoeligheids-analyses — wordt
+% verwezen naar de volledige modelspecificatie van de expert-variant.
+%
+% Actualisatie van v3.0.251 (26 mei 2026). Belangrijkste inhoudelijke
+% wijzigingen, alle geverifieerd tegen de v3.9.2-codebase:
+%  - SSPF-fondscijfers naar jaarverslag 2025 (ultimo 2025): vpv 18.643,
+%    fondsvermogen 25.329, DG 135,9% (v3.5.7)
+%  - ervaringssterfte: Bijlage-B-tabel i.p.v. vlakke f=0,76 (v3.1.0)
+%  - discontering leeftijdgebonden DNB-RTS in BEIDE varianten (v3.4.4);
+%    expert-slider is een M3-projectierente geworden
+%  - UPO-invoer in bruto/jaar; netto-route NP=70%-aanname; netto-route
+%    gesloten bij hoog-laag (v3.3.0)
+%  - AOW-poort cohort-exact via SVB-schema (v3.7.0)
+%  - resultaatscherm: DG-keuze (5 punten incl. 105% illustratief) +
+%    3×3 DG×projectierente-gevoeligheidsmatrix met metric-dropdown
+%    (v3.8.0–v3.9.2); hoog-laag één-tijdspunts-presentatie (v3.4.0)
+%  - transparantiescherm "Gebruikte gegevens" (v3.4.2/v3.4.3)
+%  - standaardregel-uitwerking expliciet wet-canoniek (x*, CW*),
+%    RDR-routing via buffer-parameter (v3.4.4, kapitaal-equivalent)
+% ============================================================================
+
+\documentclass[11pt,a4paper]{article}
+
+% --- Encoding & taal --------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[dutch]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% --- Layout ----------------------------------------------------------------
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{parskip}
+\setlength{\parindent}{0pt}
+\emergencystretch=1.5em
+
+% --- Wiskunde --------------------------------------------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+% --- Tabellen --------------------------------------------------------------
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+
+% --- Lijsten ---------------------------------------------------------------
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=*,topsep=2pt,itemsep=2pt}
+\setlist[description]{leftmargin=2em,style=nextline,topsep=2pt,itemsep=4pt}
+
+% --- Header/footer + tijdsafdruk ------------------------------------------
+\usepackage{textcomp}      % \texttrademark
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{datetime}
+\usepackage{etoolbox}
+\settimeformat{hhmmsstime}
+
+% --- Sectie-styling --------------------------------------------------------
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection}{0.7em}{}
+
+% --- Kleur en hyperlinks ---------------------------------------------------
+\usepackage{xcolor}
+\definecolor{linkblue}{HTML}{1F4E79}
+\usepackage[colorlinks=true,linkcolor=linkblue,urlcolor=linkblue,citecolor=linkblue,pdfencoding=auto,unicode=true]{hyperref}
+
+% --- Custom commands voor leesbare notatie --------------------------------
+\newcommand{\ann}{\ddot{a}}                 % annuïteitsfactor
+\newcommand{\annq}{\ddot{a}^{q}}            % q-gewogen annuïteit
+\newcommand{\anntemp}{\ddot{a}_{\text{temp}}}
+\newcommand{\vpvTotal}{\text{vpvTotal}}
+\newcommand{\vpvAftrekPct}{\text{vpvAftrekPct}}
+\newcommand{\dG}{\text{DG}}
+\newcommand{\bh}{\text{bh}}
+\newcommand{\CWvoor}{\text{CW}_{\text{voor}}}
+\newcommand{\CWstar}{\text{CW}^{\star}}
+\newcommand{\ppk}{\text{ppk}}
+\newcommand{\ppktot}{\text{ppkTotal}}
+\newcommand{\KS}{\text{KS}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% --- Document-metadata -----------------------------------------------------
+\title{%
+  \textbf{Modelspecificatie --- Basic-variant}\\[0.5em]
+  \Large Invaarcalculator\texttrademark{}\ v3.9.2\\[0.3em]
+  \normalsize Verkorte uitwerking van het rekenmodel voor SSPF-gepensioneerden
+}
+\author{Innovation Nestor / hans@invaarcalculator.nl}
+\date{\today}
+
+% ============================================================================
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+% --- Header/footer-config -------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Invaarcalculator\texttrademark{} --- Basic-modelspecificatie}
+\fancyhead[R]{\small Innovation Nestor / hans@invaarcalculator.nl}
+\fancyfoot[L]{\small Pagina \thepage{} van \pageref{LastPage}}
+\fancyfoot[R]{\small v3.9.2 \ --- \ \today\ \currenttime}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\setlength{\headheight}{14pt}
+
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyhead[L]{\small Invaarcalculator\texttrademark{} --- Basic-modelspecificatie}%
+  \fancyhead[R]{\small Innovation Nestor / hans@invaarcalculator.nl}%
+  \fancyfoot[L]{\small Pagina \thepage{} van \pageref{LastPage}}%
+  \fancyfoot[R]{\small v3.9.2 \ --- \ \today\ \currenttime}%
+  \renewcommand{\headrulewidth}{0.4pt}%
+  \renewcommand{\footrulewidth}{0.4pt}%
+}
+
+\vspace{1em}
+
+\tableofcontents
+\newpage
+
+% ============================================================================
+\section{Doel en bereik}
+
+Deze modelspecificatie beschrijft de werking van de \textbf{basic-variant} van de Invaarcalculator\textsuperscript{\textregistered}\ v3.9.2, de gratis variant bedoeld voor SSPF-gepensioneerden. De basic-variant beantwoordt twee vragen op basis van een individuele aanspraak en de actuele SSPF-fondsparameters:
+
+\begin{enumerate}
+\item Wat is de waarde van uw huidige pensioenaanspraak vandaag, in één bedrag uitgedrukt (de \textbf{kapitaalwaarde}, KV)?
+\item Welk persoonlijk pensioenvermogen zou aan u worden toegekend bij invaren onder de wettelijke standaardregel (bijlage 2a Regeling Pensioenwet), de \textbf{PPV}?
+\end{enumerate}
+
+De basic-variant deelt zijn rekenkern (M1-kapitaalwaarde en M2-standaardregel) volledig met de expert-variant --- de engines zijn identiek --- maar verschilt in wat de gebruiker kan instellen en te zien krijgt:
+
+\begin{itemize}
+\item \textbf{Eén gestuurde parameter-keuze in plaats van vrij instelbare sliders.} De basic-variant biedt op het resultaatscherm een dropdown om de uitkomst te bekijken bij vijf vaste dekkingsgraden (140\%, 135\%, 130\%, 125\%, en een uitsluitend illustratieve 105\%-optie), met meebewegende werkgevers-transitiebijdrage volgens de SSPF-staffel uit het implementatieplan~\S5.5. Zie sectie~\ref{sec:dg-staffel}. Andere fondsparameters --- ervaringssterfte, spreidingstermijn, aanwendingscascade --- staan vast. De expert-variant biedt vrije instellingen voor de cascade-componenten en de balans.
+\item \textbf{Wizard-presentatie met gevoeligheidsmatrix.} Basic leidt de gebruiker door genummerde schermen (triage $\to$ persoonlijke gegevens $\to$ invoerroute $\to$ pensioenbedrag $\to$ resultaat) en toont op het resultaatscherm naast de hoofduitkomst een 3$\times$3-gevoeligheidsmatrix over dekkingsgraad en projectierente (sectie~\ref{sec:resultaat}). Expert toont alle reken-panelen naast elkaar.
+\item \textbf{Geen stochastische module.} De expert-variant bevat daarbovenop het M3/RDR-paneel: een Monte-Carlo-projectie van de uitkering ná invaren (P10/P50/P90-waaier op de DNB-scenarioset), met instelbare projectierente en risicodelingsreserve, plus een fonds-brede pool-weergave en aanvullende grafieken. De basic-variant toont uitsluitend de deterministische invaarstand.
+\end{itemize}
+
+De disconteringsrente is in \emph{beide} varianten automatisch leeftijdgebonden uit de DNB-rentetermijnstructuur (sectie~\ref{sec:rente}); dit is sinds v3.4.4 geen basic/expert-verschil meer.
+
+Voor de volledige formele uitwerking van het rekenmodel --- inclusief fondsbalans-decompositie, cohort-sommatie, alternatieve methode, en de uitputtende lijst van aannames --- zie het document \emph{Bijlage 2 --- Modelspecificatie Invaarcalculator} (expert-variant). De stochastische M3/RDR-module heeft een eigen specificatie (\emph{SPECIFICATIE M3 RDR v0.3}).
+
+% ============================================================================
+\section{Afkortingen en begrippen}
+
+\begin{description}
+\item[Wtp] Wet toekomst pensioenen, het wettelijk kader voor de hervorming van het Nederlandse pensioenstelsel (in werking 1 juli 2023).
+\item[Pw] Pensioenwet.
+\item[DNB] De Nederlandsche Bank, prudentieel toezichthouder op pensioenfondsen.
+\item[RTS] Rentetermijnstructuur, de door DNB gepubliceerde curve van risicovrije rentes per looptijd waarmee pensioenverplichtingen contant worden gemaakt.
+\item[AG2024] Prognosetafels van het Koninklijk Actuarieel Genootschap (publicatie 12 september 2024), die sterftekansen per leeftijd, gender en projectiejaar specificeren voor de Nederlandse pensioensector.
+\item[Standaardregel] de in bijlage 2a Regeling Pw vastgelegde rekenregel voor verdeling van fondsvermogen over individuele pensioenvermogens bij invaren naar de Wtp-solidaire premieregeling.
+\item[Spreidingstermijn ($N$)] parameter in de standaardregel die bepaalt over hoeveel jaar het beschikbare overschot wordt verdeeld; SSPF heeft gekozen voor levenslange spreiding, in dit model gemodelleerd als $N = 1000$ (proxy voor levenslang).
+\item[Invaardekkingsgraad ($\dG$)] verhouding tussen het beschikbare fondsvermogen en de pensioenverplichtingen op het invaarmoment. SSPF-stand ultimo 2025 (jaarverslag): 135,9\% (beleidsdekkingsgraad 133,7\%).
+\item[Disconteringsrente (rekenrente, $r$)] de rentevoet waarmee toekomstige kasstromen contant worden gemaakt bij de \emph{waardering} (KV, PPV, vpv). In deze tool automatisch leeftijdgebonden uit de DNB-RTS (sectie~\ref{sec:rente}).
+\item[Projectierente] de rentevoet waarmee een persoonlijk pensioenvermogen ná invaren wordt omgezet in een \emph{startuitkering}. Een fondskeuze, wettelijk begrensd rond de risicovrije rente (``vaste daling'', art.\ 63a Pw); nog niet door SSPF vastgelegd. In basic alleen zichtbaar als as van de gevoeligheidsmatrix (sectie~\ref{sec:matrix}); niet te verwarren met de disconteringsrente.
+\item[RDR] risicodelingsreserve: collectieve reserve onder de Wtp die toekomstige dalingen van de uitkeringen kan opvangen. Bij invaren wordt hiervoor €\,500 mln afgezonderd (implementatieplan \S5.9).
+\item[KV (kapitaalwaarde)] de contante waarde van uw pensioenaanspraak vóór invaren, inclusief een opslag voor uitvoeringskosten. Som van OP-deel en NP-deel.
+\item[PPV (persoonlijk pensioenvermogen)] het individuele kapitaal dat aan een deelnemer wordt toegerekend bij invaren onder de standaardregel. In de engine-uitvoer \ppktot\ genoemd.
+\item[OP / NP] ouderdomspensioen / nabestaandenpensioen (partnerpensioen).
+\item[Hoog-laag] uitkeringsregeling op grond van art.\ 63 Pw waarin een deelnemer tijdelijk een hoger pensioen ontvangt tot een afgesproken knipdatum, daarna een lager bedrag levenslang.
+\item[AOW-poort] invoercontrole die geboortedata afwijst waarvoor de AOW-leeftijd nog niet bereikt is (sectie~\ref{sec:aow-poort}).
+\end{description}
+
+% ============================================================================
+\section{Wat u zelf invult}
+\label{sec:invoer}
+
+De basic-variant vraagt naar gegevens uit uw Uniform Pensioenoverzicht (UPO) en eventueel een hoog-laag-regeling. Geen technische parameters, geen aanpassingen aan fondswaarden. De wizard nummert de schermen vast (1~situatie, 2~persoonlijke gegevens, 3~partner, 4~invoerroute, 5~pensioenbedrag, 6~hoog-laag, 7~resultaat, 8~gebruikte gegevens), zodat feedback altijd naar hetzelfde scherm kan verwijzen; de voorwaardelijke schermen (3 en 6) behouden hun nummer ook wanneer ze worden overgeslagen.
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}
+                    >{\raggedright\arraybackslash}p{0.45\textwidth}
+                    >{\raggedright\arraybackslash}p{0.25\textwidth}@{}}
+\toprule
+\textbf{Veld} & \textbf{Toelichting} & \textbf{Eenheid} \\
+\midrule
+\endhead
+Geboortedatum & Bepaalt uw leeftijd $x_0$ op de invuldatum (de dag waarop u de tool gebruikt) via dag/maand/jaar-dropdowns. Beschikbaar jaarbereik: huidigJaar~$-$~67 tot huidigJaar~$-$~110; daarbinnen toetst de AOW-poort (sectie~\ref{sec:aow-poort}) cohort-exact of de AOW-leeftijd al bereikt is. & datum \\
+Geslacht & Bepaalt welke AG2024-sterftetafel wordt gebruikt. & M of V \\
+Bruto ouderdomspensioen & Het bruto \emph{jaarbedrag} uit uw UPO (UPO-route). & EUR/jaar \\
+Partner aanwezig & Schakelt het partnerpensioen-deel van de berekening in. & ja/nee \\
+Bruto partnerpensioen & Indien partner (UPO-route): het bruto jaarbedrag NP uit uw UPO --- wat uw partner ontvangt na uw overlijden. & EUR/jaar \\
+Geboortedatum partner & Idem dropdowns als deelnemer. & datum \\
+Geslacht partner & Voor AG2024-tafelkeuze partner. & M of V \\
+Hoog-laag actief & Schakelt de hoog-laag-uitwerking in (vraag op het persoonlijke-gegevens-scherm; sluit de netto-route uit). & ja/nee \\
+Laag bruto ouderdomspensioen & Indien hoog-laag: het bruto jaarbedrag dat vanaf de knipdatum wordt uitgekeerd (eigen scherm~6). & EUR/jaar \\
+Knipdatum & Datum waarop de overgang van hoog naar laag plaatsvindt. Moet ná de invuldatum liggen (toekomst-validatie). & datum \\
+Netto pensioen & Alléén in de netto-route (sectie~\ref{sec:netto-route}): het netto maandbedrag dat u van SSPF ontvangt. & EUR/maand \\
+\bottomrule
+\end{longtable}
+
+\textbf{AOW-compen\-satie\-pensioen.} Wie naast het reguliere SSPF-pensioen een AOW-compen\-satie\-pensioen ontvangt (compensatie voor niet-verzekerde jaren, met een eigen UPO) kan dat bedrag voorlopig bij het reguliere SSPF-pensioen optellen; SSPF heeft de waardering daarvan bij invaren nog niet bekendgemaakt. De resultaat-toelichting in de tool vermeldt dit ook.
+
+\textbf{Drie referentiedata --- niet verwarren.} De tool hanteert drie verschillende peildata. (1)~Uw eigen leeftijd $x_0$, de AOW-poort en de geldigheidstoets op de knipdatum worden gemeten vanaf de \emph{invuldatum}: de dag waarop u de tool gebruikt. (2)~De SSPF-fondsgrootheden (de technische voorziening \vpvTotal, het fondsvermogen, de dekkingsgraad) horen bij de \emph{SSPF-balansdatum ultimo 2025} --- de peildatum van het jaarverslag 2025, de meest recente officiële fondscijfers. (3)~De disconteringsrente komt uit de \emph{DNB-RTS van 30 april 2026}, de meest recente curve op het moment van bouwen. Deze menging is bewust (officiële ankers gecombineerd met de nieuwste rentecurve), maar betekent dat de ``na invaren''-bedragen impliciet de aanname dragen dat de fondsstand op de werkelijke invaardatum (1 januari 2027) niet wezenlijk afwijkt; de definitieve bedragen hangen af van de fondsstand op dat moment.
+
+\subsection{De AOW-poort}
+\label{sec:aow-poort}
+
+De tool is gebouwd voor gepensioneerden die AOW ontvangen: de motor waardeert een direct ingegane, levenslange annuïteit vanaf $x_0$. Wie de AOW-leeftijd nog niet heeft bereikt, valt onder de SSPF-pre-pensioen-/overbruggingsregeling --- een ander uitkeringspatroon dat de motor niet correct waardeert. Een ruwe afkap op geboortejaar (huidigJaar~$-$~67) liet randgevallen door: wie in het grensjaar geboren is maar pas later in het jaar de AOW-leeftijd haalt.
+
+Daarom toetst de tool \emph{cohort-exact}, op maandniveau. Een ingebouwde tabel met twaalf breekpunten geboortemaand~$\to$~AOW-leeftijd-in-maanden (van 65 jaar voor cohorten vanaf 1930 tot 67 jaar en 3 maanden voor geboortemaanden vanaf januari 1961) is afgeleid uit het SVB-schema \code{AOW\_geboortemaand\_1930\_2000.csv} en verliesvrij geverifieerd tegen alle 852 rijen daarvan. De AOW-maand is de geboortemaand plus de cohort-AOW-leeftijd; ``bereikt'' betekent AOW-maand $\le$ de maand van de invuldatum. Wie nog niet ``bereikt'' is, krijgt een persoonlijke afwijzingspagina (``Met deze geboortedatum bereikt u de AOW pas in \emph{maand jaar}'') met de geboortedatum-invoer erin, zodat een tikfout direct te corrigeren is. De maand-granulariteit betekent dat iemand vanaf de eerste dag van zijn AOW-maand als toegelaten geldt --- hooguit een kleine maand te vroeg, verwaarloosbaar voor een gepensioneerden-tool. Het SVB-schema is definitief tot en met geboortemaand september 1964 en daarna projectie; voor de poort is dat immaterieel, omdat alleen cohorten worden toegelaten die de AOW nú al bereikt hebben.
+
+\subsection{De twee invoerroutes}
+
+Naast de \emph{UPO-route} (bruto jaarbedragen rechtstreeks van het UPO) biedt de basic-variant een \emph{netto-route} voor wie geen UPO bij de hand heeft en alleen zijn netto-uitkering kent. De tool schat dan het bruto-jaarbedrag dat bij die netto/maand hoort en gebruikt dat als invoer voor de engine; aan het eind wordt het resultaat ook in netto/maand getoond. De methodiek en aannames staan in sectie~\ref{sec:netto-route}. Twee beperkingen van de netto-route: bij een partner wordt het nabestaandenpensioen automatisch op \textbf{70\% van het (geschatte bruto) ouderdomspensioen} gezet --- het SSPF-gebruikelijke percentage --- zonder apart invoerveld, en een \textbf{hoog-laag-regeling sluit de netto-route uit} (de combinatie van twee schattingslagen zou te onnauwkeurig worden; de hoog-laag-vraag op scherm~2 blokkeert dan de netto-optie op scherm~4).
+
+% ============================================================================
+\section{Netto-route: schatten van bruto uit netto/maand}
+\label{sec:netto-route}
+
+Een SSPF-gepensioneerde die zijn UPO niet bij de hand heeft kent meestal wel zijn netto-pensioenuitkering per maand --- het bedrag dat hij feitelijk op zijn rekening krijgt. De netto-route stelt zulke gebruikers in staat de tool toch te gebruiken: de schatting van het bruto/jaar-bedrag gebeurt achter de schermen, op basis van een belasting-tabel voor AOW-gerechtigden.
+
+Deze functionaliteit zit niet in de expert-variant. Adviseurs en bestuurders werken met UPO-gegevens en hebben de bruto/jaar al beschikbaar.
+
+\subsection{Methode}
+
+De tool bevat een tabel met 16 koppelpunten netto/maand $\to$ bruto/jaar, oplopend van \mbox{EUR 600} netto/maand (\mbox{EUR 7.800} bruto/jaar, effectieve belastingdruk circa~$8\%$) tot \mbox{EUR 5.000} netto/maand (\mbox{EUR 98.700} bruto/jaar, effectieve druk circa~$39\%$). Tussen de koppelpunten wordt \textbf{lineair geïnterpoleerd}; bij een netto-invoer onder of boven de tabel-grenzen wordt geëxtrapoleerd (zie hieronder). De uitkomst wordt op hele euro's afgerond.
+
+De tabel-punten zijn berekend op basis van de Nederlandse loonbelasting-tarieven 2026 voor AOW-gerechtigden:
+
+\begin{itemize}
+\item \textbf{Schijf 1} (tot ongeveer EUR\,38.441 bruto/jaar): 17,90\% loonbelasting, plus de standaard heffingskortingen voor AOW-gerechtigden (algemene heffingskorting + ouderenkorting). Door deze kortingen ligt de effectieve belastingdruk in dit segment veel lager dan het tariefpercentage suggereert --- bij lage inkomens vangt de korting bijna de hele schijf-1-belasting op.
+\item \textbf{Schijf 2} (EUR\,38.441 tot ongeveer EUR\,76.817): 37,07\% loonbelasting. De factor tussen netto en bruto neemt hier merkbaar toe.
+\item \textbf{Schijf 3} (boven EUR\,76.817): 49,50\% loonbelasting. Voor SSPF-gepensioneerden met een hoog fondspensioen --- in de praktijk een substantieel deel van de early-adopters van de tool --- is dit het relevante segment. Hoe de tabel daar omgaat met inkomens die boven het hoogste tabel-punt liggen, staat in sectie~\ref{sec:netto-extrapolatie}.
+\end{itemize}
+
+\textbf{Extrapolatie boven en onder de tabel.} Voor netto-bedragen onder EUR\,600/maand (zelden voorkomend) wordt geëxtrapoleerd met de verhouding van het eerste tabel-punt ($\text{bruto/jaar}\,/\,\text{netto/maand} = 7.800/600 = 13{,}0$). Voor netto-bedragen boven EUR\,5.000/maand (het hoogste tabel-punt, gekoppeld aan EUR\,98.700 bruto/jaar) wordt geëxtrapoleerd met een wet-gebonden constante. In dat segment zit de gebruiker volledig in schijf 3 --- marginaal loonbelasting-tarief 49,50\%, alle heffingskortingen voor AOW-gerechtigden zijn boven die drempel volledig afgebouwd --- dus per extra euro netto/maand stijgt het bruto/jaar met:
+\begin{equation}
+\text{helling}_{\text{schijf 3}} = \frac{12}{1 - 0{,}4950} = \frac{12}{0{,}505} \approx 23{,}76 \quad \frac{\text{EUR bruto/jaar}}{\text{EUR netto/maand}}.
+\end{equation}
+De code gebruikt deze formule rechtstreeks zonder afronding. Bij wijziging van het schijf-3-tarief in een toekomstig belastingjaar moet alleen deze constante worden bijgewerkt. Een aparte sectie~\ref{sec:netto-extrapolatie} bespreekt wat dit concreet betekent voor de hoge-pensioen-doelgroep.
+
+\subsection{Aannames van de tabel}
+
+\begin{itemize}
+\item Alleen pensioeninkomen --- geen looninkomen, geen huurinkomsten, geen ondernemerswinst, geen ander pensioen.
+\item De tabel behandelt het ingevulde netto-bedrag als \emph{het complete bruto-inkomen van de gebruiker}. Voor wie naast SSPF-pensioen ook AOW heeft (vrijwel iedere gepensioneerde), houdt de tabel impliciet rekening met de gecombineerde inkomensstroom door op basis van het ingevulde netto-bedrag de bijbehorende schijf te kiezen. Voor SSPF-pensioenen die binnen schijf~1 vallen (de meerderheid) is dit een goede benadering; voor hogere fondsbedragen accumuleren afwijkingen.
+\item Standaard algemene heffingskorting en ouderenkorting toegepast, zonder bijzondere fiscale aftrekposten.
+\item Eén persoon zonder verrekening met een fiscaal partner.
+\item Bij een partner wordt het nabestaandenpensioen op 70\% van het geschatte bruto ouderdomspensioen gesteld (geen apart invoerveld in deze route).
+\item Belasting-jaar 2026 --- bij wijziging van tarieven of kortingen in latere jaren moet de tabel worden bijgewerkt. De UI vermeldt de tabel-versie expliciet.
+\end{itemize}
+
+\subsection{Uitgewerkt voorbeeld}
+\label{sec:netto-voorbeeld}
+
+Stel een gepensioneerde gebruiker vult \textbf{EUR 1.500 netto/maand} in als zijn huidige SSPF-pensioenuitkering. De tool doorloopt vier stappen.
+
+\textbf{Stap 1 --- vind het tabel-segment.} De waarde EUR 1.500 ligt tussen de tabel-punten EUR 1.400 (gekoppeld aan EUR 19.500 bruto/jaar) en EUR 1.600 (gekoppeld aan EUR 22.700 bruto/jaar). Beide tabel-punten liggen binnen schijf 1.
+
+\textbf{Stap 2 --- lineaire interpolatie.} De positie binnen het segment is
+\[
+t = \frac{1.500 - 1.400}{1.600 - 1.400} = \tfrac{1}{2}.
+\]
+Het bijbehorende bruto/jaar-bedrag is dan
+\[
+\code{pen} = 19.500 + t \cdot (22.700 - 19.500) = 19.500 + 1.600 = \text{EUR}\,21.100\,/\text{jaar}.
+\]
+
+\textbf{Stap 3 --- engine-aanroep.} Met deze geschatte bruto-aanspraak rekent de engine identiek aan de UPO-route: KV uit de annuïteitsformule (sectie~\ref{sec:m1}), PPV uit de standaardregel (sectie~\ref{sec:m2}). De rest van de berekening weet niet of de invoer uit een UPO of uit een netto-schatting kwam.
+
+\textbf{Stap 4 --- terug-conversie voor de weergave.} Stel de engine levert een PPV/KV-verhouding van $1{,}20$ (een hypothetische opslag van 20\% door dekkingsgraad-overschot en Shell-bijdrage). De geschatte bruto-aanspraak na invaren is dan
+\[
+\text{pen}_{\text{na}} = 21.100 \cdot 1{,}20 = \text{EUR}\,25.320\,/\text{jaar}.
+\]
+Voor de weergave wordt dit terug-gemapt op de netto-tabel. De waarde EUR 25.320 ligt tussen EUR 22.700 (gekoppeld aan EUR 1.600 netto/maand) en EUR 26.000 (EUR 1.800 netto/maand). Interpolatie:
+\[
+t' = \frac{25.320 - 22.700}{26.000 - 22.700} \approx 0{,}794, \qquad
+\text{netto}_{\text{na}} \approx 1.600 + 0{,}794 \cdot 200 \approx \text{EUR}\,1.759\,/\text{maand}.
+\]
+
+De gebruiker ziet dus: \emph{huidige uitkering EUR 1.500 netto/maand} en \emph{geschatte uitkering na invaren EUR 1.759 netto/maand}, een stijging van circa $17\%$. Op het bruto-niveau is de relatieve stijging $20\%$; het verschil van 3~procentpunt komt door schijfprogressie --- de extra euro's bruto worden marginaal zwaarder belast dan de eerste euro's. Dit is een geldig effect dat een directe boost-factor toepassing op netto (had de tool de EUR 1.500 simpelweg vermenigvuldigd met~$1{,}20$) had gemist. Het resultaatscherm toont in deze route ook de procentuele verandering (op deze netto-grondslag); de gevoeligheidsmatrix uit sectie~\ref{sec:matrix} wordt in de netto-route niet getoond, omdat de bruto-startuitkeringen van de matrix en het netto-``Nu'' niet op dezelfde grondslag liggen.
+
+\subsection{Extrapolatie voor hoge pensioenen}
+\label{sec:netto-extrapolatie}
+
+Het hoogste tabel-punt zit op EUR\,5.000 netto/maand, gekoppeld aan EUR\,98.700 bruto/jaar. De tool accepteert intussen pensioenbedragen tot EUR\,400.000 bruto/jaar --- de invoer-range is eerder verruimd op verzoek van de doelgroep, omdat de \textbf{early-adopters van de tool ruim boven die EUR\,98.700 zitten}. Voor deze gebruikers werkt de basic netto-route met extrapolatie, en die is sinds v3.0.230 wet-gebonden uitgevoerd in plaats van empirisch.
+
+\textbf{Uitgewerkt voorbeeld --- hoog pensioen.} Stel een gepensioneerde vult EUR\,17.000 netto/maand in (een realistische waarde voor een hoog SSPF-pensioen rond de invoergrens). Dat ligt EUR\,12.000 boven het hoogste tabel-punt. De tool extrapoleert lineair met de wet-gebonden schijf-3-helling:
+\begin{align}
+\code{pen} &= 98.700 + (17.000 - 5.000) \cdot \tfrac{12}{1 - 0{,}4950} \\
+           &\approx 98.700 + 285.148 \\
+           &\approx \text{EUR}\,383.848 \,/\text{jaar}.
+\end{align}
+Dat bedrag is wiskundig consistent met het feitelijke marginale schijf-3-tarief: elke extra euro netto/maand die de gebruiker boven de drempel ontvangt, komt overeen met $\tfrac{12}{0{,}505} \approx 23{,}76$ extra euro bruto/jaar. De basic-engine rekent vervolgens met deze EUR\,383.848 als bruto-aanspraak en levert KV en PPV op dezelfde manier als bij elk ander pensioenbedrag.
+
+\textbf{Hoe nauwkeurig is de extrapolatie hier?} Binnen schijf 3 zelf is de extrapolatie wet-exact: één marginaal tarief geldt over het hele segment, dus de lineaire helling weerspiegelt precies wat de fiscale werkelijkheid voorschrijft (afgezien van bijzondere persoonlijke aftrekposten, die de tabel sowieso niet kan meenemen). De residu-onzekerheid zit in twee dingen: ten eerste de overgangszone net boven EUR\,5.000 netto/maand (waar de feitelijke gemiddelde belastingdruk over de bestaande aanspraak nog niet zuiver schijf-3 is); ten tweede de algemene aanname dat dit netto-bedrag alleen uit pensioeninkomen voortkomt.
+
+\textbf{Wat dit betekent voor de PPV-uitkomst.} De basic-tool gebruikt het geschatte bruto als invoer voor de engine en levert daarop een PPV. Onder een PPV/KV-verhouding van $1{,}20$ (zelfde hypothese als in het basis-voorbeeld) zou een geschatte bruto-aanspraak van EUR\,383.848 leiden tot een geschatte bruto-PPV-aanspraak van EUR\,460.618/jaar --- die vervolgens via de inverse-tabel terug naar netto/maand wordt gemapt. De terug-conversie boven de drempel gebruikt de inverse-helling $1 / 23{,}76 \approx 0{,}0421$ EUR netto/maand per EUR bruto/jaar, dus de afbeelding is bit-symmetrisch en zelf-consistent.
+
+\textbf{Vergelijking met de oude extrapolatie.} Tot en met v3.0.228 gebruikte de basic-tool de helling van het laatste tabel-segment ($24{,}9$) voor extrapolatie boven EUR\,5.000 netto/maand. Dat segment bevat zelf een gedeelte schijf-2-overgang, waardoor de helling daar circa $5\%$ boven het echte schijf-3-tarief lag. Voor de doelgroep gaf dat een systematische overschatting van het geschatte bruto/jaar: bij EUR\,17.000 netto/maand kwam de oude tool op EUR\,397.500/jaar, terwijl v3.0.230 op EUR\,383.848/jaar uitkomt. Het verschil van circa EUR\,13.500 (3,4\%) verschoof de PPV-uitkomst evenredig, en is met deze wijziging weggehaald.
+
+\textbf{Aanvullende kwetsbaarheid bij hoge inkomens.} Naast de extrapolatie-precisie speelt voor hoge-pensioen-deelnemers een tweede effect: de aanname \emph{``alleen pensioeninkomen, geen andere bronnen''} (sectie~\ref{sec:netto-route}, aannames) is bij hoge inkomens vaker een vereenvoudiging die er niet meer goed bij past. Een deelnemer met een fondspensioen van EUR\,400.000 heeft typisch ook beleggingsinkomen, box-3-vermogen, mogelijk inkomen uit lijfrente of een tweede pijler buiten SSPF. De feitelijke belastingdruk op het fondspensioen-deel hangt dan af van het samengestelde fiscaal-jaarinkomen en kan zowel hoger als lager uitvallen dan de tabel suggereert. Voor deze groep is de \textbf{UPO-route altijd te prefereren}: vul daar het bruto/jaar uit het UPO direct in, dan omzeilt u de tabel-schatting volledig en blijft alleen de uitkomst-presentatie in netto een schatting --- en die nauwkeurigheidsmarge is acceptabel als oriëntatie.
+
+\subsection{Beperkingen en foutmarge}
+
+\begin{itemize}
+\item \textbf{Schatting, geen audit.} De tabel-uitkomst hoeft niet exact gelijk te zijn aan wat een gebruiker volgens zijn jaaropgaaf netto ontvangt. De daadwerkelijke netto-uitkomst hangt af van inhoudingen, bijzondere persoonlijke fiscale omstandigheden, kortingen waar deze gebruiker recht op heeft, vakantiegeld-timing, en eventuele andere inkomensstromen die de schijf-positie verschuiven. De tabel biedt een orde-van-grootte-schatting voor een typische alleen-pensioeninkomen-situatie, niet meer.
+\item \textbf{Foutmarge naar inkomenssegment:}
+\begin{itemize}
+\item \emph{Schijf 1} (tot circa EUR\,38.000 bruto/jaar): foutmarge in de heen-conversie ongeveer $\pm 2$--$3\%$; bij heen-en-terug-conversie onder $1\%$ door uitmidding.
+\item \emph{Schijf 2} (EUR\,38.000 tot circa EUR\,77.000): vergelijkbare foutmarge, mits het tabel-bereik niet wordt overschreden.
+\item \emph{Schijf 3} (boven EUR\,77.000): tabel-interpolatie loopt tot EUR\,98.700 bruto/jaar; daarboven extrapoleert de tool met de wet-gebonden schijf-3-helling $12/(1-0{,}4950) \approx 23{,}76$ (sectie~\ref{sec:netto-extrapolatie}). Binnen schijf 3 is de heen-conversie wiskundig exact ten opzichte van het marginale tarief; resterende ruis komt van de overgangszone net boven het tabel-eindpunt en van de algemene aanname dat dit netto-bedrag alleen uit pensioeninkomen voortkomt. Bij heen-en-terug is de afbeelding bit-symmetrisch.
+\end{itemize}
+\item \textbf{Geen vervanging van een belastingadviseur.} Voor concrete fiscale planning rond pensioenkeuzes is een gecertificeerd belastingadviseur het juiste adres. Dit geldt extra voor de hoge-pensioen-doelgroep, waar de aanname ``alleen pensioeninkomen'' typisch een vereenvoudiging is.
+\end{itemize}
+
+\subsection{Wanneer de UPO-route te prefereren is}
+
+Wie zijn UPO bij de hand heeft, kan beter de UPO-route gebruiken. Dat omzeilt de schatting-stap volledig: het bruto-bedrag gaat dan rechtstreeks de engine in, en de resultaten worden ook in bruto getoond. Eenheid-consistentie heen-en-weer; geen accumulerende schatfouten. Bovendien is in de UPO-route het partner-NP een eigen invoerveld (in plaats van de 70\%-aanname), is een hoog-laag-regeling invoerbaar, en wordt de gevoeligheidsmatrix (sectie~\ref{sec:matrix}) getoond.
+
+\textbf{Voor de hoge-pensioen-doelgroep is dit advies extra stringent.} Boven EUR\,98.700 bruto/jaar (circa EUR\,5.000 netto/maand) werkt de netto-tabel met extrapolatie en is de aanname ``alleen pensioeninkomen'' typisch een vereenvoudiging. Een gebruiker die zich in dit segment bevindt en zijn UPO heeft, ontkomt aan beide bronnen van ruis door bij de invoer direct het bruto/jaar uit het UPO in te vullen. Alleen de presentatie-conversie naar netto/maand op het resultaatscherm blijft dan een schatting, en daar is een paar procent afwijking aanvaardbaar als oriëntatie.
+
+De netto-route is primair bedoeld voor de situatie ``ik weet dat ik elke maand ongeveer dit bedrag krijg, en ik wil snel zien wat dat betekent''. Voor wie precies wil rekenen: pak het UPO erbij.
+
+% ============================================================================
+\section{Welke fondsparameters de basic-variant gebruikt}
+\label{sec:vaste-parameters}
+
+Onderstaande waarden staan in basic vast. Aanpassen kan in de expert-variant; gevoeligheids-analyses op de fondsbalans horen daarbij thuis. Basic toont de actuele SSPF-stand, met als enige gestuurde keuze het dekkingsgraad-scenario (sectie~\ref{sec:dg-staffel}). De fondscijfers volgen het \textbf{SSPF-jaarverslag 2025} (ultimo 2025, p.~80--81) --- de meest recente officiële stand.
+
+\subsection{Engine-parameters (M1 en M2 gedeeld)}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}
+                    >{\raggedright\arraybackslash}p{0.40\textwidth}
+                    >{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\toprule
+\textbf{Symbool} & \textbf{Betekenis} & \textbf{SSPF-waarde} \\
+\midrule
+\endhead
+$r$ & disconteringsrente (rekenrente) & uit DNB-RTS op leeftijd (zie sectie~\ref{sec:rente}) \\
+\code{sterftekansTabelId} & sterftetafel & AG2024 \\
+$t_0$ & projectiejaar AG2024 & 2026 \\
+$f(y, g)$ & ervaringssterfte (multiplier op AG2024-sterftekansen voor de SSPF-populatie) & leeftijds- en geslachtsafhankelijke tabel, Bijlage~B Ortec 2024.1 (zie sectie~\ref{sec:ervaringssterfte}) \\
+$m$ & betalingsfrequentie & 12/jaar (maandelijks, arrears) \\
+$\pi$ & indexatie op aanspraak tijdens waardering & 0,000 (kale aanspraak) \\
+$\omega$ & eindleeftijd sterftetafel & 120 jaar \\
+$\rho$ & kostenopslag op KV & 0,02 (fallback-default; geen fonds-specifieke kostenbron geconfigureerd) \\
+\bottomrule
+\end{longtable}
+
+\subsection{Ervaringssterfte: de Bijlage-B-tabel}
+\label{sec:ervaringssterfte}
+
+Sinds v3.1.0 gebruikt de tool niet langer de vlakke ervaringssterftefactor $f = 0{,}76$, maar de leeftijds- en geslachtsafhankelijke tabel uit Bijlage~B van het Ortec Uitgangspuntendocument Transitierapportage SSPF/SNPS 2024.1. In grote lijnen: mannen 15--54 jaar $f = 0{,}50$; 55--74 jaar $f = 0{,}56$; 75--95 jaar oplopend van $0{,}58$ naar $0{,}98$; vanaf 96 jaar $f = 1{,}0$. Vrouwen 15--64 jaar $f = 0{,}70$; 65--79 jaar $f = 0{,}80$; 80--84 jaar $f = 0{,}85$; 85--99 jaar oplopend van $0{,}86$ naar $1{,}0$. De volledige tabel staat in de codebase (\code{fondsen/sspf/ervaringssterfte.bijlageB.ts}).
+
+De eerdere vlakke $f = 0{,}76$ was gekalibreerd op het fonds-totaal en daarmee correct rond het populatie-zwaartepunt, maar onderschatte de sterfte van de oudste deelnemers (waar Bijlage~B richting $1{,}0$ loopt) en overschatte die van de jongere. Kanttekening: Bijlage~B hoort formeel bij de AG2022-tafel; toepassing op AG2024 is een benadering met een klein verschil.
+
+\subsection{Fondsbalans-parameters (M2)}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}
+                    >{\raggedright\arraybackslash}p{0.40\textwidth}
+                    >{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\toprule
+\textbf{Symbool} & \textbf{Betekenis} & \textbf{SSPF-waarde} \\
+\midrule
+\endhead
+$\dG$ & invaardekkingsgraad & 5-puntige keuze, default 135\% (zie sectie~\ref{sec:dg-staffel}) \\
+\vpvTotal & totale technische voorziening (anker; constant over DG-scenario's) & 18.643 mln EUR (ultimo 2025) \\
+\code{fondsvermogen} & totale bezittingen (informatief; in de scenario's afgeleid als $\dG \times \vpvTotal$) & 25.329 mln EUR (ultimo 2025; DG 135,9\%) \\
+$r_{\text{op}}$ & operationele reserve, als fractie van \vpvTotal\ --- impl.plan §5.5 & 0,02 ($\approx$ 373 mln EUR) \\
+\code{RDR} & risicodelingsreserve, vast bedrag --- impl.plan §5.9 & 500 mln EUR \\
+\code{compdepot} & compensatiedepot voor actieven, vast bedrag --- impl.plan §5.10 & 400 mln EUR \\
+\vpvAftrekPct & aanwendingscascade als afgeleide fractie van \vpvTotal: $r_{\text{op}} + (\code{RDR} + \code{compdepot})/\vpvTotal$ & 0,0683 ($\approx$ 1.273 mln EUR) \\
+\code{bijstort} & eenmalige werkgevers-transitiebijdrage (Shell-bijdrage) & staffel-conform; beweegt mee met DG (zie sectie~\ref{sec:dg-staffel}) \\
+$N$ & spreidingstermijn standaardregel & 1000 \emph{(proxy levenslang; SSPF-keuze)} \\
+\code{N\_deelnemers} & deelnemers-totaal (alleen relevant voor de per-hoofd compensatiedepot-normalisatie) & 29.020 (4.111 actief + 18.532 ingegaan + 6.377 gewezen, ultimo 2025) \\
+\bottomrule
+\end{longtable}
+
+\emph{Opmerking.} De drie aanwendings-componenten ($r_{\text{op}}$, \code{RDR}, \code{compdepot}) zijn de SSPF-stand zoals gepubliceerd in het Wtp-implementatieplan van 15 juli 2025: operationele reserve 2\% van vpv (§5.5), risicodelingsreserve €\,500 mln (§5.9), compensatiedepot voor actieven €\,400 mln (§5.10). De afgeleide \vpvAftrekPct\ is bij \vpvTotal\ = 18.643 mln EUR gelijk aan 6,83\% (bij de eerdere \vpvTotal\ = 19.100 mln was dit 6,71\%); bij een ander \vpvTotal\ verschuift deze fractie, want de twee vaste bedragen blijven gelijk en alleen het reserve-percentage schaalt mee met vpv. De spreidingstermijn $N=1000$ is de gemodelleerde proxy voor de in §5.6 gekozen levenslange spreidingsperiode, in afwijking van de wettelijke standaard van tien jaar (Bijlage 2a Regeling Pw, art.~2 lid 1). De dekkingsgraad en de werkgevers-transitiebijdrage zijn in basic gekoppeld via de SSPF-staffel; zie sectie~\ref{sec:dg-staffel}.
+
+% ============================================================================
+\section{Hoe de huidige aanspraak wordt berekend (M1, KV)}
+\label{sec:m1}
+
+De rekenkern van M1 levert de kapitaalwaarde van uw pensioenaanspraak vandaag, vóór invaren. Vier stappen: sterftekansen $\to$ overlevingskansen $\to$ annuïteitsfactor $\to$ kapitaalwaarde KV.
+
+\subsection{Sterftekansen --- AG2024}
+
+Voor leeftijd $y$, projectiejaar $t_0 = 2026$ en geslacht $g$ levert de AG2024-tafel een eenjaars-sterftekans $q^{\text{AG2024}}(y, t_0, g)$. In de tool is een subset met jaarkolommen 2022--2050 en leeftijden 0--120 ingebed (de volledige tafel loopt tot 2200; de subset beperkt de HTML-omvang en dekt het gebruikte $t_0$ ruim). Boven leeftijd 120 geldt $q = 1$.
+
+De tool gebruikt een \textbf{periode-snapshot}: dezelfde $t_0$-kolom voor alle toekomstige leeftijden:
+\begin{equation}
+q(y, t_0, g) = q^{\text{AG2024}}(y, t_0, g)
+\end{equation}
+
+(Cohorttafels --- waarin de kolom mee-evolueert met het projectiejaar --- zijn een uitbreidingspad, niet geïmplementeerd; verschil typisch~$<1\%$ op KV-niveau.)
+
+\subsection{Overlevingskansen}
+
+De ervaringssterfte-gecorrigeerde eenjaars-sterftekans is $q_{\text{fonds}}(y) = f(y, g) \cdot q(y, t_0, g)$, met $f(y,g)$ uit de Bijlage-B-tabel (sectie~\ref{sec:ervaringssterfte}). Hieruit volgt de $t$-jaars overlevingskans vanaf leeftijd $x$:
+\begin{equation}
+\ell(x, t, t_0, g, f) = \prod_{s=0}^{t-1} \bigl(1 - f(x+s,\,g) \cdot q(x + s, t_0, g)\bigr)
+\end{equation}
+
+Voor sub-jaarlijkse tijdstippen ($k/m$ met $m = 12$) wordt lineair geïnterpoleerd tussen $\ell(x, \lfloor k/m \rfloor)$ en $\ell(x, \lfloor k/m \rfloor + 1)$, conform de \textbf{arrears-conventie} voor maandbetalingen.
+
+\subsection{Annuïteitsfactor}
+
+De annuïteitsfactor is de contante waarde van een eenheidskasstroom levenslang vanaf leeftijd $x$, betaald aan het eind van elke maand:
+\begin{equation}
+\ann(x, r, t_0, g) = \frac{1}{m} \sum_{k=1}^{m \cdot T_{\text{eff}}} (1+\pi)^{k/m} \cdot \ell(x, k/m, t_0, g, f) \cdot (1+r)^{-k/m}
+\end{equation}
+
+met $T_{\text{eff}} = \min\bigl(\omega - x,\ 55,\ t \text{ zodat } \ell(x, t) < 10^{-3}\bigr)$. De horizon-cap van 55 jaar voorkomt overflow bij overigens verwaarloosbare kasstroombijdragen ver in de toekomst.
+
+Voor \textbf{fractionele leeftijden} (uw geboortedatum bepaalt de leeftijd op de invuldatum doorgaans niet als rond getal) past het model lineaire interpolatie toe tussen $\ann(\lfloor x \rfloor)$ en $\ann(\lceil x \rceil)$.
+
+\subsection{KV ouderdomspensioen ($\text{KV}_{\text{OP}}$)}
+
+Bij een enkelvoudige aanspraak (geen hoog-laag-regeling) is de kapitaalwaarde simpelweg het jaarpensioen vermenigvuldigd met de annuïteitsfactor, met een opslag $\rho$ voor uitvoeringskosten:
+\begin{equation}
+\text{KV}_{\text{OP}} = (1 + \rho) \cdot \code{pen} \cdot \ann(x_0, r)
+\end{equation}
+
+Bij een \textbf{hoog-laag-regeling} (art.\ 63 Pw) wordt het kasstroomprofiel ontbonden in twee blokken:
+\begin{align}
+\anntemp(x_0, x_{\text{knip}}) &= \frac{1}{m} \sum_{\substack{k \,:\\ x_0 + k/m \le x_{\text{knip}}}} (1+\pi)^{k/m} \cdot \ell(x_0, k/m) \cdot (1+r)^{-k/m}\\[0.4em]
+\text{KV}_{\text{OP}} &= (1 + \rho) \cdot \Bigl[\, \code{pen}_{\text{laag}} \cdot \ann(x_0, r) + (\code{pen} - \code{pen}_{\text{laag}}) \cdot \anntemp(x_0, x_{\text{knip}}) \,\Bigr]
+\end{align}
+
+waarbij $\anntemp$ een tijdelijke annuïteit is die alleen kasstromen tot leeftijd $x_{\text{knip}}$ telt. De basic-variant weigert een knipdatum in het verleden ($x_{\text{knip}} \le x_0$) reeds in de invoervalidatie.
+
+\subsection{KV nabestaandenpensioen ($\text{KV}_{\text{NP}}$)}
+
+Voor deelnemers zonder partner geldt $\text{KV}_{\text{NP}} = 0$. Voor deelnemers met partner gebruikt het model een \textbf{joint-life-annuïteit}: de contante waarde van een uitkering die start bij overlijden van de deelnemer en doorloopt zolang de partner leeft.
+
+\begin{equation}
+\ann_{x|y}(r) = \frac{1}{m} \sum_{k=1}^{m \cdot T_{\text{eff}}} (1+\pi)^{k/m} \cdot \Pi(x, y, k) \cdot (1+r)^{-k/m}
+\end{equation}
+
+Daarin is $\Pi(x, y, k)$ de gezamenlijke kans dat de deelnemer ($x$) reeds is overleden op tijdstip $k/m$ \emph{en} de partner ($y$) nog leeft. Numeriek wordt deze kans opgebouwd door te sommeren over alle mogelijke overlijdens-tijdstippen $k_d$ van de deelnemer:
+\begin{equation}
+\Pi(x, y, k) = \sum_{k_d = 1}^{k} \Delta\ell_x(k_d) \cdot \ell_y^{\bh}(k_d, k)
+\end{equation}
+
+waarbij $\ell_y^{\bh}$ de overleving van de partner is met een \textbf{broken-heart-correctie}: direct na overlijden van de deelnemer is de sterftekans van de partner gedurende vijf jaar verhoogd (factor 1,50 voor mannen, 1,25 voor vrouwen, lineair afnemend naar 1,0 over de vijf-jaars-window). Dit modelleert het empirische verhoogde overlijdensrisico in de eerste jaren na verlies van een levenspartner.
+
+De NP-kapitaalwaarde is dan:
+\begin{equation}
+\text{KV}_{\text{NP}} = (1 + \rho) \cdot y_0 \cdot \ann_{x|y}(r)
+\end{equation}
+
+\subsection{Kostenopslag $\rho$}
+
+De opslag $\rho$ dekt de toekomstige uitvoeringskosten van het pensioen. De engine kent een fallback-ladder (afleiding uit jaarlijkse uitvoeringskosten $\to$ directe fonds-fractie $\to$ default); voor SSPF zijn geen fonds-specifieke kostenbronnen geconfigureerd, zodat de default $\rho = 0{,}02$ (2\%) geldt. Dit is een industrie-benchmark.
+
+\subsection{Totaal-KV}
+
+\begin{equation}
+\text{KV} = \text{KV}_{\text{OP}} + \text{KV}_{\text{NP}}
+\end{equation}
+
+Naast KV levert M1 ook de \emph{$q$-gewogen} contante waarden $\text{cw}^{\star}_{\text{OP}}$ en $\text{cw}^{\star}_{\text{NP}}$ (dezelfde kasstromen, maar elk gewogen met de wettelijke spreidings-multiplier $q(h,N)$ uit sectie~\ref{sec:m2}); die voeden de standaardregel in M2.
+
+% ============================================================================
+\section{Disconteringsrente: automatisch op leeftijd via DNB-RTS}
+\label{sec:rente}
+
+De disconteringsrente $r$ waarmee de tool waardeert (KV, PPV) wordt automatisch gekozen op basis van uw leeftijd, uit de DNB-rentetermijnstructuur voor pensioenfondsen. Dit geldt sinds v3.4.4 in \emph{beide} varianten: ook in expert stuurt geen handmatige slider meer de waarderings-rente (de vroegere expert-rente-slider is daar de \emph{projectierente} voor de M3-uitkeringsprojectie geworden, die de waardering niet raakt). De wettelijke waarderingscurve is daarmee in de hele tool niet handmatig te manipuleren.
+
+\subsection{Bron}
+
+De DNB-RTS die de tool gebruikt is op build-tijd ingelezen uit \code{data/dnb-rts.csv}; de peildatum is \textbf{30 april 2026} in deze release en staat in de tool vermeld. DNB publiceert deze curve maandelijks; voor reproductie zie de DNB-website (sectie ``Toezicht'' $\to$ ``Open boek pensioenen'' $\to$ ``Rentetermijnstructuur'').
+
+\subsection{Mechanisme}
+
+Bij de build wordt uit de volledige curve (looptijden 1--100 jaar) een tabel leeftijd~$\to$~rente afgeleid voor leeftijden 18--100. Per leeftijd $x_0$ is de waarde een \textbf{duration-gewogen gemiddelde} van de curve over de uitkeringsfase: voor elk kasstroomjaar $t$ in de uitkeringsfase (vanaf leeftijd 68, tot leeftijd 100) geldt als gewicht de overlevingskans maal de discontofactor, $w_t = \ell(x_0, t) \cdot (1 + r_t)^{-t}$, en de leeftijds-rente is $\sum_t r_t\,w_t / \sum_t w_t$. De overlevingskansen voor deze \emph{weging} komen uit een eenvoudige Gompertz-benadering ($a = 2 \cdot 10^{-5}$, $b = 0{,}09$); zij bepalen alleen de gewichten van de middeling, niet de waardering zelf (die loopt via AG2024 en de Bijlage-B-tabel, sectie~\ref{sec:m1}). De helper \code{rekenrenteVoorLeeftijd($x$)} levert de waarde in decimaal voor de op een geheel jaar afgeronde leeftijd en clipt buiten het bereik $[18, 100]$ naar de randwaarden. Het transparantiescherm (sectie~\ref{sec:parameters-scherm}) toont de gebruikte waarde met twee decimalen, omdat juist dat tweede decimaal het verschil tussen leeftijden zichtbaar maakt.
+
+Het achterliggende principe: een gepensioneerde heeft een kortere resterende pensioen-horizon dan een actieve deelnemer en kijkt dus naar een korter, gewoonlijk anders gelegen stuk van de DNB-curve. De leeftijds-rente beweegt daarmee automatisch mee met de marktcurve én met de leeftijd van de gebruiker.
+
+\subsection{Waarom dit een vereenvoudiging is}
+
+In een formeel actuariële discontering zou de hele curve worden gebruikt --- elke toekomstige kasstroom contant gemaakt met de looptijd-specifieke rente uit de RTS. De tool volgt de praktische conventie van een \emph{vlakke benadering}: één enkele rentevoet voor alle looptijden, gekozen passend bij de gewogen gemiddelde looptijd van de pensioenstroom (die meebeweegt met leeftijd). Voor de gepensioneerden-doelgroep, met relatief korte en weinig gespreide kasstromen, is het verschil met een volledige-curve-discontering klein.
+
+% ============================================================================
+\section{Hoe het persoonlijk pensioenvermogen wordt berekend (M2, PPV)}
+\label{sec:m2}
+
+Onder de Wtp wordt het collectieve pensioenvermogen via de standaardregel verdeeld over individuele pensioenvermogens. De basic-variant berekent uw PPV exact volgens dezelfde wettelijke regel als de expert-variant, alleen zonder dat u parameters kunt aanpassen.
+
+\subsection{Beschikbaar fondsvermogen $M$ (in het kort)}
+
+Het fondsvermogen $F = \dG \cdot \vpvTotal$ wordt eerst gecorrigeerd voor drie reserveringen die de standaardregel niet mee mag nemen, en vervolgens opgehoogd met de eenmalige werkgevers-transitiebijdrage (Shell-bijdrage). De drie reserveringen samen vormen de \emph{aanwendingscascade}:
+\begin{equation}
+M = F - \underbrace{r_{\text{op}} \cdot \vpvTotal}_{\text{operationele reserve}} - \underbrace{\code{RDR}}_{\text{vast bedrag}} - \underbrace{\code{compdepot}}_{\text{vast bedrag}} + \code{bijstort}
+\label{eq:cascade}
+\end{equation}
+Equivalent, met de aanwendingsfractie $\vpvAftrekPct = r_{\text{op}} + (\code{RDR} + \code{compdepot})/\vpvTotal$:
+\begin{equation}
+M = F - \vpvAftrekPct \cdot \vpvTotal + \code{bijstort}
+\end{equation}
+Voor SSPF bij \vpvTotal\ = 18.643 mln EUR levert dit \vpvAftrekPct\ = 6,83\%. De UI berekent deze fractie runtime uit de drie componenten; bij een andere \vpvTotal\ blijven de twee vaste bedragen onveranderd en schuift de fractie evenredig.
+
+\emph{Implementatie-detail (sinds v3.4.4):} intern voert de engine de RDR niet via de aftrek-fractie maar via een aparte \code{buffer}-parameter af. Beide paden trekken de €\,500 mln even zwaar van $M$ af --- de uitkomst is kapitaal-equivalent ($\Delta\text{ppk} = 0$, geverifieerd) en vergelijking~\eqref{eq:cascade} blijft de geldige modelbeschrijving. Het verschil is alleen relevant voor de expert-M3-module, waar de buffer ook de uitkeringsprojectie beschermt; in basic heeft het geen zichtbaar effect.
+
+Voor uitgebreidere toelichting op de Model-C-bundle-aftrek-metho\-diek: zie de sectie ``Fondsbalans'' van de expert-modelspecificatie.
+
+\subsection{Wettelijke spreidings-multiplier $q(h, N)$}
+
+De standaardregel verdeelt het beschikbare overschot ($M - \vpvTotal$) over de deelnemers, met als spreidingsregel:
+\begin{equation}
+q(h, N) = \min\bigl(\lfloor h \rfloor / N,\ 1\bigr)
+\end{equation}
+waarbij $h$ de toekomst-horizon in jaren is en $N$ de spreidingstermijn. SSPF kiest $N = 1000$ (proxy voor levenslange spreiding), waarmee $q(h, N)$ feitelijk lineair oploopt over een zeer lange horizon: kasstromen verder in de toekomst krijgen een evenredig groter deel van het overschot mee.
+
+\subsection{De wet-canonieke uitwerking: $\CWstar$ en de fondsschalingsfactor $x^{\star}$}
+
+De standaardregel werkt met twee contante waarden per deelnemer: de gewone contante waarde van de kasstromen, $\CWvoor(i) = \text{KV}(i)$, en de $q$-gewogen contante waarde
+\begin{equation}
+\CWstar(i) = \sum_h q(h, N) \cdot \KS(i, h) \cdot v(h),
+\end{equation}
+waarin $\KS(i,h)$ de kasstroom van deelnemer $i$ op horizon $h$ is en $v(h)$ de discontofactor. M1 levert $\CWstar$ per deelnemer als $\text{cw}^{\star}_{\text{OP}}$ en $\text{cw}^{\star}_{\text{NP}}$.
+
+Op fondsniveau bepaalt een cohort-sommatie de schalingsfactor die het overschot precies laat opgaan:
+\begin{equation}
+x^{\star} = \frac{M - \text{CW}^{\text{fonds}}_{\text{voor}}}{\text{CW}^{\star}_{\text{fonds}}},
+\end{equation}
+waarbij $\text{CW}^{\text{fonds}}_{\text{voor}} = \vpvTotal$ (het exacte SSPF-data-anker). De fonds-$\CWstar$ wordt geschat via een \emph{cohort-proxy}: per leeftijdscohort wordt de verhouding $\CWstar/\CWvoor$ berekend voor een proxy-deelnemer (SSPF-gewogen man/vrouw-mix, joint-life-NP-component met partner van het andere geslacht, drie jaar jonger, NP-aandeel 70\%), en de fondsbrede ratio $R = \text{CW}^{\star}_{\text{fonds}}/\text{CW}^{\text{fonds}}_{\text{voor}}$ volgt uit de cohort-gewogen som. Dan is $\text{CW}^{\star}_{\text{fonds}} = R \cdot \vpvTotal$ --- de absolute schaal van de proxy valt weg en alleen de tijd-structuur telt. De cohort-bezetting (15 vijfjaars-cohorten, 27.688 gepensioneerden) is afgeleid uit Bijlage~8 van het SSPF-transitieplan (demografie per 31-12-2023), verouderd met AG2024 en de Bijlage-B-ervaringssterfte naar de invaardatum 1-1-2027. De volledige cohort-tabel en de afleiding staan in de expert-modelspecificatie (secties ``Cohort-proxy'' en ``Fondsschalingsfactor'').
+
+\subsection{PPV-componenten}
+
+Uw persoonlijk pensioenvermogen bestaat uit drie additieve componenten:
+\begin{equation}
+\ppktot = \ppk_{\text{base}} + \ppk_{\text{surplus}} + \ppk_{\text{comp}}
+\end{equation}
+
+\begin{itemize}
+\item $\ppk_{\text{base}} = \text{KV}$ --- het basis-deel, per definitie gelijk aan uw kapitaalwaarde. Garandeert dat een 100\%-dekkingsgraad-fonds zonder transitiebijdrage iedereen zijn KV-equivalent toebedeelt.
+\item $\ppk_{\text{surplus}} = x^{\star} \cdot (\text{cw}^{\star}_{\text{OP}} + \text{cw}^{\star}_{\text{NP}})$ --- uw aandeel in het beschikbare overschot, via de $q$-gewogen contante waarde van uw eigen kasstromen. Voor SSPF (positief overschot dankzij $\dG > 100\%$ en bijstort) is dit een positieve opslag. De OP/NP-splitsing volgt door lineariteit: $\ppk_{\text{OP}} = \text{KV}_{\text{OP}} + x^{\star}\,\text{cw}^{\star}_{\text{OP}} + \ppk_{\text{comp}}$ en analoog voor NP (zonder compensatie-deel).
+\item $\ppk_{\text{comp}}$ --- aandeel uit het compensatiedepot. Voor de gebruikers van deze tool is dit \textbf{nul}: het compensatiedepot is uitsluitend bestemd voor actieve deelnemers (compensatie afschaffing doorsneesystematiek), en de tool bedient gepensioneerden. Het depot zelf is niet nul (€\,400 mln, sectie~\ref{sec:vaste-parameters}); het wordt in de aanwendingscascade volledig vóór de toedeling afgezonderd, en de engine-toedelingsparameter voor het depot staat voor SSPF op nul.
+\end{itemize}
+
+% ============================================================================
+\section{Vijf dekkingsgraad-scenario's volgens de SSPF-staffel}
+\label{sec:dg-staffel}
+
+Hoewel de basic-variant geen vrije fondsbalans-instellingen heeft, biedt het resultaatscherm wél één gestuurde keuze: een dropdown waarmee u de PPV-uitkomst kunt bekijken bij \textbf{vijf verschillende invaardekkingsgraden}. Vier daarvan reproduceren de staffel uit het SSPF-implementatieplan~\S5.5; de vijfde (105\%) is uitsluitend illustratief.
+
+\subsection{De vijf scenario's}
+
+Het implementatieplan koppelt de hoogte van de Shell-transitiebijdrage aan de invaardekkingsgraad: hoe lager de dekkingsgraad, hoe hoger de aanvullende bijdrage van de werkgever. Concreet:
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}
+                    >{\raggedright\arraybackslash}p{0.30\textwidth}
+                    >{\raggedright\arraybackslash}p{0.45\textwidth}@{}}
+\toprule
+\textbf{$\dG$-keuze} & \textbf{Shell-bijdrage} & \textbf{Rol in de staffel} \\
+\midrule
+\endhead
+140\% & 500 mln EUR & ``Hoog-uitkomst''-rand (staffel-trede $\ge 135\%$) \\
+135\% (default) & 500 mln EUR & Drempel van de $\ge 135\%$-trede; staffel-grens \\
+130\% & 650 mln EUR & Trede 130--135\% \\
+125\% & 850 mln EUR & Trede 125--130\% (laagste staffel-trede) \\
+105\% \emph{(ter illustratie)} & 850 mln EUR & Geen staffel-trede: SSPF streeft ernaar met minimaal 125\% in te varen. Deze optie laat alleen zien hoe de uitkomst eruit zou zien als vrijwel het hele overschot zou wegvallen; de tool markeert de keuze als illustratief. \\
+\bottomrule
+\end{longtable}
+
+Context bij de werkelijke SSPF-stand: ultimo 2025 was de dekkingsgraad 135,9\% (jaarverslag 2025; beleidsdekkingsgraad 133,7\%), en in het voorjaar van 2026 lag de maandstand daar iets boven --- alle binnen de $\ge 135\%$-trede. De 140\%-keuze representeert dus een hoog-uitkomst-rand, de 135\%-keuze de staffel-drempel waar de bijdrage van trede zou kunnen veranderen, en 130\% / 125\% zijn hypothetische slechtere uitkomsten waaronder de werkgever meer zou moeten bijstorten.
+
+\subsection{Waarom 135\% als default in plaats van de exacte fondsstand}
+
+Voor het default-resultaat kiest de basic-variant 135\% in plaats van de exacte fondsstand (135,9\% ultimo 2025). Reden: 135\% is de \textbf{staffel-grens}; in alle scenario's vanaf 135\% geldt dezelfde Shell-bijdrage (500 mln EUR). De uitkomst voor de werkelijke dekkingsgraad ligt heel dicht tegen die voor 135\% aan, maar 135\% laat conceptueel duidelijker zien op welk staffel-niveau het scenario zit. Bij het klikken van de Bereken-knop wordt de dropdown-keuze ook gereset naar 135\%, zodat een nieuwe berekening altijd start op de default-staffel-grens en een eerder gekozen scenario niet ``blijft kleven''.
+
+\subsection{Hoe de berekening verschuift}
+
+Het scenario-mechanisme houdt het anker constant en laat het fondsvermogen meebewegen:
+
+\begin{enumerate}
+\item Het anker \vpvTotal\ blijft constant. In de scenario-berekening wordt het afgeleid als $F_{\text{config}} / \dG_{\text{config}} = 25.329 / 1{,}359 \approx 18.639$ mln EUR --- tot op afronding gelijk aan de gerapporteerde voorziening van 18.643 mln (SSPF-balansdatum ultimo 2025).
+\item Het fondsvermogen verschuift: $F_{\text{scenario}} = \dG_{\text{scenario}} \cdot \vpvTotal$.
+\item De bijstort wijzigt naar de staffel-trede die bij de gekozen dekkingsgraad hoort.
+\item Het beschikbare $M$ wordt opnieuw bepaald conform sectie~\ref{sec:m2}.
+\item De volledige standaardregel-cohort-sommatie ($x^{\star}$) wordt opnieuw uitgevoerd, en de PPV-uitkomst voor uw eigen invoer wordt opnieuw getoond.
+\end{enumerate}
+
+Uw kapitaalwaarde KV is onafhankelijk van de DG-keuze (M1 hangt niet af van fondsbalans-grootheden), dus alleen de PPV-uitkomst verschuift. Het transparantiescherm (sectie~\ref{sec:parameters-scherm}) laat per scenario zien hoe de Shell-bijdrage en het verdeelbaar overschot verschillen.
+
+\subsection{Wat dit u inzichtelijk maakt}
+
+Met de scenario-vergelijking kunt u zien:
+\begin{itemize}
+\item hoe gevoelig uw eigen PPV is voor de dekkingsgraad op de werkelijke invaardatum (1 januari 2027), die op dit moment nog niet bekend is;
+\item hoe de staffel-werking van de Shell-bijdrage uw uitkomst tempert: bij lagere dekkingsgraad compenseert de hogere werkgeversbijdrage een (deel van) het wegvallende overschot;
+\item welk effect een sprong over de staffel-grens (van 135\% naar 130\%) heeft op uw individuele uitkomst.
+\end{itemize}
+
+De gevoeligheidsmatrix op hetzelfde scherm (sectie~\ref{sec:matrix}) toont daarbovenop de \emph{lokale} gevoeligheid rond de gekozen dekkingsgraad ($\pm 5$ procentpunt) en de projectierente-as.
+
+% ============================================================================
+\section{Het resultaatscherm}
+\label{sec:resultaat}
+
+Het resultaatscherm (scherm~7, kop ``Uw verwachte pensioen na invaren'') toont de uitkomst in twee blokken: de bedragen-tabel en --- in de UPO-route zonder hoog-laag --- een gevoeligheidsmatrix. Boven de tabel staat de dekkingsgraad-dropdown (``Dekkingsgraad op invaardatum:'', sectie~\ref{sec:dg-staffel}) en een route-subtitel: ``Berekend op basis van uw UPO'' dan wel ``Benadering op basis van uw maandbedrag'' (netto-route, met waarschuwings-opmaak omdat de bedragen daar schattingen zijn). De scherm-titel zelf is aanklikbaar (\code{?}-icoon) en opent de toelichting bij het resultaat, waaronder de status van de berekening (indicatie vóór de transitiebrief en de definitieve SSPF-berekening).
+
+\subsection{De bedragen-tabel}
+
+Drie rijen (\emph{Nu} / \emph{Na invaren} / \emph{Verschil}) in twee kolommen (per maand / per jaar), in de eenheid van de gekozen route (bruto bij UPO, netto bij de netto-route). De kern van de berekening:
+\begin{equation}
+\text{boost} = \frac{\ppktot}{\text{KV}}, \qquad
+\text{Na invaren (jaar)} = \code{pen} \cdot \text{boost},
+\end{equation}
+waarna de netto-route het bruto-jaarresultaat via de belastingtabel terugrekent naar netto/maand (sectie~\ref{sec:netto-route}). De Verschil-rij draagt een teken ($+$/$-$) maar sinds v3.9.2 geen richtingskleur; alle bedragen zijn afgerond op hele euro's (de hele berekening is een benadering; centen zouden schijnnauwkeurigheid suggereren). Een rij \emph{Procentueel} verschijnt alleen wanneer de gevoeligheidsmatrix niet wordt getoond; mét matrix is het percentage daar opvraagbaar via de hoek-dropdown (zie hieronder), en zou de rij dubbelop zijn. In de netto-route is het getoonde percentage iets lager dan de bruto-boost, door belastingschijf-progressie (sectie~\ref{sec:netto-voorbeeld}).
+
+Wat ``Na invaren'' laat zien is het pensioen dat volgt uit de kapitaalwaarde van uw aanspraken ná invaren --- niet dat vermogen zelf. Het bedrag hoort bij de invaardatum (1 januari 2027) en is een momentopname onder de gekozen dekkingsgraad; het zegt niets over het verloop van de uitkering in de jaren erna (die onder de Wtp variabel is).
+
+\subsection{De gevoeligheidsmatrix (dekkingsgraad $\times$ projectierente)}
+\label{sec:matrix}
+
+Onder de bedragen staat in de UPO-route een omkaderd 3$\times$3-blok dat de gevoeligheid van de uitkomst voor twee onzekere grootheden tegelijk toont. De \textbf{kolommen} zijn de gekozen dekkingsgraad $\pm 5$ procentpunt (keuze 135\% $\to$ kolommen 130/135/140), met de bijstort vastgehouden op die van de \emph{gekozen} DG --- een zuivere ceteris-paribus-as, anders zou de staffel-sprong door het DG-effect heen lopen. De \textbf{rijen} zijn drie projectierentes: laag / anker / hoog, met het anker op de werkelijke disconteringsrente $r$ (sectie~\ref{sec:rente}) en de band
+\begin{equation}
+\text{band} = r \pm 0{,}35 \cdot (5{,}4\% - r), \qquad \text{ondergrens geclipt op } 0,
+\end{equation}
+de wettelijke maximale vaste daling (art.\ 63a Pw / art.\ 17a Besluit uitvoering Pw): 35\% van het verschil tussen het aandelenrendement volgens de parameters (5,4\% bruto meetkundig, art.\ 23a lid 1 onder b Besluit ftk, Commissie Parameters 2022) en de risicovrije rente. De rentes zijn dus leeftijds- en marktafhankelijk en worden met twee decimalen getoond.
+
+Elke cel bevat de jaar-startuitkering
+\begin{equation}
+u_0(\dG, \text{lat}) = \code{pen} \cdot \frac{\ppk(\dG)}{\text{KV}} \cdot \frac{\ann(x_0, r)}{\ann(x_0, \text{lat})},
+\end{equation}
+waarin de eerste factor de kapitaal-uplift bij die dekkingsgraad is (kolom-as; $\ppk(\dG)$ via een volledige M2-herberekening per kolom) en de tweede factor het omzettingseffect van de projectierente (rij-as; via de OP-annuïteit). De twee assen zijn onafhankelijk: de DG schaalt elke kolom uniform, de projectierente kantelt elke rij uniform. Bij lat $= r$ en de gekozen DG reduceert $u_0$ per constructie tot $\code{pen} \cdot \text{boost}$: de \textbf{snijcel} (visueel gemarkeerd) is exact het ``Na invaren''-bedrag uit de bedragen-tabel, in elke weergave-eenheid.
+
+Een dropdown in de hoekcel bepaalt wat de cellen tonen, in vijf metrics: \emph{\% t.o.v.\ Nu} (default), \emph{Na invaren / jaar}, \emph{Na invaren / maand}, \emph{Verschil / jaar}, \emph{Verschil / maand} --- allemaal afgeleiden van dezelfde $u_0$. Beide as-labels (``dekkingsgraad'', ``projectierente'') zijn aanklikbaar en openen elk hun eigen toelichting.
+
+Twee kanttekeningen bij het lezen van de matrix. Ten eerste: de projectierente-rijen tonen \emph{startbedragen}. Een hogere projectierente geeft een hogere start, maar betekent ook een uitkering die daarna naar verwachting daalt (vaste daling); een lagere projectierente start lager maar geeft ruimte voor stijging. Hoger in de matrix is dus niet zonder meer beter --- de tool rekent het verloop niet uit. Ten tweede: SSPF kiest in het implementatieplan een vaste daling (RTS plus opslag), maar de hoogte van die opslag was bij publicatie nog een te nemen bestuursbesluit en is publiek niet bekend; daarom toont de matrix de hele wettelijke speelruimte in plaats van een specifieke SSPF-keuze.
+
+De matrix wordt \emph{niet} getoond bij: de netto-route (de bruto-startuitkeringen van de matrix en het netto-``Nu'' liggen niet op dezelfde grondslag), een actieve hoog-laag-regeling (``\code{pen}'' is daar het hoge bedrag terwijl het kapitaal de hele aanspraak betreft --- de grondslagen sluiten niet), of ongeldige invoer. In die gevallen toont de bedragen-tabel wél de Procentueel-rij.
+
+\subsection{Hoog-laag op het resultaatscherm}
+
+Bij een actieve hoog-laag-regeling verwerkt de kapitaalwaarde de knip volledig (sectie~\ref{sec:m1}): het getoonde ``Na invaren'' is het hoge bedrag, gewaardeerd op de volledige (geknipte) aanspraak. Onder de tabel staat één toelichtingsregel: \emph{``Vanaf [knipdatum] daalt uw pensioen volgens uw hoog/laag regeling.''} --- zonder bedrag.
+
+Dat is een bewuste keuze (v3.4.0, ``één-tijdspunts-eerlijkheid''). De engine berekent één momentopname op de invaardatum; toegepast op het hoge bedrag is er ten minste één moment (de invaardatum zelf) waarop dat getal klopt. Een ``laag bedrag na invaren'' ($\code{pen}_{\text{laag}} \times \text{boost}$) zou daarentegen een synthetische grootheid zijn: tussen invaardatum en knipdatum liggen jaren met rendement, sterftetafel-updates en eventuele verhogingen of verlagingen die M1/M2 niet modelleren, zodat er geen enkel moment is waarop het werkelijke lage bedrag met die rekensom samenvalt. De tool toont daarom geen getal waarvan hij de geldigheid niet kan claimen. De expert-variant, die met M3 wél vooruit projecteert, verwerkt de knip daar in de uitkeringswaaier.
+
+% ============================================================================
+\section{Het scherm ``Gebruikte gegevens''}
+\label{sec:parameters-scherm}
+
+Vanaf het resultaatscherm is een transparantiescherm bereikbaar (scherm~8, ``Gebruikte gegevens''), dat laat zien welke gegevens de zojuist getoonde berekening hebben gevoed. Het is read-only en bestaat uit twee groepen.
+
+\textbf{Uw gegevens} spiegelt de invoer (geboortedatum/leeftijd, pensioenbedrag, partner, hoog-laag) ter controle, en toont daaronder de persoonlijke kapitaalopbouw als optelling: \emph{Kapitaalwaarde pensioenaanspraken nu} (KV) $\to$ \emph{Bij: aandeel in het verdeelbaar overschot} (of \emph{Af: \ldots tekort}; $= \ppk_{\text{surplus}} + \ppk_{\text{comp}}$) $\to$ \emph{Kapitaalwaarde pensioenaanspraken na invaren} (\ppktot). Daaronder staat de \emph{Gebruikte rekenrente} met twee decimalen --- juist het tweede decimaal maakt het leeftijdseffect van de DNB-RTS-tabel zichtbaar.
+
+\textbf{Gegevens van het fonds (SSPF)} toont het gekozen dekkingsgraad-scenario als sluitende rekensom die uitkomt op het verdeelbaar overschot:
+\begin{align*}
+&\text{Fondsvermogen} - \text{pensioenvoorziening} - \text{wettelijke reserve} - \text{RDR} - \text{compensatiedepot}\\
+&\quad + \text{transitiebijdrage} \;=\; \text{Verdeelbaar overschot bij invaren},
+\end{align*}
+met elke term als eigen regel (de voorziening is veruit de grootste aftrekpost en is bewust zichtbaar gemaakt --- zonder die regel was ``verdeelbaar'' niet na te rekenen). De getoonde dekkingsgraad, het meegeschoven fondsvermogen en de transitiebijdrage volgen exact de dropdown-keuze van het resultaatscherm (bij 105\% met de markering ``ter illustratie''); de spreidingsperiode staat er als ``Levenslang''. Het getoonde verdeelbaar overschot is de som van de getoonde regels en wijkt daardoor circa 0,06\% af van de interne engine-waarde (afrondingsverschil tussen de DG-geschaalde reserve en het vpv-anker); de ppk-bedragen zelf komen onveranderd uit de engine. Narekenbaarheid op het scherm zelf is hier het doel.
+
+Onderaan verwijst een voetnoot naar de expert-variant op \href{https://invaarcalculator.nl/expert}{invaarcalculator.nl/expert} voor wie de berekening tot in detail wil zien en zelf parameters wil aanpassen.
+
+% ============================================================================
+\section{Wat de basic-variant niet doet}
+\label{sec:niet-in-basic}
+
+Voor transparantie volgt hieronder een lijst van zaken die de basic-variant \emph{niet} biedt, terwijl ze in de expert-variant wél toegankelijk zijn. (Deze lijst is herzien ten opzichte van eerdere versies van dit document: de expert-variant zelf is veranderd --- de vroegere scenario-grafieken en de documenten-pane bestaan niet meer, het M3/RDR-paneel is erbij gekomen.)
+
+\begin{itemize}
+
+\item \textbf{Vrije fondsbalans-instellingen.} Behalve de staffel-conforme dekkingsgraad-keuzes (sectie~\ref{sec:dg-staffel}) staan alle fondsparameters in basic vast op de SSPF-waarden. Expert biedt instellingen voor fondsvermogen, dekkingsgraad, transitiebijdrage (ook \emph{los} van de staffel), wettelijke reserve, RDR en compensatiedepot --- bijvoorbeeld ``wat als bij $\dG = 135\%$ de Shell-bijdrage 250 mln zou zijn?''.
+
+\item \textbf{Instelbare projectierente.} Basic toont de projectierente alleen als vaste band in de gevoeligheidsmatrix (sectie~\ref{sec:matrix}). Expert heeft een vrije projectierente-schuif (1,5--4,5\%) die de startuitkering en de uitkeringsprojectie live laat meebewegen. (De \emph{waarderings}-rente is in beide varianten de automatische DNB-RTS-leeftijdsrente; zie sectie~\ref{sec:rente}.)
+
+\item \textbf{Stochastische uitkeringsprojectie (M3/RDR-waaier).} Het expert-M3-paneel projecteert de uitkering ná invaren vooruit met een Monte-Carlo-simulatie op de DNB-scenarioset (P-set): een P10/P50/P90-waaier van de bruto-jaaruitkering, inclusief de werking van de risicodelingsreserve (het individuele RDR-budget dat neerwaartse scenario's opvangt tot het is uitgeput) en uitkeringssmoothing. Basic toont uitsluitend de deterministische invaarstand.
+
+\item \textbf{Aanvullende grafieken.} Expert bevat een grafieken-paneel (ouderdomspensioenvermogen naar leeftijd, RDR-budget naar leeftijd, startuitkering en uplift als functie van de projectierente) en een fonds-breed pool-paneel (verloop van de collectieve risicodelingsreserve over 15 jaar, met cumulatieve uitputtingskans). Basic heeft geen grafieken.
+
+\item \textbf{Alternatieve invaarmethode (Ortec).} De expert-variant biedt naast de wettelijke standaardregel een parallel berekend alternatief verdeelpad gebaseerd op het Ortec Uitgangspuntendocument \S6, via een methode-schakelaar. Voor de meeste deelnemers ligt het verschil onder een procent; voor enkele cohorten kan het groter zijn. Basic rekent uitsluitend de standaardregel.
+
+\item \textbf{Cohort-detail.} Expert toont de uitkomst-opbouw per leeftijdscohort (de deepdive achter de fondsschalingsfactor); basic toont alleen de eigen uitkomst.
+
+\end{itemize}
+
+Andersom heeft basic één route die expert mist: de netto-route (sectie~\ref{sec:netto-route}). En anders dan in eerdere versies zijn de verantwoordings-PDF's in géén van beide varianten meer ingebed; de documentatie staat in de publieke GitHub-repository en is op aanvraag beschikbaar (sectie~\ref{sec:bronnen}).
+
+\subsection{Wat de basic-variant net zomin doet als de expert}
+
+Een aantal zaken zit in geen van beide varianten. Een uitputtende lijst staat in de expert-modelspecificatie sectie ``Elementen die het model niet modelleert''; hier de hoofdpunten, met waar nodig de variant-nuance:
+
+\begin{itemize}
+\item \textbf{67\%-randvoorwaarde} (art.\ 150n lid 4 Pw): niet gemodelleerd, voor de SSPF-populatie naar verwachting gering effect.
+\item \textbf{Stochastiek in de invaarstand zelf}: de M1/M2-berekening (KV, PPV) is in beide varianten deterministisch. De stochastiek van expert zit uitsluitend in de M3-projectie \emph{ná} invaren; de verdeling bij invaren zelf kent geen scenario-spreiding.
+\item \textbf{DB-vs-Wtp-vergelijking}: geen vergelijking van het oude (niet-invaren) uitkeringspad met het nieuwe over de tijd.
+\item \textbf{Tijdspad in basic}: basic toont een deterministische initiële PPV en startuitkering, geen verloop over de jaren. (Expert projecteert wél vooruit, via M3, maar dat is een gemodelleerde waaier met eigen aannames --- geen voorspelling.)
+\item \textbf{RDR-werking post-invaren in basic}: in basic wordt de risicodelingsreserve alleen afgezonderd in de cascade; de dempingsdynamiek na invaren is daar niet zichtbaar. In expert is die dynamiek wél gemodelleerd (M3 en het pool-paneel), binnen de modelgrens van de M3-specificatie.
+\item \textbf{Persoonlijk financieel advies}: de tool levert orde-van-grootte-inzicht, geen aanspraak op individuele juistheid. Voor uw werkelijke pensioenpositie zijn alleen de transitiebrief en de definitieve berekening van SSPF zelf maatgevend.
+\end{itemize}
+
+% ============================================================================
+\section{Hoe nauwkeurig moet u dit nemen?}
+
+De basic-variant is \textbf{een onafhankelijke reconstructie} van de wettelijke standaardregel op basis van uitsluitend publieke informatie. SSPF beschikt over niet-publieke gegevens (uw werkelijke aanspraak in de pensioenadministratie, fondsspecifieke uitvoeringskeuzes uit de ABTN, de definitieve dekkingsgraad op invaardatum, eventuele afwijkingen van de standaardregel die in het transitieplan zijn vastgelegd) waar deze tool geen toegang toe heeft.
+
+\textbf{Aan de uitkomsten kunnen geen rechten worden ontleend.} Voor uw werkelijke invaarpositie zijn alleen de transitiebrief en de definitieve berekening van SSPF zelf maatgevend. De basic-variant is bedoeld als:
+
+\begin{enumerate}
+\item een \textbf{begrip-instrument}: zien hoe de wettelijke standaardregel rekent en welke factoren een rol spelen;
+\item een \textbf{plausibiliteitstoets}: is de orde van grootte van wat SSPF u straks meldt te rijmen met een onafhankelijke reconstructie?
+\item een \textbf{gespreksvoorbereiding}: voor wie zijn invaarpositie wil bespreken met SSPF, met een collega, in het verantwoordingsorgaan of in een belangenvereniging.
+\end{enumerate}
+
+Voor wie de tool kritisch wil doorgronden --- welke aannames doen ertoe, hoe gevoelig is de uitkomst voor parameter-keuzes, wat zou een andere reserve-invulling doen --- is de expert-variant het juiste instrument.
+
+% ============================================================================
+\section{Versies, bronnen en contact}
+
+\subsection{Versie en bouwdatum}
+
+De versie van de basic-variant staat onderaan elk scherm van de tool, samen met de bouwdatum. Dit document hoort bij basic v3.9.2 (juni 2026). De M1/M2-rekenkern is sinds v3.2.0 functioneel ongewijzigd; uitkomst-relevante wijzigingen sindsdien waren data en presentatie-ankering, geen rekenregels: de SSPF-fondscijfers zijn in v3.5.7 bijgewerkt naar het jaarverslag 2025, de gevoeligheidsmatrix is in v3.6.0 geankerd op de werkelijke disconteringsrente, en in v3.4.4 is de RDR-routing intern verlegd naar de buffer-parameter (kapitaal-equivalent, $\Delta\text{ppk} = 0$; zie sectie~\ref{sec:m2}). De overige releases tot v3.9.2 betroffen invoerflow, weergave en toelichtingen, niet het rekenmodel.
+
+\subsection{Belangrijkste bronnen}
+\label{sec:bronnen}
+
+\begin{itemize}
+\item \textbf{Wet- en regelgeving}: Wet toekomst pensioenen (Staatsblad 2023, 217), de Pensioenwet zoals gewijzigd door de Wtp, het Besluit uitvoering Pensioenwet, en de Regeling Pensioenwet --- met name Bijlage 2a, de ``standaardregel''. Voor de projectierente-band: art.\ 63a Pw en art.\ 23a Besluit ftk (Commissie Parameters 2022).
+\item \textbf{Sterftekansen}: AG2024-prognosetafels van het Koninklijk Actuarieel Genootschap, publicatie 12 september 2024.
+\item \textbf{Ervaringssterfte}: Bijlage~B van het Ortec Uitgangspuntendocument Transitierapportage SSPF/SNPS 2024.1 (26 mei 2024); zie sectie~\ref{sec:ervaringssterfte}.
+\item \textbf{Rentecurve}: DNB-rentetermijnstructuur voor pensioenfondsen, peildatum 30 april 2026; de peildatum staat ook in de tool vermeld.
+\item \textbf{AOW-leeftijden}: SVB-schema AOW-leeftijd per geboortemaand (1930--2000), basis van de AOW-poort (sectie~\ref{sec:aow-poort}).
+\item \textbf{SSPF-fondsgegevens}: SSPF-jaarverslag 2025 (fondsvermogen, voorziening, dekkingsgraad, deelnemersaantallen, alle ultimo 2025), Wtp-implementatieplan SSPF (15 juli 2025; cascade en staffel), SSPF-transitieplan Bijlage~8 (cohort-bezetting).
+\item \textbf{Volledige actuariële modelspecificatie}: \emph{Bijlage 2 --- Modelspecificatie Invaarcalculator} (expert-variant) en \emph{SPECIFICATIE M3 RDR v0.3} (stochastische module), beide als LaTeX-bron en PDF in de publieke GitHub-repository en opvraagbaar via het e-mailadres in de footer.
+\end{itemize}
+
+\subsection{Contact en feedback}
+
+Voor inhoudelijke opmerkingen, ontdekte fouten of suggesties voor verbetering: \href{mailto:hans@invaarcalculator.nl}{\nolinkurl{hans@invaarcalculator.nl}} (Innovation Nestor). De auteur waardeert correcties, parameter-bronverwijzingen en gevoeligheidsanalyses die de tool verder kunnen verbeteren.
+
+Voor uw eigen pensioenvragen, vragen over uw werkelijke aanspraak, of bezwaren tegen onderdelen van uw transitie: SSPF, via de kanalen die het fonds zelf aanwijst. Deze tool is geen vervanging van SSPF-communicatie en biedt geen mogelijkheid om individuele dossiers te behandelen.
+
+\vspace{2em}
+\hrule
+\vspace{0.5em}
+\emph{Einde modelspecificatie basic-variant.}
+
+\end{document}
