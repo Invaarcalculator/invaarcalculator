@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>De waarde van uw pensioen vóór en na invaren — SSPF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papier:#FBFAF7; --ink:#1C2B33; --ink-zacht:#4A5A63; --ink-mat:#7C8890;
+  --lijn:#DDD9CF; --vlak:#F2F0E9; --wit:#FFFFFF;
+  --blauw:#2A6FB0; --blauw-licht:#E3EDF6; --blauw-donker:#174567;
+  --teal:#1D9E75; --paars:#6A5FD0; --grijs:#8A887F;
+  --rood:#C0392B; --rood-licht:#F7E6E3; --rood-donker:#7A241B;
+  --amber:#B07A17; --amber-licht:#F6EDD9; --amber-donker:#6B4A0C;
+  --groen:#3B6D11; --groen-licht:#E9F1DD;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--papier);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.65;}
+main{max-width:860px;margin:0 auto;padding:0 24px 64px;}
+header.kop{border-bottom:2px solid var(--ink);margin:48px 0 8px;padding-bottom:16px;}
+.eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mat);margin:0 0 10px;}
+h1{font-size:34px;line-height:1.2;font-weight:600;margin:0 0 8px;}
+.ondertitel{font-size:17px;color:var(--ink-zacht);margin:0;}
+.scope{background:var(--blauw-licht);border-left:3px solid var(--blauw);padding:12px 16px;margin:24px 0 0;font-size:15px;color:var(--blauw-donker);font-family:var(--sans);line-height:1.55;}
+section.stap{margin-top:56px;}
+.stapkop{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--lijn);padding-bottom:8px;margin-bottom:14px;}
+.stapnr{font-family:var(--sans);font-size:13px;color:var(--ink-mat);letter-spacing:.06em;}
+h2{font-size:24px;font-weight:600;margin:0;}
+p.uitleg{color:var(--ink-zacht);}
+.legenda{display:flex;flex-wrap:wrap;gap:16px;font-family:var(--sans);font-size:12.5px;color:var(--ink-zacht);margin:18px 0 14px;}
+.legenda span{display:flex;align-items:center;gap:6px;}
+.blokje{width:10px;height:10px;border-radius:2px;display:inline-block;}
+.kolommen{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+.kolomtitel{font-family:var(--sans);font-size:14px;font-weight:500;margin:0 0 10px;}
+.groeplabel{font-family:var(--sans);font-size:12px;color:var(--ink-mat);margin:0 0 6px;letter-spacing:.03em;}
+.kaartlijst{display:flex;flex-direction:column;gap:8px;margin:0 0 16px;}
+.kaart{background:var(--wit);border:1px solid var(--lijn);border-left-width:3px;padding:10px 14px;}
+.kaart .rij{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.kaart h3{font-family:var(--sans);font-size:14.5px;font-weight:500;margin:0;}
+.kaart p{font-family:var(--sans);font-size:12.5px;color:var(--ink-zacht);margin:3px 0 0;line-height:1.5;}
+.badge{font-family:var(--sans);font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap;}
+.b-vervalt{background:var(--rood-licht);color:var(--rood-donker);}
+.b-omzet{background:var(--amber-licht);color:var(--amber-donker);}
+.b-buiten{background:var(--groen-licht);color:var(--groen);}
+.b-open{background:var(--amber-licht);color:var(--amber-donker);}
+.knoppen{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--sans);}
+button{font-family:var(--sans);font-size:13.5px;padding:7px 14px;background:var(--wit);border:1px solid var(--lijn);border-radius:6px;color:var(--ink);cursor:pointer;}
+button:hover{border-color:var(--ink-mat);}
+button:focus-visible{outline:2px solid var(--blauw);outline-offset:2px;}
+button.actief{background:var(--blauw-licht);border-color:var(--blauw);color:var(--blauw-donker);}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:20px 0;}
+.metric{background:var(--vlak);border-radius:6px;padding:14px 16px;}
+.metric .label{font-family:var(--sans);font-size:12.5px;color:var(--ink-zacht);margin:0;}
+.metric .waarde{font-family:var(--sans);font-size:25px;font-weight:500;margin:4px 0 0;font-variant-numeric:tabular-nums;}
+.metric .sub{font-family:var(--sans);font-size:12px;color:var(--ink-mat);margin:3px 0 0;}
+.staafblok{display:flex;flex-direction:column;gap:13px;margin:14px 0 8px;}
+.staaf .kopregel{display:flex;justify-content:space-between;font-family:var(--sans);font-size:13px;margin-bottom:4px;}
+.staaf .kopregel .n{color:var(--ink-zacht);}
+.staaf .kopregel .v{font-weight:500;font-variant-numeric:tabular-nums;}
+.spoor{height:13px;background:var(--vlak);border-radius:4px;overflow:hidden;}
+.vulling{height:100%;border-radius:4px;}
+.tussenkop{font-family:var(--sans);font-size:13px;font-weight:500;margin:14px 0 2px;}
+.kader{background:var(--wit);border:1px solid var(--lijn);border-left:3px solid var(--blauw);padding:14px 18px;margin:18px 0 6px;}
+.kader h4{font-family:var(--sans);font-size:13.5px;font-weight:500;margin:0 0 6px;}
+.kader p{font-family:var(--sans);font-size:13.5px;color:var(--ink-zacht);line-height:1.6;margin:0 0 8px;}
+.kader p:last-child{margin-bottom:0;}
+.voetnoot{font-family:var(--sans);font-size:12.5px;color:var(--ink-mat);margin:10px 0 0;line-height:1.55;}
+.regelaars{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px 28px;font-family:var(--sans);margin:18px 0 8px;}
+.regelaar p{font-size:13px;color:var(--ink-zacht);margin:0 0 5px;}
+.regelaar .toelichting{font-size:12.5px;color:var(--ink-mat);margin:7px 0 0;line-height:1.55;}
+.grafiek{margin-top:22px;}
+.grafiektitel{font-family:var(--sans);font-size:13.5px;font-weight:500;margin:0 0 12px;}
+.assen{display:flex;gap:10px;}
+.ylabels{display:flex;flex-direction:column;justify-content:space-between;height:230px;font-family:var(--sans);font-size:11.5px;color:var(--ink-mat);text-align:right;padding-bottom:22px;font-variant-numeric:tabular-nums;}
+.plot{flex:1;position:relative;}
+.rasterlijn{position:absolute;left:0;right:0;border-top:1px solid var(--lijn);}
+.balken{position:relative;display:flex;align-items:flex-end;gap:4%;height:208px;padding:0 2%;}
+.balkkolom{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+.balkwaarde{font-family:var(--sans);font-size:11.5px;color:var(--ink-zacht);margin-bottom:3px;font-variant-numeric:tabular-nums;}
+.balk{width:100%;max-width:44px;background:var(--blauw);border-radius:4px 4px 0 0;transition:height .25s ease;}
+.xlabels{display:flex;gap:4%;padding:6px 2% 0;font-family:var(--sans);font-size:12px;color:var(--ink-mat);}
+.xlabels span{flex:1;text-align:center;}
+.xas-titel{font-family:var(--sans);font-size:11.5px;color:var(--ink-mat);text-align:center;margin-top:4px;}
+footer.verantwoording{margin-top:64px;border-top:2px solid var(--ink);padding-top:16px;font-family:var(--sans);font-size:13px;color:var(--ink-zacht);line-height:1.6;}
+footer.verantwoording p{margin:0 0 10px;}
+@media (prefers-reduced-motion: reduce){.balk{transition:none;}}
+@media print{
+  body{background:#fff;font-size:12.5pt;}
+  .knoppen,.regelaars{display:none;}
+  section.stap{break-inside:avoid-page;}
+  .print-hint{display:block!important;}
+}
+.print-hint{display:none;font-family:var(--sans);font-size:11px;color:var(--ink-mat);}
+</style>
+</head>
+<body>
+<main>
+
+<header class="kop">
+<p class="eyebrow">Bij de notitie van 5 augustus 2026 &middot; DNB-scenariosets CP2022, vintage 2026Q3</p>
+<h1>De waarde van uw pensioen vóór en na invaren</h1>
+<p class="ondertitel">Een beeld in drie stappen: eerst de bouwstenen zonder cijfers, dan de kwantificering per &euro;100.000 aanspraak, en tot slot de onzekerheid als instelbare keuzes.</p>
+<div class="scope"><strong>Afbakening.</strong> Alles op deze pagina geldt uitsluitend voor wie op de invaardatum al gepensioneerd is. Actieve en gewezen deelnemers vallen buiten dit beeld; voor hen gelden onder meer voortgezette opbouw en een apart compensatiedepot.</div>
+</header>
+
+<section class="stap" id="stap1">
+<div class="stapkop"><span class="stapnr">Stap 1</span><h2>De bouwstenen</h2></div>
+<p class="uitleg">De waarde van het pensioen bestaat vóór invaren uit meer dan het jaarbedrag alleen. Twee dingen stonden formeel vast: de nominale aanspraak en de Shell-garantie die haar borgde. Daaromheen lag het feitelijke beleid dat door die garantie mogelijk was: volledige prijsindexatie, gevoed door de collectieve buffer. Na invaren blijven er lagen over, maar van een andere soort. De buffer wordt <em>omgezet</em> in een hogere startuitkering &mdash; hetzelfde geld, in een andere vorm. De garantie en de volledige indexatie <em>vervallen</em>. Er komen twee nieuwe elementen: een eindige risicodelingsreserve uit het eigen fondsvermogen, en &eacute;&eacute;n echte toevoer van buiten, de transitiebijdrage van Shell.</p>
+
+<div class="legenda">
+<span><span class="blokje" style="background:var(--teal);"></span>persoonlijk / blijft</span>
+<span><span class="blokje" style="background:var(--paars);"></span>bescherming</span>
+<span><span class="blokje" style="background:var(--grijs);"></span>collectief / structureel</span>
+</div>
+
+<div class="kolommen">
+<div>
+<p class="kolomtitel">Vóór invaren</p>
+<p class="groeplabel">Formeel vastgelegd</p>
+<div class="kaartlijst">
+<div class="kaart" style="border-left-color:var(--grijs);">
+<h3>Nominale aanspraak</h3>
+<p>gegarandeerd jaarbedrag, levenslang</p>
+</div>
+<div class="kaart" style="border-left-color:var(--paars);">
+<div class="rij"><h3>Shell-garantie</h3><span class="badge b-vervalt">vervalt</span></div>
+<p>bijstorten onder 105%, borgt het nominale bedrag</p>
+</div>
+</div>
+<p class="groeplabel">Feitelijk beleid, door de garantie mogelijk</p>
+<div class="kaartlijst">
+<div class="kaart" style="border-left-color:var(--paars);">
+<div class="rij"><h3>Volledige indexatie</h3><span class="badge b-vervalt">vervalt</span></div>
+<p>formeel voorwaardelijk, feitelijk steeds volledig</p>
+</div>
+<div class="kaart" style="border-left-color:var(--grijs);">
+<div class="rij"><h3>Collectieve buffer</h3><span class="badge b-omzet">wordt omgezet</span></div>
+<p>voedt de indexatie, dempt schokken</p>
+</div>
+</div>
+</div>
+<div>
+<p class="kolomtitel">Na invaren</p>
+<div class="kaartlijst">
+<div class="kaart" style="border-left-color:var(--teal);">
+<h3>Persoonlijk pensioenvermogen</h3>
+<p>eigen pot, geen gegarandeerd bedrag meer</p>
+</div>
+<div class="kaart" style="border-left-color:var(--grijs);">
+<div class="rij"><h3>Hogere startuitkering</h3><span class="badge b-omzet">omzetting</span></div>
+<p>de collectieve buffer, verdeeld</p>
+</div>
+<div class="kaart" style="border-left-color:var(--teal);">
+<h3>Voorwaardelijke verhoging</h3>
+<p>uit rendement, vijf jaar gespreid, kan ook omlaag</p>
+</div>
+<div class="kaart" style="border-left-color:var(--paars);">
+<div class="rij"><h3>Risicodelingsreserve</h3><span class="badge b-open">verdeelregels onbekend</span></div>
+<p>&eacute;&eacute;n pot op fondsniveau, eindig; wie bij tekort voorgaat is niet gecommuniceerd</p>
+</div>
+<div class="kaart" style="border-left-color:var(--paars);">
+<div class="rij"><h3>Transitiebijdrage Shell</h3><span class="badge b-buiten">van buiten</span></div>
+<p>eenmalige storting, dekkingsgraadafhankelijk</p>
+</div>
+</div>
+</div>
+</div>
+<p class="uitleg" style="margin-top:16px;">De badges vertellen het kwalitatieve verhaal: alleen de transitiebijdrage is nieuw geld van buiten. De hogere startuitkering, die in de communicatie het meest opvalt, is verplaatsing binnen dezelfde balans.</p>
+</section>
+
+<section class="stap" id="stap2">
+<div class="stapkop"><span class="stapnr">Stap 2</span><h2>Met cijfers: per &euro;100.000 aanspraak</h2></div>
+<p class="uitleg">Het nadeel wordt op twee manieren gemeten, en die mogen <em>niet bij elkaar opgeteld</em> worden: ze meten deels hetzelfde verlies in verschillende eenheden. Categorie&nbsp;I is een marktwaardeverlies: de vervallen garantie was, gewaardeerd onder het beleid dat SSPF werkelijk voerde, meer waard dan de compensatie die ertegenover staat &mdash; voor iedereen gelijk per euro aanspraak. Categorie&nbsp;II is een zekerheidsverlies: de waarde van de verdwenen uitkomstbescherming, die sterk van leeftijd afhangt omdat een jongere gepensioneerde meer beschermde jaren verliest.</p>
+
+<div class="knoppen" style="align-items:center;margin:18px 0 4px;">
+<span style="font-size:13.5px;color:var(--ink-zacht);">Maatmens:</span>
+<button id="m0" onclick="kiesMaat(0)">68 jaar</button>
+<button id="m1" onclick="kiesMaat(1)">75 jaar</button>
+<button id="m2" onclick="kiesMaat(2)">85 jaar</button>
+</div>
+
+<div class="metrics">
+<div class="metric"><p class="label">I. Marktwaardeverlies</p><p class="waarde">&minus;&euro;4.500</p><p class="sub">per &euro;100.000, gelijk voor iedereen</p></div>
+<div class="metric"><p class="label">II. Beschermingstekort</p><p class="waarde" id="s2katII">&minus;&euro;6.100</p><p class="sub">per &euro;100.000, leeftijdsafhankelijk</p></div>
+<div class="metric"><p class="label">Verlagingskans voor deze maatmens</p><p class="waarde" id="s2pkans">24,0%</p><p class="sub">per jaar, gedeelde reserve &euro;0,5 mld</p></div>
+</div>
+<p class="voetnoot">De maatmenskans komt uit de cohortmotor, voor deze vergelijking op dezelfde projectierente gezet als de fondsbrede cijfers hieronder (2,5%); leeftijden tussen de cohortpunten zijn lineair ge&iuml;nterpoleerd. Fondsbreed geeft die motor 21,4%; de afstand tot de 12,2% hieronder komt uit de resterende kernverschillen tussen beide motoren (nominale bodem, spreidingsmechaniek) &mdash; zie de verantwoording.</p>
+
+<div id="s2staven" class="staafblok"></div>
+
+<p class="tussenkop" style="margin-top:22px;">Fondsbrede kengetallen &mdash; onafhankelijk van de maatmens</p>
+<p class="voetnoot" style="margin:2px 0 0;">De reserve is &eacute;&eacute;n gezamenlijke pot: deze drie getallen gelden voor het fonds als geheel en veranderen dus niet met de gekozen maatmens. Zij komen uit de hoofdmotor van de notitie; de leeftijdsopbouw hierboven en in stap&nbsp;3 komt uit de cohortmotor.</p>
+<div class="metrics" style="margin-top:12px;">
+<div class="metric"><p class="label">Kans op verlaging</p><p class="waarde">12,2%</p><p class="sub">per jaar, bij reserve &euro;0,5 mld; belofte: onder 5%</p></div>
+<div class="metric"><p class="label">Reserve ooit uitgeput</p><p class="waarde">89%</p><p class="sub">van de scenario's, binnen 15 jaar</p></div>
+<div class="metric"><p class="label">Nodig voor de 5%-norm, in kansen (P)</p><p class="waarde">&euro;1,4 mld</p><p class="sub">echte-wereldscenario's</p></div>
+<div class="metric"><p class="label">Nodig, geprijsd als verzekering (Q)</p><p class="waarde">&euro;4,2 mld</p><p class="sub">marktconsistent, zoals de garantie gewaardeerd is</p></div>
+</div>
+<div class="kader">
+<h4>Wat betekent &ldquo;kans op verlaging &hellip; per jaar&rdquo;?</h4>
+<p>De berekening simuleert duizenden economische toekomsten over vijftien jaar. Voor elk jaar in elke toekomst is geteld: moet de uitkering d&iacute;t jaar omlaag &mdash; in euro's, dus los van inflatie? Het genoemde percentage is het gemiddelde daarvan. 12,2% per jaar betekent: gemiddeld gaat de uitkering in ruwweg &eacute;&eacute;n op de acht jaren omlaag. De maatmenskans hierboven is dezelfde maat, maar dan geteld voor de uitkering van &eacute;&eacute;n leeftijdsgroep.</p>
+<p>Drie dingen om erbij te houden. Het is <em>niet</em> de kans dat het ooit gebeurt &mdash; die is veel groter, zoals het blok &ldquo;reserve ooit uitgeput&rdquo; laat zien. Het zegt niets over hoe di&eacute;p een verlaging is. Het is ook geen mediaan (p50) zoals straks op het pensioenoverzicht: het is een gemiddelde over &aacute;lle gesimuleerde toekomsten &mdash; in de middelste toekomst zelf hoeft geen enkele verlaging voor te komen, het percentage wordt vooral gedragen door de ongunstige helft. En de percentages gelden n&aacute; de dempers die het nieuwe stelsel al heeft (de reserve van &euro;0,5 mld en de spreiding over vijf jaar) &mdash; het is dus wat er ondanks die dempers overblijft.</p>
+<p>Ter vergelijking: v&oacute;&oacute;r invaren was de kans op verlaging feitelijk nihil, omdat Shell moest bijstorten voordat het zover kwam. De belofte in het implementatieplan is dat deze kans onder de 5% blijft.</p>
+<p>Hoe groot moet de reserve daarvoor zijn? Dat hangt af van de rekenmaat, en daarom staan er twee bedragen. De &euro;1,4 mld antwoordt op de vraag: hoe groot moet de pot zijn zodat verlagingen in minder dan 5% van de jaren ook daadwerkelijk voorkomen &mdash; geteld met echte-wereldkansen (de P-maat). De &euro;4,2 mld antwoordt op een strengere vraag: wat kost het om die bescherming te garanderen, gewaardeerd zoals een markt of verzekeraar dat doet (de Q-maat) &mdash; dezelfde maat waarin de vervallen Shell-garantie is gewaardeerd en waarin straks de transitie-effecten worden berekend. Slechte scenario's wegen daarin zwaarder, omdat zekerheid juist daar geld waard is; een garantie is meer waard dan de kale kans op aanspreken. De reserve van &euro;0,5 mld blijft onder beide maten ver achter: bijna een factor drie onder P, ruim een factor acht onder Q.</p>
+</div>
+<p class="uitleg">Het patroon is de kern van de notitie: het verlies aan bescherming is het grootst voor de jongste gepensioneerde, terwijl de compensatie voor iedereen even groot is.</p>
+</section>
+
+<section class="stap" id="stap3">
+<div class="stapkop"><span class="stapnr">Stap 3</span><h2>Onzekerheid: draai zelf aan de aannames</h2></div>
+<p class="uitleg">De bedragen hierboven zijn ordes van grootte, geen puntschattingen. Het grootste deel van de onzekerheid is geen rekenonzekerheid maar een reeks open keuzes. De vier belangrijkste staan hieronder als knoppen: de referentievraag (is de oude regeling m&eacute;t of z&oacute;nder het feitelijke indexatiebeleid gemodelleerd &mdash; een factor vier, de vraag die nu bij De Nederlandsche Bank ligt), de grondslag van het reserve-aandeel, de manier waarop de gedeelde reserve bij schaarste wordt verdeeld (niet gecommuniceerd door het fonds), en de kwartaalversie van de DNB-scenarioset.</p>
+
+<div class="regelaars">
+<div class="regelaar"><p>Referentie oude regeling (vraag aan DNB)</p><div class="knoppen"><button data-g="ref" data-v="0">M&eacute;t indexatie (wettelijk kader)</button><button data-g="ref" data-v="1">TBI-staffel (hard gesloten)</button><button data-g="ref" data-v="2">Toeslagvrij</button></div>
+<p class="toelichting">Waarmee vergelijk je de oude regeling? <em>M&eacute;t indexatie</em> waardeert de vervallen garantie onder het beleid dat SSPF werkelijk voerde &mdash; volledige prijscompensatie, wettelijk aan die garantie gekoppeld (art.&nbsp;137 lid&nbsp;3 Pw); het marktwaardeverlies is dan &euro;4.500 per &euro;100.000. De <em>TBI-staffel</em> rekent alsof het fonds zonder die koppeling zou indexeren volgens de reguliere regels voor toekomstbestendig indexeren (gedeeltelijk, pas boven een dekkingsgraad van circa 110%); de garantie is dan &euro;2.500 waard en de compensatie van &euro;2.600 dekt dat vrijwel exact. <em>Toeslagvrij</em> rekent alsof alleen het kale nominale bedrag telt (garantie &euro;1.700, eveneens gedekt). De referentiekeuze scheelt dus tot een factor vier in de waarde van de garantie en draagt het volledige verschil tussen &ldquo;compensatie dekkend&rdquo; en &minus;&euro;4.500; precies die keuze is als vraag aan DNB voorgelegd.</p></div>
+<div class="regelaar"><p>Grondslag reserve-aandeel</p><div class="knoppen"><button data-g="grond" data-v="0">2,6% totale voorziening</button><button data-g="grond" data-v="1">4,0% gepensioneerden</button></div>
+<p class="toelichting">Hoeveel van de reserve reken je toe per &euro;100.000? Bij <em>2,6%</em> wordt de &euro;500 mln omgeslagen over de hele voorziening van &euro;19,1 mld (alle deelnemers); bij <em>4,0%</em> alleen over de &euro;12,4 mld van de gepensioneerden, omdat de reserve uitsluitend voor hen bestemd is. Meer toegerekende reserve betekent een kleiner onvergoed beschermingstekort (categorie&nbsp;II): het tekort per maatmens daalt met circa &euro;1.000 tot &euro;1.400.</p></div>
+<div class="regelaar"><p>Verdeling reserve bij schaarste</p><div class="knoppen"><button data-g="verd" data-v="0">Eigen potje</button><button data-g="verd" data-v="1">Gedeeld, lichte voorrang</button><button data-g="verd" data-v="2">Gedeeld, sterke voorrang</button><button data-g="verd" data-v="3">Vloerregel 82-plus</button></div></div>
+<div class="regelaar"><p>DNB-scenarioset</p><div class="knoppen"><button data-g="vin" data-v="0">2026Q3</button><button data-g="vin" data-v="1">2026Q2</button></div></div>
+</div>
+
+<div class="metrics">
+<div class="metric"><p class="label">I. Marktwaardeverlies per &euro;100.000</p><p class="waarde" id="s3katI">&minus;&euro;4.500</p><p class="sub" id="s3katIsub">garantie &euro;7.100 &minus; compensatie &euro;2.600</p></div>
+<div class="metric"><p class="label">II. Beschermingstekort per &euro;100.000</p><p class="waarde" id="s3katII" style="font-size:19px;">&minus;&euro;6.100 / &minus;&euro;4.200 / &minus;&euro;1.000</p><p class="sub">maatmens 68 / 75 / 85 jaar</p></div>
+</div>
+
+<div class="grafiek">
+<p class="grafiektitel">Verlagingskans per cohort (gemiddeld per jaar, reserve &euro;0,5 mld)</p>
+<div class="assen" role="img" aria-label="Staafgrafiek van de gemiddelde jaarlijkse verlagingskans per leeftijdscohort van 67 tot 97 jaar onder de gekozen aannames" id="ariaGrafiek">
+<div class="ylabels"><span>32%</span><span>24%</span><span>16%</span><span>8%</span><span>0%</span></div>
+<div class="plot">
+<div class="rasterlijn" style="top:0;"></div>
+<div class="rasterlijn" style="top:52px;"></div>
+<div class="rasterlijn" style="top:104px;"></div>
+<div class="rasterlijn" style="top:156px;"></div>
+<div class="rasterlijn" style="top:208px;"></div>
+<div class="balken" id="balken"></div>
+<div class="xlabels"><span>67</span><span>72</span><span>77</span><span>82</span><span>87</span><span>92</span><span>97</span></div>
+<p class="xas-titel">leeftijd op invaardatum</p>
+</div>
+</div>
+<p class="voetnoot" id="s3noot"></p>
+</div>
+
+<p class="uitleg" style="margin-top:20px;"><strong>Wat verandert er niet, hoe je ook draait.</strong> De bedragen verschuiven fors, maar de richting verandert onder geen enkele redelijke instelling: de vervallen garantie was meer waard dan de &euro;500&nbsp;miljoen die ertegenover staat, de reserve is ongeveer een factor drie te klein voor de beloofde 5%-norm, en het beschermingsverlies daalt met leeftijd terwijl de compensatie vlak is. De verdeelregel bepaalt alleen w&iacute;e van de cohorten de resterende kans draagt, niet hoe groot die in totaal is.</p>
+</section>
+
+<footer class="verantwoording">
+<p><strong>Verantwoording.</strong> Alle cijfers komen uit de notitie <em>Vervallende bijstortverplichting en risicodelingsreserve bij het invaren van SSPF</em> (DNB-draft, 5 augustus 2026) en de bijbehorende, reproduceerbare rekenkernen op de DNB-scenariosets CP2022, vintage 2026Q3 (20.000 scenario's; cohortmodule 10.000 scenario's, projectierente 3,0%). Bedragen per &euro;100.000 zijn afgerond op honderdtallen. De maatmens-verlagingskans in stap&nbsp;2 komt uit een variant van de cohortmotor op projectierente 2,5% (<code>meet_cohorten_lat25.mjs</code>, gedeelde pot, reserve &euro;0,5&nbsp;mld), zodat zij op dezelfde rente staat als de fondsbrede 12,2% van de hoofdmotor; het resterende niveauverschil (fondsbreed 21,4% tegenover 12,2%) komt uit de overige kernverschillen tussen beide motoren en is in de notitie (bijlage&nbsp;4.4) beschreven. Leeftijden tussen de cohortpunten zijn lineair ge&iuml;nterpoleerd.</p>
+<p>Categorie&nbsp;I en&nbsp;II zijn alternatieve maatstaven van deels hetzelfde verlies en mogen niet worden opgeteld. Het effect van de scenarioset 2026Q2 (+2,0 procentpunt) is exact gemeten voor de gedeelde reserve met lichte voorrang; voor de overige verdelingen is het indicatief toegepast. De verdeelregels van de reserve bij schaarste zijn door het fonds niet gecommuniceerd; de vier varianten zijn modelaannames.</p>
+<p>Deze analyse is opgesteld door een pensioengerechtigde van Stichting Shell Pensioenfonds, niet door een actuaris of onafhankelijk actuarieel adviseur. De opsteller is tevens initiatiefnemer, ontwerper en ontwikkelaar van de Invaarcalculator&reg; (<a href="https://invaarcalculator.nl" style="color:var(--blauw-donker);">invaarcalculator.nl</a>), waarvan de collectieve poolmotor is gebruikt voor de cohortberekeningen in stap&nbsp;2 en&nbsp;3. Alle code, onderliggende analyses en definitiedocumenten zijn op verzoek beschikbaar via een e-mail aan <a href="mailto:hans@invaarcalculator.nl" style="color:var(--blauw-donker);">hans@invaarcalculator.nl</a>.</p>
+<p>Dit is een publieke proxyanalyse, geen actuarieel advies. Een actuari&euml;le toetsing door een onafhankelijke deskundige is voorzien en nog niet uitgevoerd. De bedragen geven richting en rangorde betrouwbaar weer; zij rechtvaardigen vragen, meer niet.</p>
+<p class="print-hint">Interactieve keuzes zijn in deze afdruk verborgen; de getoonde cijfers zijn de hoofdlijn (referentie m&eacute;t indexatie, grondslag 2,6%, gedeelde reserve met lichte voorrang, vintage 2026Q3).</p>
+</footer>
+
+</main>
+<script>
+(function(){
+var MAAT=[{vloer:8700,tekort:6100,pkans:'24,0%'},{vloer:6800,tekort:4200,pkans:'22,1%'},{vloer:3700,tekort:1000,pkans:'15,3%'}];
+var MAX=10000;
+function fmt(v){return '\u20AC'+v.toLocaleString('nl-NL');}
+function rij(label,val,kleur,sub){
+  var w=Math.round(val/MAX*100);
+  return '<div class="staaf"><div class="kopregel"><span class="n">'+label+'</span><span class="v">'+fmt(val)+'</span></div>'+
+    '<div class="spoor"><div class="vulling" style="width:'+w+'%;background:'+kleur+';"></div></div>'+
+    (sub?'<p class="voetnoot" style="margin-top:3px;">'+sub+'</p>':'')+'</div>';
+}
+window.kiesMaat=function(i){
+  for(var j=0;j<3;j++){document.getElementById('m'+j).classList.toggle('actief',j===i);}
+  var d=MAAT[i];
+  document.getElementById('s2katII').innerHTML='&minus;'+fmt(d.tekort);
+  document.getElementById('s2pkans').textContent=d.pkans;
+  var h='<p class="tussenkop">Marktwaarde (categorie I)</p>';
+  h+=rij('Waarde vervallen garantie',7100,'var(--blauw)','');
+  h+=rij('Compensatie (aandeel &euro;500 mln)',2600,'var(--teal)','');
+  h+=rij('Netto verlies',4500,'var(--rood)','');
+  h+='<p class="tussenkop">Zekerheid (categorie II)</p>';
+  h+=rij('Waarde oude uitkomstbescherming',d.vloer,'var(--blauw)','');
+  h+=rij('Aandeel in de reserve',2600,'var(--teal)','');
+  h+=rij('Onvergoed tekort',d.tekort,'var(--rood)','I en II meten deels hetzelfde en zijn niet optelbaar.');
+  document.getElementById('s2staven').innerHTML=h;
+};
+kiesMaat(0);
+
+var S={ref:0,grond:0,verd:1,vin:0};
+var V=[
+ [27.3,26.0,23.6,19.0,13.0,8.3,5.6],
+ [26.5,25.5,23.5,20.1,15.6,11.0,7.8],
+ [26.5,23.7,20.1,15.7,10.7,6.7,4.3],
+ [27.7,26.7,24.6,11.1,8.6,6.0,4.0]
+];
+var Q2G2=[28.6,27.5,25.5,22.1,17.5,13.1,9.8];
+var II=[[6100,4200,1000],[4700,2800,0]];
+var YMAX=32;
+function upd(){
+  var kI=document.getElementById('s3katI'),kIs=document.getElementById('s3katIsub');
+  if(S.ref===0){kI.innerHTML='&minus;&euro;4.500';kIs.innerHTML='garantie &euro;7.100 &minus; compensatie &euro;2.600';}
+  else if(S.ref===1){kI.innerHTML='\u2248 \u20AC0';kIs.innerHTML='garantie &euro;2.500 &minus; compensatie &euro;2.600: compensatie dekt de TBI-referentie';}
+  else{kI.innerHTML='\u2248 \u20AC0';kIs.innerHTML='garantie &euro;1.700 &minus; compensatie &euro;2.600: compensatie dekt de ondergrens';}
+  var t=II[S.grond];
+  document.getElementById('s3katII').innerHTML='&minus;'+fmt(t[0])+' / &minus;'+fmt(t[1])+' / '+(t[2]>0?'&minus;'+fmt(t[2]):'\u2248 \u20AC0');
+  var d;
+  if(S.vin===1&&S.verd===1){d=Q2G2.slice();}
+  else{d=V[S.verd].map(function(v){return Math.round((v+(S.vin===1?2.0:0))*10)/10;});}
+  var h='';
+  for(var i=0;i<d.length;i++){
+    var hh=Math.round(d[i]/YMAX*208);
+    h+='<div class="balkkolom"><span class="balkwaarde">'+d[i].toFixed(1).replace('.',',')+'</span><div class="balk" style="height:'+hh+'px;"></div></div>';
+  }
+  document.getElementById('balken').innerHTML=h;
+  document.getElementById('ariaGrafiek').setAttribute('aria-label','Gemiddelde jaarlijkse verlagingskans per cohort: '+d.map(function(v,i){return [67,72,77,82,87,92,97][i]+' jaar '+v.toFixed(1).replace('.',',')+'%';}).join(', '));
+  var noten=[];
+  if(S.vin===1&&S.verd!==1)noten.push('Q2-effect (+2,0 punt) is exact gemeten voor de gedeelde reserve met lichte voorrang; voor andere verdelingen indicatief.');
+  if(S.verd===3)noten.push('Vloerregel: 20% van de reserve afgezonderd voor 82-plus.');
+  noten.push('Geen enkele verdeling brengt de jongere cohorten bij de 5%-norm: de reserve zelf is circa een factor drie te klein.');
+  document.getElementById('s3noot').textContent=noten.join(' ');
+}
+function paint(){
+  var bs=document.querySelectorAll('button[data-g]');
+  for(var i=0;i<bs.length;i++){
+    var b=bs[i];
+    b.classList.toggle('actief',S[b.getAttribute('data-g')]===parseInt(b.getAttribute('data-v'),10));
+  }
+}
+var bs=document.querySelectorAll('button[data-g]');
+for(var i=0;i<bs.length;i++){
+  bs[i].addEventListener('click',function(){
+    S[this.getAttribute('data-g')]=parseInt(this.getAttribute('data-v'),10);
+    paint();upd();
+  });
+}
+paint();upd();
+})();
+</script>
+</body>
+</html>
