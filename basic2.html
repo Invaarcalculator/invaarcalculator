@@ -1203,6 +1203,14 @@
   border-radius: var(--ctl-radius);
 }
 .pane-resultaat .resultaat-dg-keuze { flex-wrap: wrap; }
+.pane-resultaat .resultaat-gevoeligheden-knop {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  margin: 0;
+}
+.pane-resultaat .resultaat-dg-keuze { column-gap: 12px; row-gap: 10px; }
+.pane-resultaat .resultaat-dg-keuze .resultaat-pdf-knop { margin-left: auto; flex: 0 0 auto; white-space: nowrap; }
+.pane-resultaat .resultaat-dg-keuze .resultaat-pdf-knop[hidden] { display:none !important; }
   .form { margin-bottom: 14px; }
   .field {
     display: grid;
@@ -2854,6 +2862,28 @@
 }
 
 .methode-pct{display:block;font-size:11px;color:var(--txt2);white-space:nowrap}.methode-gekozen{background:rgba(26,138,69,.09)}
+@media print {
+  body.variant-basic #app .pane-resultaat > :not(.v4-print-parameters) { display:none !important; }
+  body.variant-basic #app .pane-resultaat .v4-print-parameters { display:block !important; break-before:auto; margin:0; }
+  body.variant-basic #app .pane-resultaat { padding:0 !important; border:0 !important; }
+  .v4-print-parameters h2 {font-size:13pt; font-weight:600; margin:8mm 0 3mm; }
+  .v4-print-parameters h3 {font-size:10.5pt; margin:4mm 0 2mm; }
+  .v4-pdf-overview .resultaat-methoden-tabellen {display:block; }
+  .v4-pdf-overview .resultaat-periode {margin-bottom:6mm; break-inside:avoid; }
+  .v4-pdf-overview .resultaat-methode-grid {display:grid;grid-template-columns:1fr 1fr;gap:4mm; }
+  .v4-pdf-overview .resultaat-methode-kaart {break-inside:avoid; }
+  .v4-pdf-overview .resultaat-methode-titel, .v4-pdf-overview .resultaat-methode-eenheid {font-size:9pt; }
+  .v4-pdf-overview .resultaat-methoden-detail th, .v4-pdf-overview .resultaat-methoden-detail td {font-size:8.5pt;padding:2mm;}
+  .v4-pdf-sensitivities {break-before:page;}
+  .v4-pdf-matrix {break-inside:avoid; margin:4mm 0 9mm;}
+  .v4-pdf-matrix .rgm-matrix {width:100%; table-layout:fixed; font-size:8pt;}
+  .v4-pdf-matrix .rgm-matrix th,.v4-pdf-matrix .rgm-matrix td {font-size:8pt;padding:2mm 1mm;}
+  .v4-pdf-unit {font-size:9pt;}
+  .v4-pdf-gegevens {break-before:page;}
+  .v4-pdf-gegevens .v4-rapport-gegevens {display:block !important;}
+  .v4-pdf-gegevens .param-tabel tr {break-inside:avoid;}
+  .v4-pdf-gegevens .param-groep-kop {break-after:avoid;}
+}
 </style>
 </head>
 <body class="variant-basic">
@@ -5201,8 +5231,8 @@ function renderResultaatShellV4(c, p) {
     let result = `<div class="pane casual pane-wizard pane-resultaat">
     ${p.header(intro).replace(/(<span class="scherm-nr">)7(<\/span>)/, (_all, open, close) => `${open}7-A${close}`)}
     <p class="resultaat-subtitel${netto ? ' resultaat-subtitel-warning' : ''}">${netto ? 'Benadering op basis van uw maandbedrag' : 'Berekend op basis van uw UPO'}</p>
-    <div class="resultaat-dg-keuze"><label for="in-dg-keuze">Dekkingsgraad op invaardatum:</label><select id="in-dg-keuze" data-dg-keuze>${dgs.map(([v, l]) => option(v, l, selectedDG)).join('')}</select><div class="resultaat-metriek-keuze" hidden><label for="in-resultaat-metriek">Weergave:</label><select id="in-resultaat-metriek" class="rgm-metric-select" data-matrix-metric aria-label="Weergave gevoeligheidstabellen">${metrics.map(([v, l]) => option(v, l, c.metriek)).join('')}</select></div></div>
-    <div class="resultaat-hoofdscherm"><div class="${netto ? 'resultaat-tabel resultaat-tabel-schatting' : 'resultaat-tabel'} resultaat-methoden-host" aria-live="polite"></div><div class="resultaat-actie-rij"><button type="button" class="action-btn" data-open-gevoeligheden>Bereken gevoeligheden</button></div></div>`;
+    <div class="resultaat-dg-keuze"><label for="in-dg-keuze">Dekkingsgraad op invaardatum:</label><select id="in-dg-keuze" data-dg-keuze>${dgs.map(([v, l]) => option(v, l, selectedDG)).join('')}</select><button type="button" class="action-btn action-btn-secondary resultaat-gevoeligheden-knop" data-open-gevoeligheden>Gevoeligheden</button><div class="resultaat-metriek-keuze" hidden><label for="in-resultaat-metriek">Weergave:</label><select id="in-resultaat-metriek" class="rgm-metric-select" data-matrix-metric aria-label="Weergave gevoeligheidstabellen">${metrics.map(([v, l]) => option(v, l, c.metriek)).join('')}</select></div><button type="button" class="action-btn action-btn-secondary resultaat-pdf-knop" data-print>Opslaan als pdf</button></div>
+    <div class="resultaat-hoofdscherm"><div class="${netto ? 'resultaat-tabel resultaat-tabel-schatting' : 'resultaat-tabel'} resultaat-methoden-host" aria-live="polite"></div></div>`;
     if (!netto) {
         result += `<div class="resultaat-gevoeligheid" hidden><div class="resultaat-gevoeligheid-methode" data-methode="standaard"><h3>Methode 1</h3>
     <p class="rgm-rij-uitleg">De rijen tonen het effect van de projectierente: de rente waarmee uw pensioenvermogen na invaren wordt omgezet in een jaarlijkse uitkering.</p>
@@ -5218,7 +5248,7 @@ function renderResultaatShellV4(c, p) {
     if (c.hoogLaag && c.knipdatum && /^\d{4}-\d{2}-\d{2}$/.test(c.knipdatum)) {
         result += `<p class="hl-aanname">Vanaf ${p.formattedDate(c.knipdatum)} daalt uw pensioen volgens uw hoog/laag regeling. De bedragen in de tabel gelden tot die datum. Uw lagere pensioen daarna stijgt met hetzelfde percentage als uw ouderdomspensioen.</p>`;
     }
-    result += '<div class="pdf-knop-rij"><button type="button" class="action-btn action-btn-secondary" data-print>Opslaan als pdf</button></div></div>';
+    result += '</div>';
     return result;
 }
 
@@ -8191,10 +8221,12 @@ function __v4ToonResultaatSubscherm(show){
  const pane=document.querySelector('.pane-resultaat');if(!pane)return;
  __v4GevoelighedenOpen=show;
  pane.querySelector('.resultaat-hoofdscherm').hidden=show;
+ pane.querySelector('.resultaat-pdf-knop')?.toggleAttribute('hidden',show);
  const sensitivity=pane.querySelector('.resultaat-gevoeligheid');
  if(sensitivity)sensitivity.hidden=!show;
  const pdf=pane.querySelector('.pdf-knop-rij');if(pdf)pdf.hidden=show;
  const metriekKeuze=pane.querySelector('.resultaat-metriek-keuze');if(metriekKeuze)metriekKeuze.hidden=!show;
+ const gevoelighedenKnop=pane.querySelector('.resultaat-gevoeligheden-knop');if(gevoelighedenKnop)gevoelighedenKnop.hidden=show;
  const number=pane.querySelector('.scherm-nr');if(number)number.textContent=show?'7-B':'7-A';
  // Normale wizard-navigatie: op 7-B is Vorige de terugweg naar 7-A.
  const previous=pane.parentElement?.querySelector('#wizard-vorige') ?? document.getElementById('wizard-vorige');
@@ -8405,6 +8437,7 @@ function applyPrimary(){
   if(gevoeligheid)gevoeligheid.hidden=!__v4GevoelighedenOpen;
   const pdf=pane.querySelector('.pdf-knop-rij');if(pdf)pdf.hidden=__v4GevoelighedenOpen;
   const metriekKeuze=pane.querySelector('.resultaat-metriek-keuze');if(metriekKeuze)metriekKeuze.hidden=!__v4GevoelighedenOpen;
+  const gevoelighedenKnop=pane.querySelector('.resultaat-gevoeligheden-knop');if(gevoelighedenKnop)gevoelighedenKnop.hidden=__v4GevoelighedenOpen;
  const nummer=pane.querySelector('.scherm-nr');if(nummer)nummer.textContent=__v4GevoelighedenOpen?'7-B':'7-A';
   const vorige=document.getElementById('wizard-vorige');if(vorige)vorige.textContent=__v4GevoelighedenOpen?'← Resultaten':'← Vorige';
   const mobiel=document.getElementById('navbar-vorige');if(mobiel)mobiel.textContent=__v4GevoelighedenOpen?'‹ Resultaten':'‹ Vorige';
@@ -8802,11 +8835,72 @@ function createReportPrintCoordinatorV4(ports) {
         }
         return node;
     }
+    function preparePrintReport() {
+        if (!snapshot)
+            return false;
+        const pane = doc.querySelector('.pane-resultaat');
+        if (!pane) {
+            const parameters = doc.querySelector('.pane-parameters');
+            if (!parameters)
+                return false;
+            const output = reportNode(parameters);
+            output.innerHTML = '<section class="v4-pdf-gegevens"><h2>Gebruikte gegevens</h2>' + ports.reportHtml(snapshot) + '</section>';
+            return true;
+        }
+        const overview = pane.querySelector('.resultaat-methoden-tabellen');
+        const matrices = Array.from(pane.querySelectorAll('.resultaat-gevoeligheid-methode'));
+        if (!overview || matrices.length !== 2 || matrices.some(m => !m.querySelector('.rgm-matrix tbody tr:nth-child(2)')))
+            return false;
+        const output = reportNode(pane);
+        const intro = doc.createElement('section');
+        intro.className = 'v4-pdf-results';
+        const one = doc.createElement('section');
+        one.className = 'v4-pdf-overview';
+        one.innerHTML = '<h2>7-A · Verwacht pensioen na invaren</h2>';
+        one.appendChild(overview.cloneNode(true));
+        const two = doc.createElement('section');
+        two.className = 'v4-pdf-sensitivities';
+        const choice = doc.querySelector('#in-resultaat-metriek');
+        const shown = choice?.selectedOptions[0]?.textContent ?? '% t.o.v. Nu';
+        const head = doc.createElement('h2');
+        head.textContent = '7-B · Gevoeligheden';
+        two.appendChild(head);
+        const metric = doc.createElement('p');
+        metric.className = 'v4-pdf-unit';
+        metric.textContent = 'Weergave: ' + shown;
+        two.appendChild(metric);
+        for (const source of matrices) {
+            const group = doc.createElement('section');
+            group.className = 'v4-pdf-matrix';
+            const title = doc.createElement('h3');
+            title.textContent = source.querySelector('h3')?.textContent ?? 'Methode';
+            group.appendChild(title);
+            const explanation = source.querySelector('.rgm-rij-uitleg');
+            if (explanation)
+                group.appendChild(explanation.cloneNode(true));
+            const table = source.querySelector('table.rgm-matrix');
+            if (table)
+                group.appendChild(table.cloneNode(true));
+            two.appendChild(group);
+        }
+        output.replaceChildren(intro);
+        intro.appendChild(one);
+        intro.appendChild(two);
+        const data = doc.createElement('section');
+        data.className = 'v4-pdf-gegevens';
+        data.innerHTML = '<h2>Gebruikte gegevens</h2>' + ports.reportHtml(snapshot);
+        output.appendChild(data);
+        return true;
+    }
     function stampPrint() {
         const node = metaNode();
         if (!isCurrent() || !snapshot) {
             node.innerHTML = '<p><strong>GEEN GELDIG BEREKENINGSRAPPORT</strong> — controleer de invoer en bereken opnieuw.</p>';
             doc.body.classList.add('v4-report-stale');
+            return false;
+        }
+        if (!preparePrintReport()) {
+            node.innerHTML = '<p>Het complete rapport is nog niet beschikbaar. Bereken de resultaten opnieuw.</p>';
             return false;
         }
         doc.body.classList.remove('v4-report-stale');
