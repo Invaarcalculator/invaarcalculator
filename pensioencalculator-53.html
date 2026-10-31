@@ -4,15 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>InvaarVergelijker</title>
-<meta name="description" content="Reken de persoonlijke berekening van uw pensioen na invaren zelf na en leg hem naast wat uw pensioenfonds u schreef. Werkt volledig in uw browser, zonder internetverbinding.">
+<meta name="description" content="Controleer zelf de persoonlijke berekening van uw pensioen na het invaren en leg uw eigen uitkomst naast wat uw pensioenfonds u schreef. Rekent volledig in uw eigen browser.">
 <meta name="color-scheme" content="light">
 <style>
 /* ==========================================================================
    InvaarVergelijker: weergavelaag (presentatie)
    Palet: #245447 #51826D #D8E7DB #F4F7F2 #FFFFFF
    Doelgroep 60+: basis 18px, grote velden en knoppen, duidelijke focus.
-   Contrast: tekst altijd #245447 op wit/#F4F7F2/#D8E7DB (> 7:1);
-   #51826D uitsluitend als vlak onder witte tekst (5,2:1) of als rand.
+   Contrast (nagerekend, zie README): tekst altijd #245447 — 8,63:1 op wit,
+   7,98:1 op #F4F7F2, 6,73:1 op #D8E7DB.
+   #51826D haalt 4,41:1 tegen wit en is daarmee GEEN tekstkleur op 18px en
+   GEEN vlak onder witte tekst; gebruik hem alleen als rand of als accentbalk
+   zonder tekst erop. Vlakken met witte tekst zijn altijd #245447.
+   (Een eerdere versie van deze kop noemde hier 5,2:1 en raadde #51826D juist
+   aan als vlak onder witte tekst; dat was onjuist en leverde AA-fouten op.)
    ========================================================================== */
 
 :root {
@@ -329,7 +334,14 @@ input[aria-invalid="true"] { border-color: var(--groen-donker); border-width: 3p
 .keuze:has(input:checked) { background: var(--groen-licht); border-color: var(--groen-donker); border-width: 3px; padding: calc(1rem - 1px) calc(1.1rem - 1px); }
 .keuze:focus-within { outline: 3px solid var(--groen-donker); outline-offset: 2px; }
 .keuze-titel { display: block; font-weight: 700; }
-.keuze-uitleg { display: block; font-size: var(--txt-s); }
+
+/* --- Uitlegscherm -------------------------------------------------------
+   De drie delen van de doorloop. Een genummerde lijst, want de volgorde is
+   de boodschap: eerst wat u nu heeft, dan wat de calculator ervan maakt, dan
+   wat SSPF ervan maakt. */
+.stappen-uitleg { margin: 0 0 1.5rem; padding-left: 1.6rem; }
+.stappen-uitleg li { margin: 0 0 0.8rem; padding-left: 0.3rem; }
+.stappen-uitleg li strong { color: var(--groen-donker); }
 
 /* --- Knoppen ----------------------------------------------------------- */
 
@@ -377,13 +389,6 @@ input[aria-invalid="true"] { border-color: var(--groen-donker); border-width: 3p
   font-size: var(--txt-s);
   margin: 0 0 1rem;
 }
-/* De waarschuwing op stap 5 moet opvallen zonder kleur: het palet kent geen
-   rood, dus het onderscheid zit in het vlak en de rand, niet in de tint. */
-.noot-let-op {
-  background: var(--groen-licht); border-color: var(--groen-donker);
-  font-size: var(--txt);
-}
-
 .tabel-wrap { overflow-x: auto; margin: 0 0 1.5rem; }
 table.data {
   border-collapse: collapse;
@@ -408,7 +413,13 @@ table.data td.gekozen, table.data thead th.gekozen {
   background: var(--groen-licht); font-weight: 700;
   box-shadow: inset 3px 0 0 var(--groen-mid), inset -3px 0 0 var(--groen-mid);
 }
+/* Haak voor losse woorden die alleen op de afdruk horen te staan. */
 .alleen-afdruk { display: none; }
+
+/* Het blok met de ingevulde gegevens onder aan de afdruk. Op het scherm staat
+   die invoer al op de stappen zelf, dus daar is het blok overbodig; op papier
+   is het juist het enige dat de cijfers hun uitgangspunt geeft. */
+.afdruk-kop { display: none; }
 
 /* --- Controlescherm ----------------------------------------------------
    Het palet kent geen rood. Een afwijking wordt daarom met vorm en gewicht
@@ -416,16 +427,6 @@ table.data td.gekozen, table.data thead th.gekozen {
    Dat leest ook zonder kleurwaarneming. Wilt u hier toch een signaalkleur,
    dan hoort die eerst door de contrasttoets in test/browser.mjs. */
 
-/* Alle drie op --groen-donker: wit op --groen-mid haalt 4,41:1 en dus geen AA
-   voor normale tekst. Het onderscheid zit in de balk, niet in de kleur. */
-.ctrl-neutraal { background: var(--groen-donker); }
-.ctrl-binnen { background: var(--groen-donker); box-shadow: inset 10px 0 0 var(--groen-mid); }
-.ctrl-buiten { background: var(--groen-donker); box-shadow: inset 10px 0 0 var(--wit); }
-
-table.data .oor { white-space: normal; font-size: var(--txt-s); }
-table.data td.oor-buiten { font-weight: 700; box-shadow: inset 5px 0 0 var(--groen-donker); }
-table.data tr.rij-buiten { background: var(--groen-licht); }
-table.data tr.rij-buiten th[scope="row"] { font-weight: 700; }
 .ctrl-tabel td .rap-hint, .ctrl-tabel th .rap-hint {
   display: block; font-size: var(--txt-s); font-weight: 400;
 }
@@ -436,13 +437,6 @@ table.data tr.rij-buiten th[scope="row"] { font-weight: 700; }
    dezelfde hoogte: de drie bedragen naast elkaar, het percentage eronder. */
 .ctrl-tabel th, .ctrl-tabel td { vertical-align: top; }
 .leeg { font-style: italic; }
-.ctrl-lijst { margin: 0 0 1.5rem; padding-left: 1.4rem; }
-.ctrl-lijst li { margin: 0 0 0.6rem; }
-
-@media (max-width: 30rem) {
-  table.stapel tr.rij-buiten { border-color: var(--groen-donker); border-width: 3px; }
-  table.stapel td.oor-buiten { box-shadow: none; border-left: 5px solid var(--groen-donker); padding-left: 0.5rem; }
-}
 
 /* --- Gegevensscherm ---------------------------------------------------- */
 
@@ -557,6 +551,15 @@ table.rap tr.tot th, table.rap tr.tot td { border-top: 2px solid var(--groen-mid
 
   .skiplink, .knoprij, .voortgang, .kop-knoppen { display: none !important; }
   .alleen-afdruk { display: inline; font-weight: 700; }
+  /* Het gegevensblok begint op een nieuwe pagina, zodat de vergelijking niet
+     halverwege wordt afgebroken en het blok als geheel bij elkaar blijft. */
+  .afdruk-kop {
+    display: block; page-break-before: always; break-before: page;
+    margin-top: 0; padding-top: 0;
+  }
+  .afdruk-kop h2 { font-size: 1.15rem; margin: 0 0 0.3cm; }
+  .afdruk-kop p { margin: 0 0 0.4cm; font-size: 10pt; }
+  .afdruk-kop th[scope="row"] { font-weight: 400; width: 55%; }
   .romp { max-width: none; padding: 0.5cm 0; }
   .kaart { border: 0; padding: 0; }
   table.data, table.rap { page-break-inside: auto; }
@@ -3594,7 +3597,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
   function pct(fractie, decimalen) {
     var d = decimalen === undefined ? 1 : decimalen;
     return (fractie * 100).toLocaleString('nl-NL',
-      { minimumFractionDigits: d, maximumFractionDigits: d }) + NBSP + '%';
+      { minimumFractionDigits: d, maximumFractionDigits: d }) + '%';
   }
   function pctGetekend(fractie) {
     return (fractie < 0 ? '−' : '+') + pct(Math.abs(fractie));
@@ -3604,6 +3607,115 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     var d = iso.split('-');
     return Number(d[2]) + ' ' + MAANDEN[Number(d[1]) - 1].toLowerCase() + ' ' + d[0];
   }
+  /**
+   * Het blok met de ingevulde gegevens, alleen zichtbaar op de afdruk.
+   *
+   * Zonder dit blok was een uitdraai een vel met verschillen zonder
+   * uitgangspunt: de regel "De verhoging: Brief <> Berekend" is niet te duiden
+   * als er nergens staat met wélke dekkingsgraad is gerekend. Wie het vel
+   * meeneemt naar het fonds of bij zijn brief legt, heeft die context nodig.
+   *
+   * Alles komt uit de besturing (`ctrl.status()`) en uit `v`, dus uit wat de
+   * gebruiker heeft ingevuld; hier wordt niets afgeleid of herrekend.
+   *
+   * Geen afdrukdatum: dit pakket houdt zijn weergave bewust vrij van een klok,
+   * en de browser zet zelf datum en tijd in de kop- of voetregel van de
+   * afdruk. De invaardatum staat er wél in, want die komt uit de configuratie.
+   */
+  function afdrukGegevens() {
+    var s = ctrl.status(), i = s.inputs;
+    var rij = function (naam, waarde) {
+      return '<tr><th scope="row">' + esc(naam) + '</th><td>' + esc(waarde) + '</td></tr>';
+    };
+    var geslachtNl = function (g) { return g === 'V' ? 'Vrouw' : 'Man'; };
+    /* Het rijlabel begint met een hoofdletter; staat er een UPO-nummer voor,
+       dan komt het woord na een dubbele punt en blijft het dus klein. */
+    var deel = function (voor, woord) {
+      return voor ? voor + woord : woord.charAt(0).toUpperCase() + woord.slice(1);
+    };
+    var r = '';
+
+    r += rij('Geboortedatum', datumNl(i.birthDate));
+    r += rij('Geslacht', geslachtNl(s.geslacht));
+    r += rij('Recht op partnerpensioen', i.hasPartner ? 'Ja' : 'Nee');
+    if (i.hasPartner) {
+      r += rij('Geboortedatum partner', datumNl(i.partnerBirthDate));
+      r += rij('Geslacht partner', geslachtNl(s.partnerGeslacht));
+    }
+    r += rij('Hoog-laag-regeling', i.highLow ? 'Ja' : 'Nee');
+    if (i.highLow) r += rij('Knipdatum', datumNl(i.cutoverDate));
+
+    for (var n = 0; n < v.aantalUpo; n++) {
+      var u = v.upo[n] || {};
+      var voor = v.aantalUpo > 1 ? 'UPO ' + (n + 1) + ': ' : '';
+      r += rij(deel(voor, 'ouderdomspensioen'), u.bruto === null || u.bruto === undefined
+        ? 'niet ingevuld' : eur(u.bruto) + ' per jaar');
+      if (i.hasPartner) {
+        r += rij(deel(voor, 'partnerpensioen'), u.np === null || u.np === undefined
+          ? 'niet ingevuld' : eur(u.np) + ' per jaar');
+      }
+      if (i.highLow) {
+        r += rij(deel(voor, 'ouderdomspensioen laag'), u.laag === null || u.laag === undefined
+          ? 'leeg: dit pensioen verandert niet' : eur(u.laag) + ' per jaar');
+      }
+    }
+    if (v.aowAan) {
+      r += rij('AOW-compensatiepensioen', v.aowJaar === null
+        ? 'niet ingevuld' : eur(v.aowJaar) + ' per jaar');
+    }
+
+    r += rij('Dekkingsgraad uit de brief', dgTekst() || 'niet ingevuld');
+    r += rij('Invaardatum', datumNl(K.CONFIG.invaardatum));
+
+    return '<section class="afdruk-kop">' +
+      '<h2>De gegevens waarmee is gerekend</h2>' +
+      '<p>Overgenomen uit uw UPO’s van mei 2026 en, voor de dekkingsgraad, ' +
+      'uit de persoonlijke berekening van november 2026.</p>' +
+      '<table class="data"><tbody>' + r + '</tbody></table>' +
+      modelUitgangspunten() +
+      '</section>';
+  }
+
+  /**
+   * Sectie 2 en 3 van het rapport van de kern: de uitgangspunten en de
+   * fondsgegevens.
+   *
+   * Hier staan de getallen die bepalen wát er uit de berekening komt en die
+   * nergens anders op het scherm te zien zijn: de sterftetafel met de correctie
+   * voor de sterfte binnen het fonds, de peildatum van de DNB-curve, de
+   * rekenrente waarmee contant is gemaakt, de projectierente, de rekenmethode,
+   * en aan fondskant het vermogen, de voorziening, de drie aftrekposten, het
+   * verdeelbare overschot en de spreidingsperiode.
+   *
+   * Dit wordt **niet** overgetikt. De blokken komen woordelijk uit
+   * `rapportWeergaveV4`, inclusief de toelichting per regel, en gaan door
+   * dezelfde `rapportHtml()` als stap 4, zodat `KOLOMNAAM`, `NOTEN` en
+   * `TOELICHTINGEN` hun hernoemingen ook hier doen. Verandert de kern een
+   * getal of een formulering, dan verandert de afdruk mee; er is geen tweede
+   * lijst die kan gaan afwijken.
+   *
+   * Secties 1 tot en met 3 komen als `tabel`-blokken met een `kop`, secties 4
+   * en 5 als losse `kop`-blokken. Sectie 1 ("Uw invoer") wordt overgeslagen:
+   * die staat hierboven al, en dan per UPO uitgesplitst, wat de kern niet kan
+   * omdat zij de UPO's opgeteld krijgt. Vindt deze functie de twee secties
+   * niet, dan geeft zij niets terug in plaats van iets te verzinnen.
+   */
+  function modelUitgangspunten() {
+    var sc = huidigScenario();
+    if (!sc) return '';
+    var blokken = K.rapportWeergaveV4(sc.gebruikteGegevens).blokken
+      .filter(function (b) {
+        return b.soort === 'tabel' && typeof b.kop === 'string' &&
+          (b.kop.indexOf('2.') === 0 || b.kop.indexOf('3.') === 0);
+      });
+    if (!blokken.length) return '';
+    /* De nummering van de kern weglaten, net als op stap 4: hier staan alleen
+       sectie 2 en 3, dus "2." en "3." zonder een 1 ervoor lezen als een fout. */
+    return rapportHtml({blokken: blokken.map(function (b) {
+      return {soort: b.soort, kop: b.kop.replace(/^\d+\.\s*/, ''), rijen: b.rijen};
+    })});
+  }
+
   function esc(tekst) {
     return String(tekst).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -3615,33 +3727,55 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
 
   /* --------------------------------------------- teksten bij kerncodes */
 
+  /* De kern levert twee codewoordenschatten voor dezelfde fouten: een
+     Engelstalige uit de workflow en een Nederlandstalige uit de voorbereiding.
+     Vijf teksten stonden daardoor twee keer letterlijk in deze tabel, en een
+     formuleringswijziging aan één kant liep stilletjes uit de pas met de
+     andere. Ze staan nu één keer, hieronder, en worden tweemaal aangewezen.
+
+     Twee eisen aan deze teksten:
+     - Ze noemen hetzelfde woord als het label waar ze naar wijzen. Een melding
+       die "de datum waarop uw pensioen verandert" zegt bij een veld dat
+       "Datum waarop het lagere bedrag ingaat" heet, laat de lezer zoeken.
+     - Ze verwijzen naar knoppen die bestaan. De app rekent vanzelf; er is geen
+       knop "Bereken", alleen Vorige en Volgende. */
+  var T_GEBOORTEDATUM = 'Vul een volledige en geldige geboortedatum in: dag, maand en jaar.';
+  var T_PARTNERDATUM = 'Vul een volledige en geldige geboortedatum van uw partner in.';
+  var T_BEDRAG = 'Vul een bedrag in dat hoger is dan nul.';
+  var T_PARTNERPENSIOEN = 'Vul het bruto partnerpensioen per jaar in.';
+  var T_KNIPDATUM = 'Vul de datum in waarop het lagere bedrag ingaat.';
+  var T_AOW = 'Vul het bruto AOW-compensatiepensioen per jaar in.';
+  var T_HOOGLAAG_BRUTO = 'Voor een hoog-laag-regeling zijn de bruto bedragen van uw UPO nodig.';
+  var T_NIET_REKENEN = 'De calculator kan nu niet rekenen. Neem contact op met de maker.';
+
   var FOUTTEKST = {
-    INVALID_DATE: 'Vul een volledige en geldige geboortedatum in: dag, maand en jaar.',
-    INVALID_PARTNER_DATE: 'Vul een volledige en geldige geboortedatum van uw partner in.',
-    MISSING_ROUTE: 'Kies hoe u uw pensioenbedragen doorgeeft.',
-    INVALID_AMOUNT: 'Vul een bedrag in dat hoger is dan nul.',
-    MISSING_CUTOVER: 'Vul de datum in waarop uw pensioen verandert.',
-    MISSING_PARTNER_PENSION: 'Vul het bruto pensioen voor uw partner per jaar in.',
-    MISSING_AOW_COMPENSATION: 'Vul het bruto AOW-compensatiepensioen per jaar in.',
-    NET_ROUTE_EXCLUDES_HIGH_LOW: 'Voor een hoog-laag-regeling zijn de bruto bedragen van uw UPO nodig.',
-    CALCULATION_REQUIRED: 'Kies Bereken om het resultaat te zien.',
-    NOT_AT_FINAL_INPUT_STEP: 'Vul eerst alle stappen in.',
-    STALE_CALCULATION: 'De invoer is gewijzigd. Bereken opnieuw.',
+    INVALID_DATE: T_GEBOORTEDATUM,
+    INVALID_PARTNER_DATE: T_PARTNERDATUM,
+    MISSING_ROUTE: 'Geef eerst aan hoe uw UPO’s in de brief staan.',
+    INVALID_AMOUNT: T_BEDRAG,
+    MISSING_CUTOVER: T_KNIPDATUM,
+    MISSING_PARTNER_PENSION: T_PARTNERPENSIOEN,
+    MISSING_AOW_COMPENSATION: T_AOW,
+    NET_ROUTE_EXCLUDES_HIGH_LOW: T_HOOGLAAG_BRUTO,
+    CALCULATION_REQUIRED: 'Ga verder naar de volgende stap om het resultaat te zien.',
+    NOT_AT_FINAL_INPUT_STEP: 'Doorloop eerst alle stappen.',
+    STALE_CALCULATION: 'De invoer is gewijzigd. Loop de stappen opnieuw door.',
     INVALID_TRANSITION: 'Deze stap is nu niet beschikbaar.',
     INVALID_GESLACHT: 'Kies man of vrouw.',
-    MODEL_CONTEXT_CHANGED: 'De uitgangspunten zijn gewijzigd. Bereken opnieuw.',
+    MODEL_CONTEXT_CHANGED: 'De uitgangspunten zijn gewijzigd. Loop de stappen opnieuw door.',
     LEGACY_CALCULATION_FAILED: 'De berekening is niet gelukt. Controleer uw invoer.',
-    ONGELDIGE_GEBOORTEDATUM: 'Vul een volledige en geldige geboortedatum in: dag, maand en jaar.',
-    ONGELDIGE_PARTNERDATUM: 'Vul een volledige en geldige geboortedatum van uw partner in.',
-    ONGELDIG_BEDRAG: 'Vul een bedrag in dat hoger is dan nul.',
-    ONGELDIG_PARTNERPENSIOEN: 'Vul het bruto pensioen voor uw partner per jaar in.',
-    ONGELDIGE_KNIPDATUM: 'Vul de datum in waarop uw pensioen verandert.',
-    ONGELDIG_LAAG_PENSIOEN: 'Vul het bruto bedrag per jaar in dat u vanaf die datum ontvangt.',
-    ONGELDIGE_AOW_COMPENSATIE: 'Vul het bruto AOW-compensatiepensioen per jaar in.',
-    NETTO_ZONDER_HOOGLAAG: 'Voor een hoog-laag-regeling zijn de bruto bedragen van uw UPO nodig.',
-    GEEN_RENTE_VOOR_LEEFTIJD: 'Voor deze leeftijd is geen rente beschikbaar in de rentetermijnstructuur.',
-    ONGELDIGE_FONDSBASIS: 'De berekening is niet gelukt met deze fondsgegevens.',
-    ONGELDIGE_INVAARDATUM: 'De invaardatum in de configuratie is ongeldig.'
+    ONGELDIGE_GEBOORTEDATUM: T_GEBOORTEDATUM,
+    ONGELDIGE_PARTNERDATUM: T_PARTNERDATUM,
+    ONGELDIG_BEDRAG: T_BEDRAG,
+    ONGELDIG_PARTNERPENSIOEN: T_PARTNERPENSIOEN,
+    ONGELDIGE_KNIPDATUM: T_KNIPDATUM,
+    ONGELDIG_LAAG_PENSIOEN: 'Vul het bruto bedrag per jaar in dat u vanaf de knipdatum ontvangt.',
+    ONGELDIGE_AOW_COMPENSATIE: T_AOW,
+    NETTO_ZONDER_HOOGLAAG: T_HOOGLAAG_BRUTO,
+    GEEN_RENTE_VOOR_LEEFTIJD: 'Voor deze leeftijd kan de calculator niet rekenen. ' +
+      'Controleer uw geboortedatum.',
+    ONGELDIGE_FONDSBASIS: T_NIET_REKENEN,
+    ONGELDIGE_INVAARDATUM: T_NIET_REKENEN
   };
 
   var MELDINGTEKST = {
@@ -3662,9 +3796,13 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
   var BRIEFFOUTTEKST = {
     GEEN_DEKKINGSGRAAD: 'Vul de dekkingsgraad in die in uw brief staat. Zonder die dekkingsgraad ' +
       'kan de calculator niet op hetzelfde uitgangspunt rekenen als de brief.',
-    DEKKINGSGRAAD_BUITEN_STAFFEL: 'Bij deze dekkingsgraad hoort geen transitiebijdrage in de staffel ' +
-      'van het fonds. De calculator kan dit scenario niet doorrekenen. Controleer of u de ' +
-      'dekkingsgraad goed hebt overgenomen.',
+    /* Deze melding is de enige die een gebruiker realistisch tegenkomt met een
+       typefout, dus zij hoort in de taal van het scherm te staan en niet in
+       die van het model: "transitiebijdrage", "staffel" en "scenario" zijn
+       woorden die hij nergens anders in deze app tegenkomt. */
+    DEKKINGSGRAAD_BUITEN_STAFFEL: 'Deze dekkingsgraad valt buiten de reeks waarmee ' +
+      'de calculator kan rekenen. Controleer of u de dekkingsgraad goed heeft ' +
+      'overgenomen uit uw brief.',
     TRIAGE_GEEN_KEUZE: 'Geef eerst aan of deze drie punten voor u gelden.'
   };
 
@@ -3715,7 +3853,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     aowAan: false,
     aowJaar: null,
     /* Eén regel per UPO. De kern kent één bruto bedrag en één
-       nabestaandenpensioen; deze regels worden daarvoor opgeteld. Dat mag:
+       partnerpensioen; deze regels worden daarvoor opgeteld. Dat mag:
        de kapitaalwaarde is lineair in het pensioenbedrag, dus drie pensioenen
        apart doorrekenen en optellen geeft tot op de cent hetzelfde als één
        opgeteld bedrag. Zie README. */
@@ -3776,6 +3914,17 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     /* Privacy en disclaimer leggen zich over de stap heen; de besturing merkt
        er niets van en de invoer blijft staan. null = geen van beide. */
     overlay: null,
+    /* Het uitlegscherm gaat aan de openingsvraag vooraf: het zegt wat de
+       calculator doet en waarom de bedragen uit twee bronnen komen. Die
+       redenering stond alleen in de README, en zonder haar leest "niet uit de
+       brief" op stap 2 als een willekeurige eis terwijl de lezer die brief in
+       zijn hand heeft.
+
+       Twee schermen in plaats van één: de uitleg en de vraag hebben elk hun
+       eigen taak, en wie al weet waar het over gaat klikt door zonder langs de
+       tekst te hoeven scrollen om de vraag te vinden. Op 360px scheelt dat een
+       scherm of twee. */
+    uitlegGelezen: false,
     /* De openingsvraag: null = nog niet beantwoord, 'ja' = door naar de
        stappen, 'nee' = het scherm dat zegt dat dit niet past. */
     triage: null
@@ -3900,8 +4049,8 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       kies('jaar') + opties(jaren, deel.jaar) + '</select></span>' +
       '</div>' +
       (v.dagGewist === naam
-        ? '<p class="noot" role="status">Die dag bestaat niet in de gekozen maand, dus hij is ' +
-          'uit de lijst gevallen. Kies opnieuw een dag.</p>'
+        ? '<p class="noot" role="status">Die dag bestaat niet in de gekozen maand ' +
+          'en staat niet meer in de lijst. Kies een andere dag.</p>'
         : '') +
       '</fieldset>';
   }
@@ -3947,7 +4096,19 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
    * wat geen cijfer, komma of punt is, valt weg.
    */
   function naarGetal(ruw) {
-    var schoon = String(ruw).replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
+    var tekst = String(ruw);
+    /* Een minteken hoort hier niet thuis: dit zijn pensioenbedragen en
+       kapitalen, en die zijn nooit negatief. Het wegstrippen ervan maakte van
+       "-500" stilletjes 500 — een ander bedrag dan er stond, zonder dat
+       iemand het merkt. Afwijzen is beter: het veld leest dan als leeg en de
+       kern vraagt om een bedrag.
+
+       Behalve het gewone koppelteken ook het echte minteken en de twee
+       streepjes die uit tekstverwerkers komen; wie een bedrag plakt, plakt het
+       teken mee. "24.000,-" blijft gewoon goed: daar staat geen cijfer
+       achter het streepje. */
+    if (/[-−–—]\s*\d/.test(tekst)) return null;
+    var schoon = tekst.replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
     if (schoon === '') return null;
     var n = Number(schoon);
     return isFinite(n) ? n : null;
@@ -4049,7 +4210,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
    * rekent de calculator met de cijfers die hij moet controleren en valt een
    * ontbrekend pensioen nergens op. Met de UPO's ernaast wel.
    *
-   * De kern kent één bruto bedrag en één nabestaandenpensioen; de regels
+   * De kern kent één bruto bedrag en één partnerpensioen; de regels
    * hieronder worden daarvoor opgeteld. Dat is exact: de kapitaalwaarde is
    * lineair in het pensioenbedrag.
    */
@@ -4065,7 +4226,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
           'Ouderdomspensioen', r.bruto, '') +
         (i.hasPartner
           ? upoVeld('in-upo-' + n + '-np', n, 'np',
-              'Nabestaandenpensioen', r.np, '')
+              'Partnerpensioen', r.np, '')
           : '') +
         (i.highLow
           ? upoVeld('in-upo-' + n + '-laag', n, 'laag',
@@ -4083,10 +4244,9 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     }
 
     return '<h2 id="staptitel" tabindex="-1">Uw pensioen nu</h2>' +
-      '<p class="kaart-intro">Neem deze bedragen over van uw UPO\u2019s van mei 2026, niet uit ' +
-      'de brief. ' +
-      'Juist doordat ze van een andere bron komen, valt het op wanneer er in de brief iets ' +
-      'ontbreekt.</p>' +
+      '<p class="kaart-intro">Gebruik hiervoor de bedragen uit uw UPO\u2019s van mei 2026. ' +
+      'Neem ze niet over uit de brief, want juist door beide bronnen te vergelijken, ' +
+      'kunt u zien of er bedragen in de brief ontbreken.</p>' +
       foutenBlok() + regels + extra + totaalBlok(i);
   }
 
@@ -4111,7 +4271,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     var tekst = '';
     if (codes.indexOf('MISSING_CUTOVER') >= 0) {
       tekst = 'De kapitaalwaarde kan nog niet worden berekend: de datum waarop het lagere ' +
-        'bedrag ingaat ontbreekt. Ga met Vorige terug naar uw gegevens om hem in te vullen.';
+        'bedrag ingaat, ontbreekt nog. Ga met Vorige terug naar uw gegevens en vul die datum in.';
     } else if (codes.length) {
       tekst = 'Zodra alle bedragen zijn ingevuld, verschijnt hier de kapitaalwaarde.';
     }
@@ -4162,7 +4322,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
    * Overzicht van de aanspraken, zodat het naast de brief te leggen is. Bij een
    * hoog-laag-regeling komt er een tweede tabel voor de periode vanaf de
    * knipdatum. Alleen het ouderdomspensioen verandert daar: de kern kent één
-   * nabestaandenpensioen en één AOW-compensatiepensioen, die niet met de knip
+   * partnerpensioen en één AOW-compensatiepensioen, die niet met de knip
    * meebewegen.
    */
   /** `kvId` is gezet wanneer de regel ook een kapitaalwaarde krijgt. */
@@ -4186,7 +4346,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     if (v.aantalUpo < 2 && !v.aowAan && !i.hasPartner && !i.highLow) return '';
     var rijen = overzichtRij('Ouderdomspensioen', i.grossAnnual, 'tot-op', 'kv-op');
     if (i.hasPartner) {
-      rijen += overzichtRij('Nabestaandenpensioen', i.partnerGrossAnnual, 'tot-np', 'kv-np');
+      rijen += overzichtRij('Partnerpensioen', i.partnerGrossAnnual, 'tot-np', 'kv-np');
     }
     if (v.aowAan) {
       rijen += overzichtRij('AOW-compensatiepensioen', v.aowJaar, 'tot-aow', 'kv-aowc');
@@ -4195,20 +4355,20 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       /* Alle kapitaalwaarden tellen op: het zijn contante waarden op dezelfde
          datum. Dat ze apart worden berekend, elk met hun eigen verhoging, staat
          daar los van. De bruto bedragen tellen niet op, want het
-         nabestaandenpensioen gaat pas in na overlijden; die cel blijft leeg. */
+         partnerpensioen gaat pas in na overlijden; die cel blijft leeg. */
       rijen += '<tr class="totaal"><th scope="row">Samen</th>' +
         '<td data-k="bruto per jaar">\u2014</td>' +
         '<td data-k="kapitaalwaarde" id="kv-totaal">\u2014</td></tr>';
     }
-    var uit = overzichtTabel('Overzicht voor invaren', rijen, true);
+    var uit = overzichtTabel('Overzicht v\u00f3\u00f3r invaren', rijen, true);
     var noten = [];
     if (i.hasPartner) {
       noten.push('De kapitaalwaarden tellen op; de bruto bedragen niet, want het ' +
-        'nabestaandenpensioen gaat pas in na uw overlijden.');
+        'partnerpensioen gaat pas in na uw overlijden.');
     }
     if (v.aowAan) {
       noten.push('Het AOW-compensatiepensioen krijgt bij het invaren een eigen, iets hogere ' +
-        'verhoging; daarom rekent de calculator het apart door. De kapitaalwaarde telt gewoon ' +
+        'verhoging; daarom rekent de calculator het apart door. De kapitaalwaarde telt ' +
         'mee in het totaal.');
     }
     /* Leeg en verborgen tot `toonReden` hem vult; zonder `hidden` staat er bij
@@ -4219,11 +4379,11 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       var vanaf = isoUit(v.knip) ? datumNl(isoUit(v.knip)) : 'de knipdatum';
       var rijen2 = overzichtRij('Ouderdomspensioen', i.lowGrossAnnual, 'tot2-op');
       if (i.hasPartner) {
-        rijen2 += overzichtRij('Nabestaandenpensioen', i.partnerGrossAnnual, 'tot2-np');
+        rijen2 += overzichtRij('Partnerpensioen', i.partnerGrossAnnual, 'tot2-np');
       }
       if (v.aowAan) rijen2 += overzichtRij('AOW-compensatiepensioen', v.aowJaar, 'tot2-aow');
       var ongewijzigd = [];
-      if (i.hasPartner) ongewijzigd.push('het nabestaandenpensioen');
+      if (i.hasPartner) ongewijzigd.push('het partnerpensioen');
       if (v.aowAan) ongewijzigd.push('het AOW-compensatiepensioen');
       var staart = ongewijzigd.length === 0 ? ''
         : ' ' + ongewijzigd.join(' en ').replace(/^h/, 'H') +
@@ -4252,11 +4412,12 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
    */
   function schermDg() {
     return '<h2 id="staptitel" tabindex="-1">De dekkingsgraad uit uw brief</h2>' +
-      '<p class="kaart-intro">Dit is het enige getal uit uw brief dat de calculator nodig ' +
-      'heeft om te rekenen. Het bepaalt hoe groot de te verdelen buffer is en welk deel ' +
-      'daarvan bij u terechtkomt — en daarmee uw kapitaal en uw pensioen ná ' +
-      'invaren. De andere bedragen uit uw brief vraagt de calculator later, bij de ' +
-      'vergelijking.</p>' +
+      '<p class="kaart-intro">De calculator heeft eerst maar één gegeven uit uw ' +
+      'brief nodig: de dekkingsgraad. Hiermee wordt de bufferverdeling berekend: hoe ' +
+      'groot de te verdelen buffer is, en welk deel daarvan naar u gaat. Dit heeft ' +
+      'invloed op uw ' +
+      'pensioenkapitaal en uw pensioen na het invaren. De andere bedragen uit uw brief ' +
+      'komen later aan bod, wanneer u de resultaten vergelijkt.</p>' +
       foutenBlok() +
       veld('<label for="in-brief-dg">Dekkingsgraad op de invaardatum</label>' +
         '<span class="geld-wrap">' +
@@ -4265,8 +4426,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
         'aria-describedby="in-brief-dg-eenheid" ' +
         'autocomplete="off" value="' + esc(v.brief.dg) + '"></span>' +
         '<p class="hint">U vindt dit getal in de brief met de persoonlijke berekening ' +
-        'van november 2026. Neem het over zoals het er staat: 140 als het een rond getal ' +
-        'is, 138,7 als er cijfers achter de komma staan.</p>');
+        'van november 2026.</p>');
   }
 
   /**
@@ -4394,7 +4554,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     var perUpo = briefPerUpo();
     var opNaam = erin ? 'Ouderdomspensioen met AOW-compensatie' : 'Ouderdomspensioen';
     var laagNaam = erin
-      ? 'Ouderdomspensioen laag, met AOW-compensatie' : 'Ouderdomspensioen laag';
+      ? 'Ouderdomspensioen laag met AOW-compensatie' : 'Ouderdomspensioen laag';
 
     var vragen = '';
     if (v.aantalUpo > 1) {
@@ -4425,13 +4585,13 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
         regels += '<h3 class="groep-kop">UPO ' + (n + 1) + '</h3>' +
           briefPaar(opNaam, n, 'bruto', pNu.bruto[n], pNa.bruto[n]) +
           (i.hasPartner
-            ? briefPaar('Nabestaandenpensioen', n, 'np', pNu.np[n], pNa.np[n]) : '') +
+            ? briefPaar('Partnerpensioen', n, 'np', pNu.np[n], pNa.np[n]) : '') +
           (i.highLow
             ? briefPaar(laagNaam, n, 'laag', pNu.laag[n], pNa.laag[n]) : '');
       }
     } else {
       regels += briefPaar(opNaam, 0, 'bruto', d.nu.bruto, d.na.bruto) +
-        (i.hasPartner ? briefPaar('Nabestaandenpensioen', 0, 'np', d.nu.np, d.na.np) : '') +
+        (i.hasPartner ? briefPaar('Partnerpensioen', 0, 'np', d.nu.np, d.na.np) : '') +
         (i.highLow ? briefPaar(laagNaam, 0, 'laag', d.nu.laag, d.na.laag) : '');
     }
 
@@ -4465,11 +4625,18 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       '</div>';
 
     return '<h2 id="staptitel" tabindex="-1">De bedragen uit uw brief</h2>' +
-      '<p class="kaart-intro">Neem hier over wat ' + esc(K.CONFIG.shortLabel) + ' in de ' +
-      'persoonlijke berekening schrijft: per pensioen het bedrag v\u00f3\u00f3r en n\u00e1 het ' +
-      'invaren. ' +
-      (vragen ? 'Zeg eerst hoe die bedragen in uw brief staan; de vakken passen zich aan. '
+      /* E\u00e9n naam voor \u00e9\u00e9n document. Hier stonden "de persoonlijke berekening"
+         en "uw brief" vijftien woorden uit elkaar, op het scherm waar de
+         lezer dat document in zijn handen houdt. De volledige naam staat op
+         de openingsvraag en bij de dekkingsgraad; daarna volstaat "uw brief".
+         En de volgorde was omgekeerd: de eerste zin zei "neem over", de
+         tweede "zeg eerst". */
+      '<p class="kaart-intro">' +
+      (vragen ? 'Zeg eerst hoe de bedragen in uw brief staan; de vakken passen zich aan. '
               : '') +
+      (vragen ? 'Neem daarna over wat ' : 'Neem hier over wat ') +
+      esc(K.CONFIG.shortLabel) + ' schrijft: per pensioen het bedrag ' +
+      'v\u00f3\u00f3r en n\u00e1 het invaren. ' +
       'Onder elk vak staat waarmee het straks wordt vergeleken.</p>' +
       foutenBlok() + vragen + regels + extra;
   }
@@ -4490,7 +4657,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       datumVelden('dob', v.dob, 'Uw geboortedatum', MAX_JAAR - 110, JONGSTE_JAAR) +
       geslachtVeld('in-g', 'geslacht', 'Uw geslacht', s.geslacht) +
       jaNee('in-partner', 'partner',
-        'Heeft uw partner recht op nabestaandenpensioen na uw overlijden?', i.hasPartner);
+        'Heeft uw partner recht op partnerpensioen na uw overlijden?', i.hasPartner);
     if (i.hasPartner) {
       inhoud += '<div class="vervolg">' +
         datumVelden('dobPartner', v.dobPartner, 'Geboortedatum van uw partner',
@@ -4607,6 +4774,67 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     return true;
   }
 
+  /* ------------------------------------------------------ uitleg vooraf */
+
+  /**
+   * Het eerste scherm: wat de calculator doet, hoe de doorloop eruitziet, en
+   * waarom de bedragen uit twee bronnen komen.
+   *
+   * Dat laatste is de reden dat dit scherm bestaat. De calculator vraagt op
+   * stap 2 om de bedragen van de eigen UPO's en zegt er "niet uit de brief"
+   * bij, zonder uit te leggen waarom. Wie die brief net heeft opengevouwen,
+   * leest dat als een omweg. Het is juist de kern van de controle: kwamen de
+   * bedragen uit de brief, dan rekende de calculator met de cijfers die hij
+   * moet controleren.
+   *
+   * De zes stappen worden als drie paren gepresenteerd. Dat is geen
+   * vereenvoudiging maar de werkelijke indeling: stap 1 en 2 gaan over wat de
+   * deelnemer nu ontvangt, stap 3 en 4 over wat deze calculator ervan maakt,
+   * stap 5 en 6 over wat SSPF ervan maakt en wat het verschil is. Zes losse
+   * labels zeggen minder dan die drie.
+   *
+   * Net als de openingsvraag staat dit scherm buiten de workflow van de kern;
+   * er komt dus geen stap bij in `stroom/workflow.ts`.
+   */
+  function schermUitleg() {
+    var delen = [
+      ['Wat u nu ontvangt', 'U vult uw gegevens in, en de bedragen van uw UPO’s ' +
+        'van mei 2026.'],
+      ['Wat de calculator ervan maakt', 'Met de dekkingsgraad uit uw brief rekent hij ' +
+        'uw pensioen na het invaren zelf uit.'],
+      ['Wat ' + K.CONFIG.shortLabel + ' ervan maakt', 'U neemt de bedragen uit uw brief ' +
+        'over en ziet ze regel voor regel naast de uwe staan.']
+    ];
+    return '<h2 id="staptitel" tabindex="-1">Controleer zelf de berekening van ' +
+      esc(K.CONFIG.shortLabel) + '</h2>' +
+      '<p class="kaart-intro">In november 2026 stuurt ' + esc(K.CONFIG.shortLabel) +
+      ' u een persoonlijke berekening van uw pensioen na het invaren. Deze calculator ' +
+      'rekent die berekening na en legt beide naast elkaar, zodat u ziet of er een ' +
+      'pensioen ontbreekt of een bedrag anders uitvalt dan u verwacht.</p>' +
+      /* De brief van november is de eerste berekening, niet de laatste: SSPF
+         kondigt in de PensioenVerkenner een definitieve aan in het voorjaar
+         van 2027, dus ná de invaardatum. Dat stond nergens in deze app, en
+         zonder die zin weet de lezer niet of een verschil een fout is of een
+         getal dat toch nog verandert. Het is bovendien het sterkste argument
+         om de controle juist nu te doen. */
+      '<p>Die berekening van november is de eerste; de definitieve volgt in het ' +
+      'voorjaar van 2027. Juist daarom is dit het moment om te kijken of er iets ' +
+      'ontbreekt: een pensioen dat niet is meegenomen verandert niet vanzelf, en er ' +
+      'is nog tijd om het aan te kaarten.</p>' +
+      '<h3 class="rap-kop">Hoe het gaat</h3>' +
+      '<ol class="stappen-uitleg">' +
+      delen.map(function (d) {
+        return '<li><strong>' + esc(d[0]) + '.</strong> ' + esc(d[1]) + '</li>';
+      }).join('') +
+      '</ol>' +
+      '<p class="noot">De bedragen komen bewust uit twee bronnen. Kwam alles uit de ' +
+      'brief, dan rekende de calculator met precies de cijfers die hij moet ' +
+      'controleren, en viel een ontbrekend pensioen nergens op.</p>' +
+      '<p>De calculator velt geen oordeel: hij toont de verschillen, u beoordeelt ze.</p>' +
+      '<div class="knoprij"><button type="button" class="knop knop-volgende" ' +
+      'data-nav="uitleg-verder">Verder</button></div>';
+  }
+
   /* ------------------------------------------------------------- triage */
 
   /**
@@ -4644,7 +4872,11 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       (v.triage === 'nee' ? ' checked' : '') + ' data-triage>' +
       '<span><span class="keuze-titel">Nee, dit klopt niet</span></span></label>' +
       '</fieldset>' +
-      '<div class="knoprij"><button type="button" class="knop knop-volgende" ' +
+      /* Vorige hoort er nu bij: de openingsvraag is het tweede scherm
+         geworden, en wie de uitleg wil herlezen moet terug kunnen. */
+      '<div class="knoprij">' +
+      '<button type="button" class="knop knop-vorige" data-nav="uitleg-terug">Vorige</button>' +
+      '<button type="button" class="knop knop-volgende" ' +
       'data-nav="triage-verder">Volgende</button></div>';
   }
 
@@ -4653,16 +4885,17 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       '<p>De vergelijking werkt alleen wanneer alle drie de punten gelden. Zonder de ' +
       'persoonlijke berekening van november 2026 is er niets om mee te vergelijken, en zonder ' +
       'uw UPO\u2019s van mei 2026 ontbreekt de onafhankelijke bron waarmee die berekening wordt ' +
-      'nagerekend. Heeft u die stukken nog niet bij de hand, kom dan terug zodra u ze heeft.</p>' +
+      'nagerekend. Heeft u die stukken nog niet bij de hand, kom dan later terug.</p>' +
       '<p>Bent u ná ' + esc(JONGSTE_DATUM) + ' geboren, dan heeft u op ' +
       datumNl(K.CONFIG.invaardatum) + ' de pensioengerechtigde leeftijd van het reglement ' +
       'nog niet bereikt; die is ' + PENSIOENLEEFTIJD + ' jaar. Deze calculator is gemaakt ' +
-      'voor wie op die datum al pensioen van ' + esc(K.CONFIG.shortLabel) + ' ontvangt, en ' +
-      'rekent met een pensioen dat al loopt en ' +
-      'verder gelijk blijft. Twee uitzonderingen daarop kan hij wel aan, en hij vraagt er ' +
-      'zelf naar: een hoog-laag-regeling, waarbij uw pensioen op een afgesproken datum ' +
-      'omlaag gaat, en een AOW-compensatiepensioen. Verandert uw pensioen om een andere ' +
-      'reden, dan klopt de uitkomst niet. Datzelfde geldt wanneer u geen pensioen van ' +
+      'voor wie op die datum al pensioen van ' + esc(K.CONFIG.shortLabel) + ' ontvangt. ' +
+      'De calculator rekent met een pensioen dat al loopt en verder gelijk blijft. ' +
+      'Twee uitzonderingen daarop kan hij wel aan, en hij vraagt er op stap 1 zelf naar: ' +
+      'een hoog-laag-regeling, waarbij uw pensioen op een afgesproken datum ' +
+      'omlaag gaat, en een AOW-compensatiepensioen.</p>' +
+      '<p>Verandert uw pensioen om een andere ' +
+      'reden, dan klopt de uitkomst niet. Dat geldt ook wanneer u geen pensioen van ' +
       esc(K.CONFIG.shortLabel) + ' ontvangt of onder een andere regeling valt.</p>' +
       '<div class="knoprij"><button type="button" class="knop knop-volgende" ' +
       'data-nav="triage-wijzig">Wijzig uw keuze</button></div>';
@@ -4685,13 +4918,19 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
   }
 
   /**
-   * De volledige disclaimer, letterlijk zoals aangeleverd, met één
-   * aanpassing: "deze app" is "deze calculator" geworden, zodat de tekst
-   * dezelfde woorden gebruikt als de rest van de schermen.
+   * De volledige disclaimer, zoals aangeleverd, met twee aanpassingen:
+   *
+   * 1. "deze app" is "deze calculator" geworden, zodat de tekst dezelfde
+   *    woorden gebruikt als de rest van de schermen.
+   * 2. Het woord "adviezen" is uit de eerste zin gehaald. Deze calculator
+   *    geeft er geen: hij toont verschillen en laat het oordeel aan de lezer
+   *    (zie `vergelijkingsRegels` hieronder, "geen oordeel, geen advies, geen
+   *    marge"). De disclaimer dekte daarmee iets af wat er niet is, en wekte
+   *    de indruk dat de calculator de lezer ergens in stuurt.
    */
   function schermDisclaimer() {
     var alineas = [
-      'De resultaten, berekeningen, adviezen en overige informatie die via deze calculator ' +
+      'De resultaten, berekeningen en overige informatie die via deze calculator ' +
       'worden verstrekt, zijn uitsluitend bedoeld ter informatie en dienen als indicatie.',
       'Hoewel de ontwikkelaar en aanbieder van deze calculator de grootst mogelijke ' +
       'zorgvuldigheid betracht bij de ontwikkeling, het onderhoud en de werking ervan, kan de ' +
@@ -4722,32 +4961,35 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     return '<h2 id="staptitel" tabindex="-1">Privacy</h2>' +
       '<div class="priv-kaarten">' +
       privKaart('Geen invoer verlaat uw browser',
-        esc('Deze calculator werkt volledig lokaal in uw browser. Uw invoer (leeftijd, jaarpensioen, ' +
-          'partnergegevens, en alle andere parameters die u aanpast) wordt niet verstuurd naar ' +
-          'een server, niet opgeslagen, niet gedeeld met derden, en niet gebruikt voor analyse ' +
-          'of profilering. De berekeningen vinden plaats in JavaScript-code die met de webpagina ' +
-          'is meegestuurd; sluiten van het tabblad of de browser wist alle gegevens.'), true) +
+        esc('Deze calculator werkt volledig lokaal in uw browser. Alles wat u invult \u2014 ' +
+          'uw leeftijd, uw jaarpensioen, de gegevens van uw partner en elk ander getal \u2014 ' +
+          'blijft op uw eigen computer. Het wordt niet naar een server verstuurd, niet ' +
+          'opgeslagen, niet met anderen gedeeld en niet gebruikt voor analyse of profilering. ' +
+          'Het rekenen gebeurt in programmacode die met de pagina is meegestuurd. Sluit u het ' +
+          'tabblad of de browser, dan zijn alle gegevens weg.'), true) +
       privKaart('Geen cookies, geen profilering',
         esc('De calculator plaatst geen cookies en bewaart niets in uw browser. Er worden geen ' +
           'persoonsgegevens verzameld, geen profielen opgebouwd, en u wordt niet over websites ' +
           'heen gevolgd. Voor het tellen van het aantal bezoeken gebruikt de pagina wel een ' +
-          'privacyvriendelijke, anonieme teller. Zie hieronder.')) +
+          'privacyvriendelijke, anonieme teller.')) +
       privKaart('Anonieme bezoektelling (GoatCounter)',
         esc('Om te zien hoeveel mensen de calculator gebruiken, telt deze pagina bezoeken via ' +
-          'GoatCounter: open-source, privacyvriendelijke webanalyse zonder cookies. GoatCounter ' +
-          'bewaart geen IP-adressen, niet de volledige browseridentificatie, en plaatst niets in ' +
-          'uw browser (geen cookies, geen lokale opslag). Alleen geaggregeerde tellingen worden ' +
-          'opgeslagen: het aantal weergaven per pagina, de verwijzende website, en bij benadering ' +
-          'browsertype, besturingssysteem, schermgrootte en land (afgeleid uit het IP-adres, dat ' +
-          'zelf niet wordt bewaard). Deze gegevens zijn niet tot u te herleiden. ') +
+          'GoatCounter: opensource, privacyvriendelijke webanalyse zonder cookies. ' +
+          'GoatCounter bewaart geen IP-adressen en niet de volledige browseridentificatie. ' +
+          'Er wordt niets in uw browser geplaatst: geen cookies, geen lokale opslag. ' +
+          'Alleen opgetelde aantallen worden bewaard: hoe vaak een pagina is bekeken en ' +
+          'via welke website u binnenkwam. Daarnaast bij benadering uw browsertype, ' +
+          'besturingssysteem, schermgrootte en land. Dat land wordt afgeleid uit het ' +
+          'IP-adres; dat adres zelf wordt niet bewaard. Deze gegevens zijn niet tot u ' +
+          'te herleiden. ') +
         '<a href="https://www.goatcounter.com/help/privacy" target="_blank" rel="noopener">' +
         'Privacybeleid van GoatCounter</a>.') +
       privKaart('Hosting via GitHub Pages',
-        esc('Deze calculator wordt gehost via GitHub Pages (een dienst van GitHub, Inc., onderdeel van ' +
-          'Microsoft). Bij het ophalen van de pagina door uw browser legt GitHub standaard ' +
-          'servergegevens vast — IP-adres, gebruikte browser, tijdstip van bezoek, ' +
-          'opgevraagde bestanden — voor beveiligings- en infrastructuurdoeleinden. Dit ' +
-          'gebeurt buiten invloed van de auteur. ') +
+        esc('Deze calculator wordt gehost via GitHub Pages, een dienst van GitHub, Inc. ' +
+          '(onderdeel van Microsoft). Haalt uw browser de pagina op, dan legt GitHub ' +
+          'standaard servergegevens vast: uw IP-adres, uw browser, het tijdstip van het ' +
+          'bezoek en welke bestanden zijn opgevraagd. Dat gebeurt voor de beveiliging en ' +
+          'het beheer van de servers. Daar heeft de auteur geen invloed op. ') +
         '<a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" ' +
         'target="_blank" rel="noopener">Privacybeleid van GitHub</a>.') +
       '</div>' +
@@ -4895,7 +5137,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
    *
    * De kern telt de UPO's op stap 2 op en rekent met één bedrag; er ís dus
    * geen uitkomst per UPO. Naar rato toerekenen mag wel: de verhoging is één
-   * percentage over het hele ouderdoms- en nabestaandenpensioen, dus elk UPO
+   * percentage over het hele ouderdoms- en partnerpensioen, dus elk UPO
    * krijgt hetzelfde percentage. Gemeten met de kern: € 24.000 in één keer
    * geeft factor 1,279375, en € 10.000 en € 14.000 los geven 1,27940 en
    * 1,279357 — gelijk op de afronding op hele euro's na.
@@ -5013,7 +5255,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     var aowAfwijking = heeftAow
       ? '<p class="noot">Deze rij telt uw AOW-compensatiepensioen mee, dat een eigen verhoging ' +
         'krijgt. Daardoor wijkt het middelste getal iets af van de verhoging in de tabel hierboven: ' +
-        'die gaat alleen over uw pensioenkapitaal. Vergelijk de drie getallen hier dus met elkaar, ' +
+        'die gaat alleen over uw pensioenkapitaal. Vergelijk de drie getallen hier met elkaar, ' +
         'niet met de rij hierboven.</p>'
       : '';
     return '<h3 class="rap-kop">Wat een andere dekkingsgraad doet met deze berekening</h3>' +
@@ -5102,7 +5344,13 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       if (m.code === 'KNIP_VOOR_INVAARDATUM') {
         return '<p class="noot">' + esc(knipMelding()) + '</p>';
       }
-      return MELDINGTEKST[m.code] ? '<p class="noot">' + esc(MELDINGTEKST[m.code]) + '</p>' : '';
+      /* Een code die hier nog niet staat, hoort zichtbaar te zijn en niet te
+         verdwijnen: dat is dezelfde afspraak als bij `foutTekst()`. Zonder
+         deze terugval rendert een nieuwe `MeldingCode` uit de kern als lege
+         string, en verdwijnt bijvoorbeeld "gerekend met 70% van uw pensioen"
+         zonder spoor. */
+      return '<p class="noot">' + esc(MELDINGTEKST[m.code]
+        || ('Onbekende melding: ' + m.code)) + '</p>';
     }).join('');
 
     return '<div class="res-kop"><h2 id="staptitel" tabindex="-1">De vergelijking</h2></div>' +
@@ -5112,7 +5360,8 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
         'Verschil in %-punten', groeiRijen) +
       meldingen +
       '<p class="rap-voetnoot">Dit is een indicatieve berekening. Aan de uitkomsten kunt u ' +
-      'geen rechten ontlenen.</p>';
+      'geen rechten ontlenen.</p>' +
+      afdrukGegevens();
   }
 
   /**
@@ -5341,18 +5590,20 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       if (b.soort !== 'kop') return b;
       return {soort: 'kop', tekst: b.tekst.replace(/^\d+\.\s*/, '')};
     });
-    /* Het voorbehoud van de kern sluit het rapport af. De gevoeligheidsband
-       komt daar nog achteraan, dus die regel wordt even apart gezet en als
-       laatste getekend; anders staat het voorbehoud midden op het scherm. */
-    var slot = secties.filter(function (b) { return b.soort === 'voetnoot'; });
+    /* Het voorbehoud van de kern ("Dit is een indicatieve berekening…") valt
+       hier weg: het staat woordelijk ook op stap 6, en twee schermen achter
+       elkaar dezelfde zin leest als een herhaling in plaats van een
+       voorbehoud. Stap 6 houdt hem, want dat is het eindpunt — het scherm
+       dat iemand meeneemt of afdrukt. */
     var romp = secties.filter(function (b) { return b.soort !== 'voetnoot'; });
     return '<h2 id="staptitel" tabindex="-1">De opbouw van uw verhoging</h2>' +
       '<p class="kaart-intro">Dit heeft de calculator zelf uitgerekend, met de bedragen ' +
       'van uw UPO\u2019s en de dekkingsgraad van ' + esc(dgTekst() || '\u2014') +
-      ' uit uw brief. Op de volgende stap legt hij het naast wat uw brief zegt.</p>' +
+      ' uit uw brief. Verderop in de calculator wordt deze uitkomst vergeleken met wat er ' +
+      'in uw brief staat.</p>' +
       rapportHtml({blokken: romp}) +
       dekkingsgraadBand(sc, !!sc.aowCompensatie) +
-      rapportHtml({blokken: slot});
+      afdrukGegevens();
   }
 
   /* ----------------------------------------------------------- tekenen */
@@ -5375,10 +5626,12 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       return;
     }
 
-    /* De openingsvraag gaat aan alles vooraf en kent geen voortgangsbalk. */
-    if (v.triage !== 'ja') {
+    /* De uitleg en de openingsvraag gaan aan alles vooraf en kennen geen
+       voortgangsbalk: zij horen niet bij de workflow van de kern. */
+    if (!v.uitlegGelezen || v.triage !== 'ja') {
       app.innerHTML = '<section class="kaart" aria-labelledby="staptitel">' +
-        (v.triage === 'nee' ? schermNietGeschikt() : schermTriage()) + '</section>';
+        (!v.uitlegGelezen ? schermUitleg()
+          : v.triage === 'nee' ? schermNietGeschikt() : schermTriage()) + '</section>';
       document.title = 'InvaarVergelijker';
       var doelT = focusDoel === 'fout' ? document.getElementById('foutblok') : null;
       if (!doelT && focusDoel) doelT = document.getElementById('staptitel');
@@ -5691,8 +5944,29 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
        keuzelijsten staan nog ingevuld, maar de kern heeft `cutoverDate: null`
        en meldt op stap 2 `MISSING_CUTOVER` bij een datum die zichtbaar is
        ingevuld. Daarom gaat de datum hier opnieuw naar de kern. Omgekeerd
-       hoeft er niets te gebeuren: bij Nee telt de knipdatum niet mee. */
-    if (naam === 'hoogLaag' && aan) datumNaarKern('knip');
+       hoeft er niets te gebeuren: bij Nee telt de knipdatum niet mee.
+
+       Dezelfde regel geldt voor álles wat de kern bij Nee wist terwijl dit
+       scherm het vasthoudt. `stroom/workflow.ts` kent twee zulke acties, niet
+       één: `set-partner` wist `partnerBirthDate` én `partnerGrossAnnual`,
+       `set-high-low` wist `cutoverDate` én `lowGrossAnnual`. Bleef dat voor de
+       andere drie achterwege, dan leverde dat achtereenvolgens een blokkade op
+       een zichtbaar ingevulde partnerdatum, een overzicht dat
+       "Partnerpensioen € 0" toont naast een veld waar een bedrag in staat,
+       en een `INVALID_AMOUNT` op het dekkingsgraadscherm, waar dat bedrag niet
+       eens staat.
+
+       `upoNaarKern()` stuurt `partnerBrutoJaar` en `laagJaar` alleen wanneer de
+       besturing partner respectievelijk hoog-laag aan heeft staan; het volgt
+       daarom ná de dispatch hierboven, niet ervoor. */
+    if (naam === 'hoogLaag' && aan) {
+      datumNaarKern('knip');
+      upoNaarKern();
+    }
+    if (naam === 'partner' && aan) {
+      datumNaarKern('dobPartner');
+      upoNaarKern();
+    }
   }
 
   app.addEventListener('click', function (e) {
@@ -5720,9 +5994,10 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     if (!knop) return;
     var actie = knop.dataset.nav;
 
-    if (actie === 'afdruk') { window.print(); return; }
+    if (actie === 'overlay-terug') { sluitOverlay(); return; }
 
-    if (actie === 'overlay-terug') { v.overlay = null; render(true); return; }
+    if (actie === 'uitleg-verder') { v.uitlegGelezen = true; v.fouten = []; render(true); return; }
+    if (actie === 'uitleg-terug') { v.uitlegGelezen = false; v.fouten = []; render(true); return; }
 
     if (actie === 'triage-verder') {
       if (v.triage === null) { v.fouten = ['TRIAGE_GEEN_KEUZE']; render('fout'); return; }
@@ -5793,15 +6068,50 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
 
   });
 
-  /* Enter in een invoerveld betekent: verder, niet niets. */
+  /* Enter in een invoerveld betekent: verder, niet niets.
+
+     De doorloopknop heet niet overal `verder`: op de openingsvraag is het
+     `triage-verder`. Zonder die tweede naam vuurde `preventDefault()` daar wel
+     maar gebeurde er niets, zodat Enter op juist het eerste scherm dood was. */
   app.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
     var t = e.target;
     if (t.tagName !== 'INPUT') return;
+    var knop = app.querySelector('[data-nav="verder"],[data-nav="triage-verder"]');
+    if (!knop) return;
     e.preventDefault();
-    var knop = app.querySelector('[data-nav="verder"]');
-    if (knop) knop.click();
+    knop.click();
   });
+
+  /* Escape sluit privacy en disclaimer. Die schermen zijn geen modaal venster
+     (zij vervangen de inhoud van #app, de kopband en voettekst blijven
+     bereikbaar), dus er is geen toetsenbordval om uit te ontsnappen. Maar wie
+     een scherm over zijn werk heen krijgt, probeert Escape, en dan hoort er
+     iets te gebeuren. De aandacht gaat terug naar de knop die het scherm
+     opende, zodat wie met het toetsenbord werkt zijn plaats terugkrijgt. */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || !v.overlay) return;
+    sluitOverlay();
+  });
+
+  /* Welk element het overlayscherm opende; `sluitOverlay()` geeft de aandacht
+     daaraan terug. Blijft null wanneer het scherm niet met een knop is
+     geopend, en dan doet render() zijn gewone werk. */
+  var overlayOpener = null;
+
+  function openOverlay(soort, opener) {
+    overlayOpener = opener || null;
+    v.overlay = soort;
+    render(true);
+  }
+
+  function sluitOverlay() {
+    v.overlay = null;
+    render(true);
+    var terug = overlayOpener && document.getElementById(overlayOpener);
+    overlayOpener = null;
+    if (terug) terug.focus();
+  }
 
   /* De knoppen staan in de kopband, buiten #app, en zijn dus op elk scherm
      bereikbaar. Ze schakelen heen en weer; de invoer blijft intussen staan.
@@ -5817,8 +6127,8 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     var el = document.getElementById(k[0]);
     if (!el) return;
     el.addEventListener('click', function () {
-      v.overlay = v.overlay === k[1] ? null : k[1];
-      render(true);
+      if (v.overlay === k[1]) sluitOverlay();
+      else openOverlay(k[1], k[0]);
     });
   });
 
@@ -5837,8 +6147,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     if (!el) return;
     el.addEventListener('click', function (e) {
       e.preventDefault();
-      v.overlay = k[1];
-      render(true);
+      openOverlay(k[1], k[0]);
     });
   });
 
