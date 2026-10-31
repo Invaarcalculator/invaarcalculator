@@ -3591,16 +3591,10 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
   function eurGetekend(bedrag) {
     return (bedrag < 0 ? '−' : '+') + NBSP + eur(Math.abs(bedrag));
   }
-  /* Zonder spatie vóór het procentteken: "138,7%". Zo schrijft de kern het
-     ook (`rapportage.v4.ts`), en op stap 4 staan de twee onder elkaar — de
-     verhogingskolom van de kern en de gevoeligheidstabel van dit scherm. Met
-     een spatie hier stond hetzelfde getal daar in twee spellingen. Onze Taal
-     geeft dezelfde regel: `13%` zonder spatie, `€ 50` met. Het euroteken
-     houdt dus wel zijn NBSP, zie `eur()`. */
   function pct(fractie, decimalen) {
     var d = decimalen === undefined ? 1 : decimalen;
     return (fractie * 100).toLocaleString('nl-NL',
-      { minimumFractionDigits: d, maximumFractionDigits: d }) + '%';
+      { minimumFractionDigits: d, maximumFractionDigits: d }) + NBSP + '%';
   }
   function pctGetekend(fractie) {
     return (fractie < 0 ? '−' : '+') + pct(Math.abs(fractie));
@@ -4071,7 +4065,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
           'Ouderdomspensioen', r.bruto, '') +
         (i.hasPartner
           ? upoVeld('in-upo-' + n + '-np', n, 'np',
-              'Partnerpensioen', r.np, '')
+              'Nabestaandenpensioen', r.np, '')
           : '') +
         (i.highLow
           ? upoVeld('in-upo-' + n + '-laag', n, 'laag',
@@ -4192,7 +4186,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     if (v.aantalUpo < 2 && !v.aowAan && !i.hasPartner && !i.highLow) return '';
     var rijen = overzichtRij('Ouderdomspensioen', i.grossAnnual, 'tot-op', 'kv-op');
     if (i.hasPartner) {
-      rijen += overzichtRij('Partnerpensioen', i.partnerGrossAnnual, 'tot-np', 'kv-np');
+      rijen += overzichtRij('Nabestaandenpensioen', i.partnerGrossAnnual, 'tot-np', 'kv-np');
     }
     if (v.aowAan) {
       rijen += overzichtRij('AOW-compensatiepensioen', v.aowJaar, 'tot-aow', 'kv-aowc');
@@ -4206,11 +4200,11 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
         '<td data-k="bruto per jaar">\u2014</td>' +
         '<td data-k="kapitaalwaarde" id="kv-totaal">\u2014</td></tr>';
     }
-    var uit = overzichtTabel('Overzicht vóór invaren', rijen, true);
+    var uit = overzichtTabel('Overzicht voor invaren', rijen, true);
     var noten = [];
     if (i.hasPartner) {
       noten.push('De kapitaalwaarden tellen op; de bruto bedragen niet, want het ' +
-        'partnerpensioen gaat pas in na uw overlijden.');
+        'nabestaandenpensioen gaat pas in na uw overlijden.');
     }
     if (v.aowAan) {
       noten.push('Het AOW-compensatiepensioen krijgt bij het invaren een eigen, iets hogere ' +
@@ -4225,11 +4219,11 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       var vanaf = isoUit(v.knip) ? datumNl(isoUit(v.knip)) : 'de knipdatum';
       var rijen2 = overzichtRij('Ouderdomspensioen', i.lowGrossAnnual, 'tot2-op');
       if (i.hasPartner) {
-        rijen2 += overzichtRij('Partnerpensioen', i.partnerGrossAnnual, 'tot2-np');
+        rijen2 += overzichtRij('Nabestaandenpensioen', i.partnerGrossAnnual, 'tot2-np');
       }
       if (v.aowAan) rijen2 += overzichtRij('AOW-compensatiepensioen', v.aowJaar, 'tot2-aow');
       var ongewijzigd = [];
-      if (i.hasPartner) ongewijzigd.push('het partnerpensioen');
+      if (i.hasPartner) ongewijzigd.push('het nabestaandenpensioen');
       if (v.aowAan) ongewijzigd.push('het AOW-compensatiepensioen');
       var staart = ongewijzigd.length === 0 ? ''
         : ' ' + ongewijzigd.join(' en ').replace(/^h/, 'H') +
@@ -4264,10 +4258,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       'invaren. De andere bedragen uit uw brief vraagt de calculator later, bij de ' +
       'vergelijking.</p>' +
       foutenBlok() +
-      /* Niet "Dekkingsgraad op de invaardatum": dat leest als een vastgesteld
-         feit, terwijl het het rekenscenario van de brief is. Het label zegt
-         daarom waar het getal vandaan komt en waarvoor het dient. */
-      veld('<label for="in-brief-dg">Dekkingsgraad waarmee in uw brief is gerekend</label>' +
+      veld('<label for="in-brief-dg">Dekkingsgraad op de invaardatum</label>' +
         '<span class="geld-wrap">' +
         '<span class="geld-teken" id="in-brief-dg-eenheid">%</span>' +
         '<input type="text" id="in-brief-dg" data-brief="dg" inputmode="decimal" ' +
@@ -4420,23 +4411,6 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     }
     if (vragen) vragen = '<div class="brief-vorm">' + vragen + '</div>';
 
-    /* Staan de UPO's apart, dan staat onder elk vak "deze calculator: € …"
-       terwijl de kern geen uitkomst per UPO ként: zij telt de UPO's van stap 2
-       op en rekent met één bedrag. `verdeelOverUpo()` rekent dat totaal toe naar
-       rato, en rondt elk deel op zichzelf af, zodat twee gelijke UPO's hetzelfde
-       getal onder zich krijgen. De prijs is dat de delen samen een euro of twee
-       van het geheel kunnen schelen. Zonder deze noot lijken het zelfstandig
-       berekende uitkomsten per UPO en lijkt die euro een rekenfout. Zie
-       "Toerekenen per UPO" in de README. */
-    var perUpoNoot = perUpo
-      ? '<p class="noot">De bedragen van deze calculator staan hier <strong>per UPO</strong>, ' +
-        'maar zijn niet per UPO berekend: de calculator rekent met uw UPO’s bij elkaar ' +
-        'opgeteld en verdeelt de uitkomst daarna naar verhouding van de bedragen van stap 2. ' +
-        'Doordat elk deel apart is afgerond, kunnen de delen samen een euro of twee van het ' +
-        'totaal schelen. Op de volgende stap wordt het totaal vergeleken, niet elk deel ' +
-        'apart.</p>'
-      : '';
-
     var regels = '';
     if (perUpo) {
       /* Per UPO staat er geen uitkomst van de kern klaar: die telt de UPO's
@@ -4451,13 +4425,13 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
         regels += '<h3 class="groep-kop">UPO ' + (n + 1) + '</h3>' +
           briefPaar(opNaam, n, 'bruto', pNu.bruto[n], pNa.bruto[n]) +
           (i.hasPartner
-            ? briefPaar('Partnerpensioen', n, 'np', pNu.np[n], pNa.np[n]) : '') +
+            ? briefPaar('Nabestaandenpensioen', n, 'np', pNu.np[n], pNa.np[n]) : '') +
           (i.highLow
             ? briefPaar(laagNaam, n, 'laag', pNu.laag[n], pNa.laag[n]) : '');
       }
     } else {
       regels += briefPaar(opNaam, 0, 'bruto', d.nu.bruto, d.na.bruto) +
-        (i.hasPartner ? briefPaar('Partnerpensioen', 0, 'np', d.nu.np, d.na.np) : '') +
+        (i.hasPartner ? briefPaar('Nabestaandenpensioen', 0, 'np', d.nu.np, d.na.np) : '') +
         (i.highLow ? briefPaar(laagNaam, 0, 'laag', d.nu.laag, d.na.laag) : '');
     }
 
@@ -4497,7 +4471,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       (vragen ? 'Zeg eerst hoe die bedragen in uw brief staan; de vakken passen zich aan. '
               : '') +
       'Onder elk vak staat waarmee het straks wordt vergeleken.</p>' +
-      foutenBlok() + vragen + perUpoNoot + regels + extra;
+      foutenBlok() + vragen + regels + extra;
   }
 
   function schermGegevens(s) {
@@ -4515,17 +4489,8 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
     var inhoud =
       datumVelden('dob', v.dob, 'Uw geboortedatum', MAX_JAAR - 110, JONGSTE_JAAR) +
       geslachtVeld('in-g', 'geslacht', 'Uw geslacht', s.geslacht) +
-      /* Hier staat de term één keer voluit, omdat dit het eerste voorkomen in
-         de hele doorloop is. Daarna heet het overal kort "Partnerpensioen":
-         dezelfde naam die de kern in haar rapport gebruikt, dus stap 2 en 5
-         zeggen nu hetzelfde als stap 4 en 6. Voorheen heette het veld op stap
-         2 en 5 "Nabestaandenpensioen" en de rapportregel "Partnerpensioen",
-         en moest de lezer zelf bedenken dat dat hetzelfde pensioen was. Het
-         voluit zetten kán hier, en niet bij de veldlabels: die staan per UPO
-         naast elkaar en lijnen uit op labellengte. */
       jaNee('in-partner', 'partner',
-        'Heeft uw partner recht op partnerpensioen (nabestaandenpensioen) na uw ' +
-        'overlijden?', i.hasPartner);
+        'Heeft uw partner recht op nabestaandenpensioen na uw overlijden?', i.hasPartner);
     if (i.hasPartner) {
       inhoud += '<div class="vervolg">' +
         datumVelden('dobPartner', v.dobPartner, 'Geboortedatum van uw partner',
@@ -5080,18 +5045,11 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
    * bedragkolommen. Die brede past op een telefoon niet en stapelt daar tot
    * een rij losse getallen zonder kop; deze drie blijven leesbaar.
    */
-  /* De kopteksten staan voluit ("Volgens uw brief"), niet als "Brief <> UPO".
-     Dat laatste is geen Nederlands, en `<>` heeft voor een schermlezer geen
-     uitspraak: hij leest de kop dan als twee losse woorden of slaat het teken
-     over. Voluit zegt de kop bovendien zelf welke twee bronnen er naast
-     elkaar staan, zodat de lezer dat niet uit de kolomkoppen hoeft te halen.
-     De korte namen leven voort in `data-k`, want smal gestapeld staat die
-     tekst vóór elke waarde en moet hij kort blijven. */
   function vergelijkBlok(kop, eigenKolom, verschilKop, rijen) {
     return '<h3 class="rap-kop">' + esc(kop) + '</h3>' +
       '<div class="tabel-wrap"><table class="data stapel ctrl-tabel">' +
       '<caption class="sr-only">' + esc(kop) + '</caption>' +
-      '<thead><tr><th scope="col">&nbsp;</th><th scope="col">Volgens uw brief</th>' +
+      '<thead><tr><th scope="col">&nbsp;</th><th scope="col">Brief</th>' +
       '<th scope="col">' + esc(eigenKolom) + '</th>' +
       '<th scope="col">' + esc(verschilKop) + '</th></tr></thead><tbody>' +
       rijen.map(function (x) { return x.html; }).join('') +
@@ -5128,9 +5086,7 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
 
     var kVoor = {brief: 'brief', eigen: 'UPO', verschil: 'verschil'};
     var kNa = {brief: 'brief', eigen: 'berekend', verschil: 'verschil'};
-    /* Smal gestapeld is dit de enige kop die bij de waarde staat, dus
-       "%-punten" is hier niet kort genoeg om onduidelijk te mogen zijn. */
-    var kGroei = {brief: 'brief', eigen: 'berekend', verschil: 'verschil in procentpunten'};
+    var kGroei = {brief: 'brief', eigen: 'berekend', verschil: 'verschil in %-punten'};
     var voorRijen = regels.map(function (x) {
       return controleRij(x.label, x.briefVoor, x.eigenVoor, 'euro', x.hint, kVoor);
     });
@@ -5149,50 +5105,11 @@ if (typeof globalThis !== 'undefined') globalThis.Rekenkern = api;
       return MELDINGTEKST[m.code] ? '<p class="noot">' + esc(MELDINGTEKST[m.code]) + '</p>' : '';
     }).join('');
 
-    /* Hoeveel regels uit de brief zijn ingevuld. `controleRij` weet dat al per
-       regel; hier wordt het geteld. Zonder \u00e9\u00e9n ingevuld bedrag staan er drie
-       tabellen vol "niet ingevuld" en is de vergelijking \u2014 de taak van dit
-       scherm \u2014 niet gemaakt. Dan hoort er te staan wat ontbreekt en waar het
-       vandaan komt, en niet alleen een streepje per regel. Stap 5 bewust
-       leeglaten blijft mogelijk: wat niet in de brief staat, kan niet worden
-       overgenomen. Dit scherm meldt het, het blokkeert niets. */
-    var ingevuld = voorRijen.concat(naRijen).filter(function (r) {
-      return r.ingevuld;
-    }).length;
-    var leegMelding = ingevuld === 0
-      ? '<p class="noot noot-let-op"><strong>U hebt nog geen bedragen uit uw brief ' +
-        'ingevuld.</strong> Daardoor is er niets te vergelijken: de kolom \u201cVolgens uw ' +
-        'brief\u201d blijft leeg en een verschil is niet te berekenen. Ga met Vorige terug naar ' +
-        '\u201cDe bedragen uit uw brief\u201d en neem ze over uit de persoonlijke berekening ' +
-        'van ' + esc(K.CONFIG.shortLabel) + '.</p>'
-      : '';
-
     return '<div class="res-kop"><h2 id="staptitel" tabindex="-1">De vergelijking</h2></div>' +
-      leegMelding +
-      /* Het teken van het verschil stond nergens uitgelegd. "+ € 969" is geen
-         vooruitgang en geen winst: het zegt dat déze calculator hoger uitkomt
-         dan de brief, want `controleRij` rekent `eigen − brief`. Zonder deze
-         zin is de kolom in beide richtingen te lezen, en dat is precies de
-         vraag waarvoor iemand dit scherm opent.
-
-         Dit is bewust één alinea boven de tabellen, en daarmee een afwijking
-         van de eerdere keuze dat de koppen de hele uitleg dragen en er geen
-         lopende tekst boven of tussen de tabellen staat. Die keuze hield het
-         scherm rustig, maar liet het teken onverklaard; de koppen kunnen een
-         rekenrichting niet dragen zonder zelf notatie te worden
-         ("Verschil (berekend − brief)"). Het blijft bij deze éne alinea: geen
-         tekst tússen de tabellen, geen helpvensters, geen vraagtekens. */
-      '<p class="kaart-intro">Hieronder staat per pensioen wat uw brief zegt, wat deze ' +
-      'calculator uitrekent en het verschil daartussen: eerst vóór het invaren, dan ' +
-      'erna, en ten slotte de verhoging. Een <strong>positief</strong> verschil betekent dat ' +
-      'deze calculator <strong>hoger</strong> uitkomt dan uw brief; een negatief verschil dat ' +
-      'hij lager uitkomt. Bij de verhoging is het verschil een aantal procentpunten.</p>' +
-      vergelijkBlok('V\u00f3\u00f3r het invaren: uw brief en uw UPO', 'Volgens uw UPO',
-        'Verschil', voorRijen) +
-      vergelijkBlok('Na het invaren: uw brief en deze calculator', 'Volgens deze calculator',
-        'Verschil', naRijen) +
-      vergelijkBlok('De verhoging: uw brief en deze calculator', 'Volgens deze calculator',
-        'Verschil in procentpunten', groeiRijen) +
+      vergelijkBlok('V\u00f3\u00f3r invaren: Brief <> UPO', 'UPO', 'Verschil', voorRijen) +
+      vergelijkBlok('N\u00e1 invaren: Brief <> Berekend', 'Berekend', 'Verschil', naRijen) +
+      vergelijkBlok('De verhoging: Brief <> Berekend', 'Berekend',
+        'Verschil in %-punten', groeiRijen) +
       meldingen +
       '<p class="rap-voetnoot">Dit is een indicatieve berekening. Aan de uitkomsten kunt u ' +
       'geen rechten ontlenen.</p>';
