@@ -10,8 +10,8 @@
     body { margin: 0; background: var(--cream); color: var(--dark); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     main { width: min(100% - 40px, 420px); margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 0 max(22px, env(safe-area-inset-bottom)); }
     .top { display: flex; justify-content: space-between; align-items: center; color: #a75709; font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
-    .offline { display: flex; align-items: center; gap: 6px; color: #9b3d17; }
-    .offline::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+    .online { display: flex; align-items: center; gap: 6px; color: #327a49; }
+    .online::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #39a55c; }
     .hero { padding: 42px 0 28px; }
     .eyebrow { margin: 0 0 12px; color: var(--orange); font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
     h1 { max-width: 330px; margin: 0; font-size: clamp(2.25rem, 10.5vw, 3rem); line-height: .99; letter-spacing: -.065em; }
@@ -31,14 +31,15 @@
 </head>
 <body>
   <main>
-    <header class="top"><span>Invaarcalculator</span><span class="offline">Overige offline</span></header>
+    <header class="top"><span>Invaarcalculator</span><span class="online">2 online</span></header>
     <section class="hero">
-      <h1>De Basic-calculator is <strong>online.</strong></h1>
-      <p class="intro">De overige calculators zijn tijdelijk offline.</p>
-      <p class="intro">Neem contact op als u toegang wilt&nbsp;aanvragen.</p>
+      <h1>2 calculators zijn <strong>online.</strong></h1>
+      <p class="intro">De Basic-calculator en de InvaarVergelijker zijn beschikbaar.</p>
+      <p class="intro">De overige calculators zijn verouderde versies. Op verzoek zijn ze nog beschikbaar, &lsquo;as is&rsquo; (in de huidige staat).</p>
     </section>
     <nav class="actions" aria-label="Acties">
       <a class="button primary" href="basic.html"><span>Open Basic-calculator</span><b aria-hidden="true">→</b></a>
+      <a class="button primary" href="https://invaarcalculator.nl/invaarvergelijker.html"><span>Open InvaarVergelijker</span><b aria-hidden="true">→</b></a>
       <a class="button secondary" href="mailto:hans@invaarcalculator.nl?subject=Toegang%20verzoek&amp;cc="><span>Neem contact op</span><b aria-hidden="true">→</b></a>
     </nav>
     <footer><a href="https://innovation-nestor.godaddysites.com/">Innovation Nestor</a><span class="dot">·</span><a href="mailto:hans@invaarcalculator.nl?subject=Toegang%20verzoek&amp;cc=">Contact</a><span class="dot">·</span><a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a></footer>
