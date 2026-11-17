@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InvaarPlus</title>
+<meta name="description" content="Een schatting van de verhoging van uw pensioen bij het invaren volgens de indexatiemethode, afgelezen uit een tabel. Met de gevoeligheid voor de dekkingsgraad en de verwachte indexatie.">
+<meta name="color-scheme" content="light">
+<style>
+/* ==========================================================================
+   InvaarVergelijker: weergavelaag (presentatie)
+   Palet: #245447 #51826D #D8E7DB #F4F7F2 #FFFFFF
+   Doelgroep 60+: basis 18px, grote velden en knoppen, duidelijke focus.
+   Contrast (nagerekend, zie README): tekst altijd #245447 — 8,63:1 op wit,
+   7,98:1 op #F4F7F2, 6,73:1 op #D8E7DB.
+   #51826D haalt 4,41:1 tegen wit en is daarmee GEEN tekstkleur op 18px en
+   GEEN vlak onder witte tekst; gebruik hem alleen als rand of als accentbalk
+   zonder tekst erop. Vlakken met witte tekst zijn altijd #245447.
+   (Een eerdere versie van deze kop noemde hier 5,2:1 en raadde #51826D juist
+   aan als vlak onder witte tekst; dat was onjuist en leverde AA-fouten op.)
+   ========================================================================== */
+
+:root {
+  --groen-donker: #245447;
+  --groen-mid: #51826D;
+  --groen-licht: #D8E7DB;
+  --groen-bleek: #F4F7F2;
+  --wit: #FFFFFF;
+
+  --txt: 18px;
+  --txt-s: 16px;
+  --txt-l: 21px;
+  --radius: 10px;
+  --rij: 1.55;
+  --veld-hoogte: 3.1rem;
+  --max: 56rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  font-size: var(--txt);
+  line-height: var(--rij);
+  color: var(--groen-donker);
+  background: var(--groen-bleek);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { line-height: 1.25; margin: 0; font-weight: 700; }
+p { margin: 0 0 0.85em; }
+p:last-child { margin-bottom: 0; }
+
+/* --- Hulpmiddelen ------------------------------------------------------- */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skiplink {
+  position: absolute; left: -9999px; top: 0; z-index: 10;
+  background: var(--groen-donker); color: var(--wit);
+  padding: 0.75rem 1.25rem; border-radius: 0 0 var(--radius) 0;
+  font-weight: 700; text-decoration: none;
+}
+.skiplink:focus { left: 0; }
+
+:focus-visible {
+  outline: 3px solid var(--groen-donker);
+  outline-offset: 2px;
+}
+.kop-band :focus-visible { outline-color: var(--wit); }
+
+/* --- Kop --------------------------------------------------------------- */
+
+.kop-band {
+  background: var(--groen-donker);
+  color: var(--wit);
+  padding: 1.5rem 1.25rem;
+}
+.kop-binnen {
+  max-width: var(--max); margin: 0 auto;
+  display: flex; flex-wrap: wrap; gap: 0.75rem 2rem;
+  align-items: center; justify-content: space-between;
+}
+.kop-band h1 { font-size: 1.6rem; letter-spacing: -0.01em; }
+/* Geen kader en geen vet: in deze band is een afgerond kader een knop, en
+   deze regel is tekst. Het onderscheid zit dus in de vorm, niet alleen in de
+   tekengrootte. */
+/* "InvaarVergelijker" is één woord en breekt uit zichzelf nergens. Bij 200%
+   tekst op een smal scherm is het breder dan de kopband, en dan schuift de
+   hele pagina horizontaal — precies wat deze opmaak wil voorkomen. In
+   `shell.html` staat daarom een <wbr> tussen "Invaar" en "Vergelijker", zodat
+   het afbreekpunt op een leesbare plek ligt; `overflow-wrap` vangt af wat
+   daarnaast nog te breed wordt. Hernoemt u de calculator, controleer dit dan
+   opnieuw: de vorige naam was kort genoeg om het probleem te verbergen. */
+.kop-titel { min-width: 0; }
+.kop-band h1 { overflow-wrap: break-word; }
+/* De ondertitel staat binnen de <h1>, zodat de koptekst één kop blijft: de
+   toets eist precies één <h1>, en een tweede kop zou de structuur verdelen
+   zonder dat er een tweede onderwerp is. Als blok op een eigen regel, en
+   kleiner dan de naam, zodat de naam de kop blijft dragen. */
+.kop-sub { display: block; margin: 0.3rem 0 0; font-size: var(--txt-s); font-weight: 400; letter-spacing: 0; }
+.kop-waarschuwing { margin: 0.3rem 0 0; font-size: var(--txt-s); }
+/* Wit op --groen-donker: 8,63:1. Hoogte volgt --veld-hoogte, net als de
+   overige knoppen, zodat ook deze boven de 48px blijft. */
+/* Wrap, want het zijn er drie: zonder wrap staan ze op één onbreekbare regel
+   en schuift de kopband horizontaal bij 360px of 200% tekst. .kop-binnen
+   wrapt al, maar dat verplaatst de groep als geheel. */
+.kop-knoppen { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.knop-kop {
+  font: inherit; font-weight: 700;
+  min-height: var(--veld-hoogte);
+  padding: 0.5rem 1.1rem;
+  border: 2px solid var(--wit); border-radius: var(--radius);
+  background: var(--groen-donker); color: var(--wit);
+  cursor: pointer;
+}
+.knop-kop:hover { background: var(--wit); color: var(--groen-donker); }
+.knop-kop[aria-pressed="true"] { background: var(--wit); color: var(--groen-donker); }
+
+/* Vervolgvragen die pas verschijnen na een Ja: ingesprongen met een lijn,
+   zodat zichtbaar is waar ze bij horen. */
+.vervolg {
+  border-left: 4px solid var(--groen-licht);
+  padding-left: 1.1rem;
+  margin: 0 0 1.6rem;
+}
+.vervolg > :last-child { margin-bottom: 0; }
+
+/* Twee bedragen van hetzelfde UPO naast elkaar; ze breken naar onder elkaar
+   zodra er geen ruimte meer is. */
+.bedrag-paar { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
+/* Labels breken over verschillend veel regels af: "Ouderdomspensioen met
+   AOW-compensatie" neemt er twee, "Nabestaandenpensioen" ernaast één. Zonder
+   dit zouden de invoervelden op verschillende hoogten beginnen. Elk veld is
+   daarom zelf een kolom, en het label rekt uit om de hoogte op te nemen
+   (`flex: 1`), zodat wat eronder hangt — het invoervak en de regel met de
+   bedragen — bij alle velden op dezelfde hoogte staat.
+
+   Niet met `justify-content: space-between`: dat werkte toen label en invoer
+   de enige twee kinderen waren, maar sinds er een regel onder de invoer staat
+   duwt het de invoer naar het midden van de overgebleven ruimte, en daar
+   belandt hij bij een kort label hoger dan bij een lang. */
+.bedrag-paar .veld {
+  flex: 1 1 13rem; min-width: 0; margin-bottom: 1.1rem;
+  display: flex; flex-direction: column;
+}
+.bedrag-paar .veld > label { flex: 1 0 auto; }
+/* `.veld:last-child` haalt elders de ondermarge weg. In deze rij zou het
+   laatste veld daardoor 1,1rem dieper doorlopen dan zijn buren, en dan staat
+   zijn invoerveld niet meer op één lijn. Binnen de rij dus gelijke marges. */
+.bedrag-paar .veld:last-child { margin-bottom: 1.1rem; }
+/* Kop boven een groep invoervelden ("UPO 1", "UPO 2"). Eerder stond hier de
+   `.rap-kop` van de rapporttabellen, met een ondermarge van 2rem die bij een
+   tabel hoort. Boven invoer telt die op bij de 1,1rem van de velderij erboven,
+   waardoor er tussen twee UPO's bijna drie keer zoveel ruimte stond als tussen
+   een velderij en het label eronder. Hier hoort de maat van het formulier. */
+.groep-kop { font-size: 1.15rem; margin: 0.9rem 0 0.75rem; }
+.groep-kop:first-child { margin-top: 0; }
+.bedrag-paar .geld-wrap { max-width: none; }
+
+/* --- Keuze uit twee ----------------------------------------------------- */
+
+.keuzeknoppen { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.keuzeknop {
+  font: inherit; font-weight: 700;
+  min-height: var(--veld-hoogte);
+  min-width: 7rem;
+  padding: 0.6rem 1.5rem;
+  border: 2px solid var(--groen-mid); border-radius: var(--radius);
+  background: var(--wit); color: var(--groen-donker);
+  cursor: pointer;
+}
+.keuzeknop:hover { background: var(--groen-licht); }
+/* De gekozen knop: wit op --groen-donker (8,63:1), plus een dikkere rand,
+   zodat het verschil niet alleen in kleur zit. */
+.keuzeknop.aan {
+  background: var(--groen-donker); color: var(--wit); border-color: var(--groen-donker);
+  box-shadow: inset 0 0 0 2px var(--wit);
+}
+
+/* --- Openingsvraag ------------------------------------------------------ */
+
+.triage-criteria { list-style: none; margin: 0 0 1.75rem; padding: 0; }
+.triage-criteria li {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0; font-weight: 700;
+}
+.triage-criteria .vink {
+  flex: 0 0 auto;
+  width: 2rem; height: 2rem; border-radius: var(--radius);
+  background: var(--groen-licht); color: var(--groen-donker);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+.triage-vraag { border: 0; padding: 0; margin: 0 0 1.5rem; }
+.triage-vraag legend { padding: 0 0 0.75rem; font-weight: 700; font-size: var(--txt-l); }
+.triage-vraag .keuze { margin: 0 0 0.75rem; }
+.keuze-groot .keuze-titel { font-size: var(--txt-l); }
+
+/* Lopende tekst over de volle breedte van de kaart, zoals de disclaimer. */
+.lange-tekst { margin: 0 0 1.5rem; }
+.lange-tekst p { margin: 0 0 1rem; }
+
+/* --- Privacyscherm ------------------------------------------------------ */
+
+.priv-kaarten { display: flex; flex-direction: column; gap: 1rem; margin: 0 0 1.5rem; }
+.priv-kaart {
+  border: 2px solid var(--groen-licht); border-radius: var(--radius);
+  background: var(--wit); padding: 1.1rem 1.25rem;
+}
+.priv-kaart.uitgelicht { background: var(--groen-licht); border-color: var(--groen-mid); }
+.priv-kaart h3 { font-size: var(--txt); margin: 0 0 0.45rem; }
+.priv-kaart p { margin: 0; }
+/* Niet het blauw van de browser: tekstkleur is overal --groen-donker. */
+.priv-kaart a { color: var(--groen-donker); }
+
+/* --- Romp -------------------------------------------------------------- */
+
+.romp { max-width: var(--max); margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+.voortgang { margin-bottom: 1.25rem; }
+.voortgang-tekst { font-weight: 700; margin: 0 0 0.5rem; }
+.voortgang-balk {
+  height: 0.75rem; background: var(--groen-licht);
+  border-radius: 999px; overflow: hidden;
+}
+.voortgang-vulling {
+  display: block; height: 100%; background: var(--groen-mid);
+  border-radius: 999px; transition: width 0.25s ease;
+}
+
+.kaart {
+  background: var(--wit);
+  border: 2px solid var(--groen-licht);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+}
+.kaart > h2 {
+  font-size: 1.35rem;
+  margin: 0 0 0.35rem;
+}
+.kaart-intro { margin: 0 0 1.5rem; }
+.kaart-intro:only-of-type { margin-bottom: 1.25rem; }
+
+/* --- Formulier --------------------------------------------------------- */
+
+.veld { margin: 0 0 1.6rem; }
+.veld:last-child { margin-bottom: 0; }
+/* Een veld dat zelf een groep begint (AOW-compensatiepensioen, pensioenkapitaal)
+   heeft geen kop boven zich. Zonder dit staat het tegen de UPO-groep erboven
+   aan terwijl het een ander pensioen is; dezelfde maat als `.groep-kop` zet
+   alle groepen op hetzelfde ritme. */
+.veld-groep { margin-top: 0.9rem; }
+/* Het blok met de vormvragen op stap 5. De laatste vraag verliest zijn
+   ondermarge aan `.veld:last-child`; zonder deze regel staat de eerste
+   UPO-kop er dichter op dan de vragen op elkaar. */
+.brief-vorm { margin-bottom: 0.7rem; }
+/* Naam van het pensioen boven de twee vakken "Vóór invaren" en "Ná invaren".
+   Kleiner dan `.groep-kop`, want dat is op stap 5 de UPO erboven. */
+.paar-kop { font-size: 1.02rem; margin: 0.9rem 0 0.6rem; }
+.paar-kop:first-child { margin-top: 0; }
+.groep-kop + .paar-kop { margin-top: 0; }
+.veld > label, .veld-kop {
+  display: block; font-weight: 700; margin-bottom: 0.5rem;
+}
+.hint { font-size: var(--txt-s); margin: 0.45rem 0 0; }
+
+input[type="number"], input[type="text"], select {
+  font: inherit;
+  color: var(--groen-donker);
+  background: var(--wit);
+  border: 2px solid var(--groen-mid);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.75rem;
+  min-height: var(--veld-hoogte);
+  width: 100%;
+  max-width: 22rem;
+}
+select {
+  /* eigen pijl, geen externe bron */
+  appearance: none; -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #245447 50%),
+    linear-gradient(135deg, #245447 50%, transparent 50%);
+  background-position: right 1.25rem center, right 0.9rem center;
+  background-size: 0.42rem 0.42rem, 0.42rem 0.42rem;
+  background-repeat: no-repeat;
+  padding-right: 2.5rem;
+}
+input:hover, select:hover { border-color: var(--groen-donker); }
+input[aria-invalid="true"] { border-color: var(--groen-donker); border-width: 3px; }
+
+.geld-wrap { display: flex; align-items: stretch; max-width: 22rem; }
+/* De eenheid staat voluit in dit vlak ("€/jaar"), dus het is breder dan het
+   oude €-teken. `white-space: nowrap` houdt hem op één regel; `flex: 0 0 auto`
+   laat hem zijn eigen breedte nemen zonder het invoerveld te verdringen.
+   Groen-licht met groen-donkere tekst: ruim boven AA. */
+.geld-teken {
+  flex: 0 0 auto; display: flex; align-items: center;
+  padding: 0 0.75rem; white-space: nowrap;
+  background: var(--groen-licht); color: var(--groen-donker);
+  border: 2px solid var(--groen-donker); border-right: 0;
+  border-radius: var(--radius) 0 0 var(--radius);
+  font-variant-numeric: tabular-nums;
+}
+.geld-wrap input { border-radius: 0 var(--radius) var(--radius) 0; max-width: none; }
+
+/* datum in drie delen */
+.datum-rij { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.datum-deel { display: flex; flex-direction: column; }
+.datum-deel label { font-size: var(--txt-s); font-weight: 400; margin-bottom: 0.25rem; }
+.datum-dag input { width: 5.5rem; }
+.datum-jaar input { width: 7.5rem; }
+.datum-maand select { width: 11rem; }
+
+/* keuzelijst als grote radio's */
+.keuzes { display: grid; gap: 0.85rem; }
+.keuze {
+  display: flex; gap: 0.9rem; align-items: flex-start;
+  border: 2px solid var(--groen-mid);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  background: var(--wit);
+  cursor: pointer;
+}
+.keuze:hover { background: var(--groen-bleek); }
+.keuze input { width: 1.5rem; height: 1.5rem; margin: 0.15rem 0 0; accent-color: #245447; flex: none; }
+.keuze:has(input:checked) { background: var(--groen-licht); border-color: var(--groen-donker); border-width: 3px; padding: calc(1rem - 1px) calc(1.1rem - 1px); }
+.keuze:focus-within { outline: 3px solid var(--groen-donker); outline-offset: 2px; }
+.keuze-titel { display: block; font-weight: 700; }
+
+/* --- Uitlegscherm -------------------------------------------------------
+   De drie delen van de doorloop. Een genummerde lijst, want de volgorde is
+   de boodschap: eerst wat u nu heeft, dan wat de calculator ervan maakt, dan
+   wat SSPF ervan maakt. */
+.stappen-uitleg { margin: 0 0 1.5rem; padding-left: 1.6rem; }
+.stappen-uitleg li { margin: 0 0 0.8rem; padding-left: 0.3rem; }
+.stappen-uitleg li strong { color: var(--groen-donker); }
+
+/* --- Knoppen ----------------------------------------------------------- */
+
+.knoprij {
+  display: flex; flex-wrap: wrap; gap: 0.85rem;
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 2px solid var(--groen-licht);
+}
+.knop {
+  font: inherit; font-weight: 700;
+  min-height: var(--veld-hoogte);
+  padding: 0.65rem 1.6rem;
+  border-radius: var(--radius);
+  border: 2px solid var(--groen-donker);
+  background: var(--groen-donker);
+  color: var(--wit);
+  cursor: pointer;
+}
+/* Omkeren in plaats van vergrijzen: wit op --groen-mid haalt 4,41:1 en dus
+   geen AA. Omgekeerd is het 8,63:1 en is de hover-stand duidelijker. */
+.knop:hover { background: var(--wit); color: var(--groen-donker); }
+.knop-tweede { background: var(--wit); color: var(--groen-donker); }
+.knop-tweede:hover { background: var(--groen-licht); }
+.knop-volgende { margin-left: auto; }
+
+/* --- Meldingen --------------------------------------------------------- */
+
+.fouten {
+  border: 2px solid var(--groen-donker);
+  border-left-width: 10px;
+  border-radius: var(--radius);
+  background: var(--groen-licht);
+  padding: 1rem 1.1rem;
+  margin: 0 0 1.5rem;
+}
+.fouten h3 { font-size: var(--txt); margin-bottom: 0.35rem; }
+.fouten ul { margin: 0; padding-left: 1.3rem; }
+.fouten li { margin: 0.2rem 0; }
+
+.noot {
+  background: var(--groen-bleek);
+  border: 2px solid var(--groen-licht);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  font-size: var(--txt-s);
+  margin: 0 0 1rem;
+}
+/* Advies over de schermbreedte, op het uitlegscherm. Staat op elke breedte.
+
+   Eerder verscheen hij alleen onder 30rem, daar waar de tabellen stapelen.
+   Dat was logischer, maar gedrag dat je op een breed scherm nooit te zien
+   krijgt, wordt bij onderhoud over het hoofd gezien — het viel zelfs bij de
+   eigen oplevering niet op. Nu staat hij er altijd, iets kleiner dan de
+   lopende tekst, en op papier helemaal niet (zie `@media print`).
+
+   Gemeten op 01-11-2026 (3 UPO's, partner, hoog/laag, AOW-compensatie): de
+   vergelijking kost 6,7 schermhoogtes op 360px breed en 2,6 vanaf 481px —
+   dezelfde 2,6 als op een laptop van 1280px. Er loopt op geen enkele breedte
+   iets over, van 320px tot 1280px; dit is dus een advies en geen eis, en er
+   wordt niemand tegengehouden. Wie alleen een telefoon heeft, kan door. */
+.scherm-advies { font-style: italic; margin: 0 0 1.25rem; }
+
+.tabel-wrap { overflow-x: auto; margin: 0 0 1.5rem; }
+table.data {
+  border-collapse: collapse;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+table.data caption {
+  text-align: left; font-weight: 700; padding: 0 0 0.6rem;
+}
+table.data th, table.data td {
+  border-bottom: 2px solid var(--groen-licht);
+  padding: 0.7rem 0.85rem;
+  text-align: right;
+  white-space: nowrap;
+}
+table.data thead th { background: var(--groen-licht); border-bottom-color: var(--groen-mid); }
+table.data th[scope="row"], table.data thead th:first-child { text-align: left; white-space: normal; }
+table.data tbody tr:nth-child(even) { background: var(--groen-bleek); }
+table.data tr.totaal { font-weight: 700; }
+/* De naam van de totaalregel van stap 2 staat in de tweede kolom, rechts
+   uitgelijnd tegen het bedrag dat hij benoemt. */
+table.data th.totaal-naam { text-align: right; white-space: nowrap; }
+table.data tr.totaal th, table.data tr.totaal td { border-top: 3px solid var(--groen-mid); }
+table.data td.gekozen, table.data thead th.gekozen {
+  background: var(--groen-licht); font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--groen-mid), inset -3px 0 0 var(--groen-mid);
+}
+/* Haak voor losse woorden die alleen op de afdruk horen te staan. */
+.alleen-afdruk { display: none; }
+
+/* Het blok met de ingevulde gegevens onder aan de afdruk. Op het scherm staat
+   die invoer al op de stappen zelf, dus daar is het blok overbodig; op papier
+   is het juist het enige dat de cijfers hun uitgangspunt geeft. */
+.afdruk-kop { display: none; }
+
+/* --- Controlescherm ----------------------------------------------------
+   Het palet kent geen rood. Een afwijking wordt daarom met vorm en gewicht
+   gemeld, niet met kleur: een dikke rand, vette tekst en de woorden zelf.
+   Dat leest ook zonder kleurwaarneming. Wilt u hier toch een signaalkleur,
+   dan hoort die eerst door de contrasttoets in test/browser.mjs. */
+
+.ctrl-tabel td .rap-hint, .ctrl-tabel th .rap-hint {
+  display: block; font-size: var(--txt-s); font-weight: 400;
+}
+.ctrl-tabel td { white-space: normal; }
+/* Breekt een regelnaam over twee regels af, dan zouden gecentreerde cellen de
+   bedragen ernaast omlaag duwen en niet meer uitlijnen met het verschil, dat
+   zelf uit twee regels bestaat. Bovenaan uitlijnen zet alle eerste regels op
+   dezelfde hoogte: de drie bedragen naast elkaar, het percentage eronder. */
+.ctrl-tabel th, .ctrl-tabel td { vertical-align: top; }
+.leeg { font-style: italic; }
+
+/* --- Gegevensscherm ---------------------------------------------------- */
+
+.rap-kop { font-size: 1.15rem; margin: 2rem 0 0.75rem; }
+.rap-kop:first-child { margin-top: 0; }
+table.rap { border-collapse: collapse; width: 100%; margin: 0 0 1rem; font-variant-numeric: tabular-nums; }
+table.rap th, table.rap td {
+  border-bottom: 1px solid var(--groen-licht);
+  padding: 0.6rem 0.85rem; vertical-align: top; text-align: left;
+}
+table.rap td { text-align: right; white-space: nowrap; }
+table.rap thead th { background: var(--groen-licht); text-align: right; }
+table.rap thead th:first-child { text-align: left; }
+table.rap th[scope="row"] { font-weight: 400; width: 55%; }
+table.rap .rap-label { font-weight: 700; display: block; }
+table.rap .rap-hint { display: block; font-size: var(--txt-s); font-weight: 400; }
+table.rap .rap-sub { padding-left: 1.5rem; display: block; }
+table.rap tr.tot { font-weight: 700; }
+table.rap tr.tot th, table.rap tr.tot td { border-top: 2px solid var(--groen-mid); }
+.rap-noot { font-size: var(--txt-s); margin: 0 0 1rem; }
+/* De voorbehoudregel stond tussen twee streepjes: haar eigen bovenrand en
+   die van de knoppenrij eronder. Zij krijgt nu hetzelfde groene kader als de
+   andere noten op deze schermen; de lijn boven de knoppenrij blijft, want
+   die scheidt de inhoud van de bediening op elk scherm. */
+.rap-voetnoot {
+  font-size: var(--txt-s); font-weight: 700;
+  background: var(--groen-bleek); border: 2px solid var(--groen-licht);
+  border-radius: var(--radius); padding: 0.9rem 1.1rem; margin: 1.5rem 0 0;
+}
+
+/* --- Voet -------------------------------------------------------------- */
+
+.voet {
+  border-top: 2px solid var(--groen-licht);
+  background: var(--wit);
+  padding: 1.5rem 1.25rem;
+}
+.voet-binnen { max-width: var(--max); margin: 0 auto; font-size: var(--txt-s); }
+/* Ruime raakvlakken: de links staan op één regel, maar krijgen elk genoeg
+   hoogte om met een vinger te raken. */
+.voet-meta { margin: 0; display: flex; flex-wrap: wrap; gap: 0 0.5rem; align-items: center; }
+.voet a { color: var(--groen-donker); display: inline-block; padding: 0.5rem 0.2rem; }
+.voet .uit { margin-left: 0.2em; text-decoration: none; }
+
+/* --- Smalle schermen --------------------------------------------------- */
+
+@media (max-width: 40rem) {
+  :root { --txt-l: 20px; }
+  .kop-band { padding: 1.1rem 1rem; }
+  .kop-band h1 { font-size: 1.35rem; }
+  .romp { padding: 1.1rem 1rem 2.5rem; }
+  .kaart { padding: 1.15rem; border-radius: var(--radius); }
+  .knoprij > .knop { flex: 1 1 100%; }
+  .knop-volgende { margin-left: 0; order: -1; }
+  input[type="number"], input[type="text"], select, .geld-wrap { max-width: none; }
+  .datum-dag input, .datum-jaar input, .datum-maand select { width: 100%; }
+  /* 5rem (80px) knipte het woord "dag" af; de lijst heeft met het pijltje
+     erbij 89px nodig. 6rem geeft dat met een kleine marge, en blijft duidelijk
+     smaller dan de maandlijst. Drie keuzelijsten naast elkaar passen niet:
+     "september" maakt de maandlijst 148px, en samen vragen ze 359px tegen
+     357px op de breedste iPhone — gemeten 01-11-2026. Jaar wikkelt daarom
+     naar de tweede regel, en bij 200% tekst staan ze alle drie onder elkaar. */
+  .datum-dag { flex: 0 0 6rem; }
+  .datum-maand { flex: 1 1 8rem; }
+  .datum-jaar { flex: 1 1 100%; }
+  table.data th, table.data td { padding: 0.55rem 0.4rem; font-size: var(--txt-s); }
+  table.data thead th { font-size: var(--txt-s); }
+  table.rap th, table.rap td { padding: 0.5rem 0.45rem; }
+  .tabel-wrap[tabindex] {
+    border: 2px dashed var(--groen-mid); border-radius: var(--radius); padding: 0.25rem;
+  }
+  table.rap th[scope="row"] { width: auto; }
+}
+
+/* Zeer smal: tabellen stapelen, zodat niemand horizontaal hoeft te schuiven. */
+@media (max-width: 30rem) {
+  table.stapel, table.stapel tbody, table.stapel tr, table.stapel th, table.stapel td { display: block; }
+  table.stapel thead { display: none; }
+  /* `:not(.sr-only)`: zonder dat maakt `width: 100%` een onzichtbare,
+     absoluut gepositioneerde caption alsnog schermbreed, en schuift de
+     pagina horizontaal. */
+  table.stapel caption:not(.sr-only) { display: block; width: 100%; }
+  table.stapel tr {
+    border: 2px solid var(--groen-licht); border-radius: var(--radius);
+    margin: 0 0 0.6rem; padding: 0.35rem 0.6rem; background: var(--wit);
+  }
+  table.stapel tbody tr:nth-child(even) { background: var(--wit); }
+  table.stapel th[scope="row"] {
+    border: 0; padding: 0.35rem 0; font-weight: 700; text-align: left; background: none;
+  }
+  table.stapel td {
+    border: 0; border-top: 1px solid var(--groen-licht);
+    padding: 0.4rem 0; text-align: right;
+    display: flex; gap: 1rem; justify-content: space-between; align-items: baseline;
+  }
+  /* Gestapeld is de lege eerste cel van de totaalregel alleen een lege regel. */
+  table.stapel td.totaal-leeg { display: none; }
+  table.stapel th.totaal-naam { text-align: left; white-space: normal; }
+  table.stapel td::before {
+    content: attr(data-k); text-align: left; font-size: var(--txt-s); font-weight: 400;
+  }
+  table.rap.stapel th[scope="row"] { padding-bottom: 0.15rem; }
+  table.rap.stapel .rap-hint { font-weight: 400; }
+  table.stapel td.gekozen { box-shadow: none; border-left: 5px solid var(--groen-mid); padding-left: 0.5rem; }
+  table.stapel tr.totaal, table.stapel tr.tot {
+    background: var(--groen-licht); border-color: var(--groen-mid);
+  }
+  .tabel-wrap[tabindex] { border: 0; padding: 0; }
+  table.rap.stapel th[scope="row"] { width: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* --- Afdrukken --------------------------------------------------------- */
+
+@media print {
+  body { background: var(--wit); font-size: 11pt; }
+  .kop-band { background: var(--wit); color: var(--groen-donker); padding: 0 0 0.5cm; border-bottom: 2pt solid var(--groen-donker); }
+
+  /* `.scherm-advies` gaat niet mee de printer in: het advies gaat over het
+     scherm waarop gelezen wordt, en op papier is het onzin. */
+  .skiplink, .knoprij, .voortgang, .kop-knoppen, .scherm-advies { display: none !important; }
+  .alleen-afdruk { display: inline; font-weight: 700; }
+  /* Het gegevensblok begint op een nieuwe pagina, zodat de vergelijking niet
+     halverwege wordt afgebroken en het blok als geheel bij elkaar blijft. */
+  .afdruk-kop {
+    display: block; page-break-before: always; break-before: page;
+    margin-top: 0; padding-top: 0;
+  }
+  .afdruk-kop h2 { font-size: 1.15rem; margin: 0 0 0.3cm; }
+  .afdruk-kop p { margin: 0 0 0.4cm; font-size: 10pt; }
+  .afdruk-kop th[scope="row"] { font-weight: 400; width: 55%; }
+  .romp { max-width: none; padding: 0.5cm 0; }
+  .kaart { border: 0; padding: 0; }
+  table.data, table.rap { page-break-inside: auto; }
+  tr, .noot { page-break-inside: avoid; }
+  .rap-kop { page-break-after: avoid; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 9pt; }
+}
+
+/* De knoppen bij een wijziging zijn GEEN navigatie. `.knoprij` draagt een
+   streep en 2rem ruimte omdat zij de onderkant van een scherm markeert; dat
+   tussen elke trede herhalen hakt het scherm in stukken. En zij krijgen de
+   tweede stijl: een knop die een wijziging weggooit hoort niet dezelfde
+   nadruk te hebben als Volgende. */
+/* --- De invoertabel van stap 2 ------------------------------------------
+   Eén tabel per reeks bedragen (pensioen, partnerpensioen): per regel de
+   periode, de leeftijd waarop het bedrag ingaat, en het bedrag. Het is een
+   raster en geen <table>: de cellen zijn invoervelden met elk hun eigen label,
+   en op een smal scherm moeten ze onder elkaar kunnen vallen zonder dat een
+   schermlezer een tabel van één kolom voorgelezen krijgt. */
+.reeks { margin: 0 0 1.5rem; }
+/* Sinds de intro-alinea van stap 2 weg is, volgt de eerste tabel direct op de
+   titel; zonder deze regel staat haar naam er strak tegenaan. */
+h2 + .reeks { margin-top: 1rem; }
+/* De naam van de reeks. Kleiner dan `.groep-kop`, de UPO erboven. */
+.reeks-naam { font-size: 1.05rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.reeks-rij {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 11.5rem 11.5rem 6.75rem;
+  gap: 0 1rem;
+}
+.reeks-kop {
+  background: var(--groen-licht); border-bottom: 2px solid var(--groen-mid);
+  padding: 0.5rem 0.75rem; font-size: var(--txt-s); font-weight: 700;
+}
+.reeks-rij {
+  align-items: start;
+  padding: 0.8rem 0.75rem; border-bottom: 1px solid var(--groen-licht);
+}
+.reeks-periode { font-weight: 700; align-self: center; }
+/* De leeftijd heeft kleine labels ("Jaar", "Maanden") boven haar keuzelijsten
+   en een regel eronder ("Dat is ..."). Het bedrag en de knop ernaast zakken
+   precies de hoogte van dat labeltje, zodat de invoervakken van één regel op
+   één lijn staan, wat er ook onder de keuzelijsten bij komt. */
+.reeks-rij[data-trede] .reeks-bedrag, .reeks-rij[data-trede] .reeks-actie,
+.reeks-rij[data-nptrede] .reeks-bedrag, .reeks-rij[data-nptrede] .reeks-actie {
+  padding-top: calc(var(--txt-s) * var(--rij) + 0.25rem);
+}
+.reeks-actie .knop { min-height: var(--veld-hoogte); }
+.reeks-bedrag .geld-wrap { max-width: none; }
+.reeks-leeftijd { border: 0; padding: 0; margin: 0; min-width: 0; }
+.reeks-leeftijd .datum-rij { flex-wrap: nowrap; gap: 0.5rem; }
+.reeks-leeftijd .datum-deel { flex: 1 1 0; min-width: 0; }
+.reeks-leeftijd select { width: 100%; max-width: none; }
+.reeks-actie .knop { width: 100%; padding: 0.5rem 0.6rem; }
+/* De afgeleide datum en een melding horen bij de hele regel. */
+.reeks-rij .trede-tevroeg { grid-column: 1 / -1; margin: 0.6rem 0 0; }
+.reeks + .trede-knoppen, .reeks .trede-knoppen { margin: 0.75rem 0 0; }
+@media (max-width: 48rem) {
+  /* Smal: de periode boven, daaronder leeftijd en bedrag, dan de knop. */
+  .reeks-kop { display: none; }
+  .reeks-rij { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.5rem 0.75rem; }
+  .reeks-periode { grid-column: 1 / -1; }
+  .reeks-grens:empty { display: none; }
+  .reeks-grens:empty + .reeks-bedrag { grid-column: 1 / -1; }
+  .reeks-actie { grid-column: 1 / -1; }
+  .reeks-actie:empty { display: none; }
+  .reeks-actie .knop { width: auto; min-height: 0; }
+  .reeks-rij[data-trede] .reeks-actie, .reeks-rij[data-nptrede] .reeks-actie { padding-top: 0; }
+}
+@media (max-width: 30rem) {
+  .reeks-rij[data-trede] .reeks-bedrag, .reeks-rij[data-nptrede] .reeks-bedrag { padding-top: 0; }
+}
+@media (max-width: 30rem) {
+  .reeks-rij { grid-template-columns: minmax(0, 1fr); }
+}
+
+.trede-knoppen { margin: 0.9rem 0 0; }
+.trede-knoppen .knop { padding: 0.5rem 1.1rem; }
+
+/* --- InvaarPlus: alles op één telefoonscherm ------------------------ */
+body.schatter { --veld-hoogte: 2.75rem; }
+.schatter .skiplink { display: none; }
+.schatter .kop-binnen { gap: 0.5rem 2rem; }
+.schatter .kop-sub { margin-top: 0.1rem; }
+.schatter .knop-kop { min-height: 2.4rem; padding: 0.25rem 0.9rem; font-size: var(--txt-s); }
+.schatter .kop-band { padding-top: 0.6rem; padding-bottom: 0.6rem; }
+.schatter .kop-band h1 { font-size: 1.3rem; }
+.schatter .kop-waarschuwing { margin-top: 0.1rem; }
+.schatter .romp { padding: 0.75rem 0.75rem 0.75rem; }
+.schatter .kaart { padding: 1rem; }
+.rooster { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem 0.75rem; }
+.vak { min-width: 0; }
+.vak.breed { grid-column: 1 / -1; }
+.vak-kop { display: block; font-weight: 700; font-size: var(--txt-s); margin: 0 0 0.2rem; }
+.paar { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.rooster select, .rooster input[type="text"] { max-width: none; min-width: 0; padding-top: 0.35rem; padding-bottom: 0.35rem; }
+.paar .keuzeknop { min-width: 0; padding: 0.35rem 0.5rem; }
+.uitkomst { margin: 0.8rem 0 0.7rem; padding-top: 0.7rem; border-top: 2px solid var(--groen-licht); }
+.uit-lijn { margin: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; white-space: nowrap; }
+.uit-naam { font-weight: 700; }
+.uit-getal { font-weight: 700; }
+.uit-getal .uit-pm { font-size: clamp(1.1rem, 6vw, 1.5rem); }
+.uit-getal #uit-kop { font-size: clamp(1.4rem, 7.5vw, 2rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.uit-melding { margin: 0.6rem 0; font-size: var(--txt-s); }
+.knoprij-schatter { margin: 0; }
+.schatter .kaart-intro { margin-bottom: 0.8rem; }
+.schatter .tabel-wrap { margin-bottom: 0.6rem; }
+table.data.smal th, table.data.smal td { padding: 0.5rem 0.6rem; }
+/* Uw schatting: een ring om het getal, niet een gekleurde cel. */
+table.data td .uw {
+  display: inline-block; font-weight: 700; padding: 0.1rem 0.5rem; margin: -0.2rem -0.6rem -0.2rem 0;
+  border: 2px solid var(--groen-donker); border-radius: 999px; background: var(--wit);
+}
+.legenda { font-size: var(--txt-s); margin: 0 0 0.9rem; }
+.schatter .lange-tekst p { font-size: var(--txt-s); margin-bottom: 0.7rem; }
+.schatter .priv-kaart { padding: 0.8rem 0.9rem; font-size: var(--txt-s); }
+.schatter .priv-kaarten, .schatter .lange-tekst { margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<a class="skiplink" href="#app">Direct naar het formulier</a>
+
+<header class="kop-band">
+  <div class="kop-binnen">
+    <div class="kop-titel">
+      <h1>Invaar<wbr>Plus<span class="kop-sub">Hoeveel procent gaat uw pensioen mogelijk omhoog?</span></h1>
+      <p class="kop-waarschuwing">Geen product van of namens SSPF of Shell</p>
+    </div>
+    <span class="kop-knoppen">
+      <button type="button" class="knop-kop" id="knop-privacy" data-scherm="privacy">Privacy</button>
+      <button type="button" class="knop-kop" id="knop-disclaimer" data-scherm="disclaimer">Disclaimer</button>
+    </span>
+  </div>
+</header>
+
+<main class="romp" id="app">
+  <noscript>
+    <section class="kaart">
+      <h2>JavaScript is nodig</h2>
+      <p>Deze pagina zoekt de uitkomst op in uw eigen browser. Zet JavaScript aan om haar te gebruiken.</p>
+    </section>
+  </noscript>
+</main>
+
+<script>
+var INVAAR_TABEL = {"model":null,"invaardatum":"2027-01-01","piFonds":0.018,"pi":[0,0.015,0.018,0.021],"xmin":55,"xmax":96,"dmin":-21,"dmax":11,"dgMin":125,"dgMax":145,"aandeel":{"125":0.7,"126":0.73,"127":0.76,"128":0.79,"129":0.82,"130":0.85,"131":0.88,"132":0.91,"133":0.94,"134":0.97,"135":1,"136":1.03,"137":1.06,"138":1.09,"139":1.12,"140":1.15,"141":1.18,"142":1.21,"143":1.24,"144":1.27,"145":1.3},"op":{"M":[[20.4079,25.50619,26.7371,28.0515],[20.03193,24.90731,26.07901,27.32809],[19.65401,24.3117,25.42596,26.61184],[19.27476,23.72009,24.77869,25.90348],[18.89265,23.13035,24.13491,25.20052],[18.50495,22.53905,23.491,24.49913],[18.11301,21.94777,22.84856,23.80096],[17.71129,21.34969,22.20046,23.0985],[17.30076,20.74603,21.54797,22.39308],[16.87872,20.13356,20.88772,21.68117],[16.44342,19.5104,20.21778,20.96078],[15.99237,18.87371,19.53521,20.22889],[15.53478,18.23565,18.85288,19.49908],[15.0351,17.55155,18.12394,18.72222],[14.52598,16.86339,17.39259,17.9448],[14.00819,16.17234,16.66004,17.16811],[13.48108,15.47785,15.92574,16.3916],[12.94673,14.78252,15.19241,15.61806],[12.40405,14.08528,14.45896,14.84637],[11.85418,13.38762,13.72691,14.07811],[11.30029,12.69323,13.00006,13.31716],[10.73841,11.99775,12.27391,12.5589],[10.17991,11.31392,11.56151,11.81663],[9.624801,10.64157,10.86261,11.09003],[9.075831,9.983564,10.18008,10.38196],[8.534441,9.341243,9.515183,9.693619],[8.003664,8.717626,8.870929,9.027973],[7.485788,8.114839,8.249376,8.387009],[6.980462,7.532127,7.649659,7.769737],[6.491343,6.973042,7.075284,7.179606],[6.020203,6.439039,6.527616,6.617882],[5.568333,5.931033,6.007469,6.08527],[5.139686,5.452734,5.518484,5.585331],[4.733114,5.002535,5.058942,5.116229],[4.354445,4.585824,4.634117,4.683111],[4.004689,4.203213,4.244527,4.286399],[3.685284,3.855629,3.890979,3.926774],[3.38339,3.52918,3.559356,3.589883],[3.106844,3.231811,3.257616,3.2837],[2.854647,2.961889,2.983983,3.006299],[2.627268,2.71963,2.738619,2.757784],[2.425795,2.505913,2.522355,2.538939]],"V":[[20.87314,26.28538,27.60131,29.01013],[20.51519,25.70375,26.95955,28.30176],[20.15651,25.12668,26.32417,27.60192],[19.7961,24.55284,25.69372,26.90906],[19.4334,23.98128,25.06714,26.22196],[19.066,23.4089,24.44113,25.53712],[18.69316,22.83469,23.81461,24.85336],[18.31062,22.25332,23.18198,24.16478],[17.9178,21.66416,22.54256,23.47067],[17.51207,21.064,21.89304,22.76754],[17.08985,20.44877,21.22917,22.05104],[16.662,19.83147,20.56448,21.33516],[16.22733,19.21196,19.89905,20.62028],[15.74634,18.53995,19.18006,19.85085],[15.25624,17.86373,18.45839,19.08053],[14.75773,17.18436,17.73519,18.31051],[14.2466,16.4972,17.00568,17.53589],[13.72604,15.80623,16.27403,16.76101],[13.19539,15.11098,15.53976,15.9854],[12.65774,14.4152,14.80677,15.21308],[12.11102,13.71673,14.07285,14.44178],[11.55962,13.0207,13.34328,13.67692],[11.00242,12.32597,12.61686,12.91727],[10.44223,11.63574,11.89689,12.16617],[9.88058,10.95174,11.1851,11.42534],[9.316422,10.27281,10.48026,10.69352],[8.775124,9.626633,9.810554,9.999349],[8.236457,8.990546,9.152749,9.319011],[7.710183,8.374978,8.517393,8.663168],[7.192831,7.77581,7.900203,8.027358],[6.683003,7.191275,7.29931,7.409597],[6.190491,6.631594,6.725002,6.820234],[5.721261,6.102643,6.183112,6.265052],[5.275839,5.604404,5.673487,5.743749],[4.855513,5.137683,5.196812,5.256881],[4.459552,4.701151,4.751617,4.802827],[4.101787,4.30875,4.351847,4.395535],[3.760881,3.937462,3.974126,4.011255],[3.446365,3.596889,3.628056,3.659589],[3.158403,3.286829,3.313353,3.340166],[2.895596,3.005192,3.027772,3.050579],[2.65756,2.751278,2.770543,2.789987]]},"np":{"M":[[[5.564697,9.920806,11.15793,12.55623],[5.484602,9.757764,10.97001,12.33966],[5.394224,9.573719,10.75787,12.09517],[5.292966,9.367601,10.52032,11.82142],[5.180482,9.138921,10.25684,11.51787],[5.056425,8.887242,9.966983,11.18408],[4.920852,8.612984,9.651304,10.82076],[4.774119,8.317235,9.311137,10.42955],[4.616955,8.001862,8.94872,10.01311],[4.450236,7.669102,8.566729,9.574648],[4.275101,7.321723,8.168448,9.118049],[4.09323,6.963448,7.758232,8.648405],[3.905927,6.597335,7.339687,8.169958],[3.715121,6.227447,6.91752,7.688162],[3.522123,5.8567,6.495137,7.206984],[3.328395,5.488135,6.076044,6.730467],[3.135395,5.124642,5.663545,6.262385],[2.94444,4.76874,5.260499,5.805974],[2.75685,4.422816,4.869584,5.364239],[2.573535,4.088484,4.492594,4.939169],[2.39543,3.767292,4.131231,4.532627],[2.223146,3.460004,3.786264,4.145371],[2.057758,3.16848,3.45976,3.779701],[1.899862,2.893461,3.152471,3.436362],[1.749819,2.635274,2.864682,3.115581],[1.608044,2.394283,2.596711,2.817612],[1.474633,2.170334,2.348306,2.54208],[1.349694,1.963259,2.119197,2.288588],[1.233035,1.772428,1.908605,2.056183],[1.124576,1.597357,1.715912,1.844088],[1.024066,1.437303,1.54022,1.651221],[0.9310573,1.291251,1.38034,1.476193],[0.845869,1.15925,1.236223,1.318838]],[[5.826251,10.29996,11.56532,12.99348],[5.734343,10.11335,11.35033,12.74584],[5.631395,9.904393,11.10963,12.46859],[5.517035,9.67255,10.84264,12.16115],[5.390876,9.417314,10.54883,11.82297],[5.252935,9.139031,10.22868,11.45468],[5.103521,8.838701,9.883414,11.05779],[4.943309,8.518097,9.51517,10.63486],[4.773108,8.179334,9.126486,10.18894],[4.593984,7.825053,8.720503,9.723748],[4.407567,7.458887,8.301477,9.244267],[4.215074,7.083751,7.872854,8.754566],[4.0184,6.703649,7.439278,8.260023],[3.818782,6.321384,7.004028,7.764473],[3.61764,5.939936,6.570547,7.27189],[3.416412,5.562178,6.142127,6.786037],[3.216413,5.190645,5.721645,6.310179],[3.018993,4.827799,5.311867,5.84742],[2.825091,4.475325,4.914676,5.399855],[2.635708,4.134907,4.531926,4.969525],[2.451544,3.807487,4.16459,4.557417],[2.273786,3.495135,3.814975,4.166103],[2.103164,3.198836,3.484105,3.796636],[1.94017,2.919153,3.172531,3.449538],[1.785375,2.65672,2.880871,3.1254],[1.639011,2.411616,2.609134,2.824136],[1.501332,2.183914,2.357313,2.545637],[1.372259,1.97317,2.124835,2.28918],[1.251837,1.77909,1.911291,2.054212],[1.139908,1.601074,1.715934,1.839816],[1.036086,1.438193,1.537667,1.6447],[0.940823,1.290671,1.376628,1.468895],[0.852962,1.15651,1.230581,1.309896]],[[6.092013,10.67504,11.96576,13.42036],[5.987359,10.46322,11.72188,13.13959],[5.871116,10.22821,11.45137,12.82824],[5.742861,9.969435,11.15364,12.4857],[5.602577,9.687183,10.82907,12.11251],[5.45053,9.382376,10.47883,11.71009],[5.287349,9.056705,10.10495,11.28089],[5.11378,8.712175,9.70984,10.82781],[4.930819,8.351306,9.296517,10.35444],[4.74005,7.97765,8.869141,9.86565],[4.542604,7.593977,8.430999,9.365332],[4.340334,7.204223,7.986658,8.858785],[4.134397,6.811062,7.539257,8.349686],[3.926157,6.41739,7.09215,7.841912],[3.717017,6.026038,6.648581,7.33918],[3.508272,5.639522,6.211415,6.844742],[3.301284,5.260342,5.783461,6.361757],[3.096996,4.890213,5.366641,5.892372],[2.896447,4.530917,4.962924,5.438754],[2.700415,4.183535,4.573442,5.00208],[2.510174,3.850321,4.200711,4.585154],[2.326579,3.532483,3.846007,4.189313],[2.150246,3.230809,3.510132,3.815366],[1.981901,2.946206,3.194011,3.464239],[1.821918,2.678995,2.897921,3.136148],[1.670708,2.429512,2.622145,2.831305],[1.528321,2.197522,2.366343,2.549243],[1.394944,1.982963,2.130356,2.289681],[1.270538,1.785413,1.913633,2.051915],[1.154803,1.604066,1.715209,1.834795],[1.048354,1.439377,1.535466,1.638613],[0.9500035,1.289291,1.372106,1.460793],[0.8594035,1.152943,1.224107,1.300135]],[[6.36163,11.04548,12.35866,13.83623],[6.243454,10.8072,12.08452,13.52084],[6.113061,10.54481,11.78276,13.17383],[5.970404,10.25853,11.45372,12.79566],[5.815711,9.949223,11.09847,12.38767],[5.649573,9.618512,10.71898,11.95222],[5.472678,9.268303,10.31755,11.4921],[5.285958,8.901007,9.897067,11.01076],[5.090957,8.520105,9.46162,10.51298],[4.888721,8.128227,9.014339,10.00248],[4.681064,7.729244,8.559717,9.484484],[4.469053,7.325687,8.10074,8.962492],[4.253988,6.920354,7.640651,8.440267],[4.037226,6.516009,7.182626,7.92145],[3.820025,6.115123,6.729481,7.409245],[3.603741,5.720199,6.284035,6.906826],[3.389297,5.332947,5.848206,6.416339],[3.177752,4.955198,5.424026,5.94003],[2.969931,4.58814,5.012747,5.47921],[2.767182,4.234173,4.617055,5.036879],[2.570462,3.894698,4.23844,4.614618],[2.380498,3.570707,3.877939,4.213496],[2.19817,3.263373,3.53677,3.834769],[2.02399,2.97326,3.215482,3.478955],[1.858532,2.700977,2.91466,3.146601],[1.701985,2.446521,2.634221,2.837521],[1.5547,2.210088,2.374288,2.551746],[1.416776,1.991473,2.134547,2.288828],[1.288017,1.79003,1.914206,2.047806],[1.169245,1.606501,1.713955,1.829298],[1.059249,1.438799,1.531457,1.630688],[0.9577449,1.286134,1.365769,1.450855],[0.8643841,1.147631,1.21586,1.288589]],[[6.634791,11.41029,12.74284,14.23971],[6.502198,11.14415,12.43692,13.88806],[6.357114,10.85374,12.10327,13.50477],[6.199737,10.53986,11.74293,13.0911],[6.030623,10.20407,11.35778,12.64936],[5.850411,9.848198,10.95005,12.18222],[5.659975,9.474559,10.52251,11.69301],[5.460824,9.086575,10.07917,11.18645],[5.253922,8.686743,9.623038,10.66609],[5.04105,8.278876,9.15853,10.13709],[4.823183,7.865359,8.688473,9.602773],[4.601548,7.44888,8.215992,9.06677],[4.377449,7.032119,7.744172,8.532624],[4.152092,6.617478,7.275754,8.003462],[3.926811,6.207436,6.813536,7.482434],[3.70249,5.803658,6.35939,6.971644],[3.480183,5.40799,5.915367,6.473363],[3.260738,5.02168,5.482793,5.988987],[3.045555,4.647237,5.064477,5.521661],[2.835671,4.286218,4.662089,5.073168],[2.631907,3.93979,4.276862,4.644799],[2.435282,3.609372,3.91029,4.238119],[2.24644,3.29576,3.563181,3.853932],[2.06612,2.999841,3.236427,3.493128],[1.894654,2.721853,2.930212,3.155815],[1.73257,2.462275,2.644971,2.842365],[1.580124,2.22115,2.380657,2.552625],[1.437248,1.998025,2.136692,2.285864],[1.305,1.793988,1.914136,2.043097],[1.182168,1.606945,1.710644,1.821698],[1.068555,1.436222,1.525395,1.620676],[0.9638757,1.281022,1.357437,1.438898],[0.8677172,1.14038,1.205644,1.275057]],[[6.912479,11.77002,13.11875,14.63114],[6.76489,11.47532,12.78033,14.24251],[6.60476,11.15673,12.41473,13.82299],[6.432619,10.81576,12.02381,13.37481],[6.249061,10.45417,11.6097,12.90056],[6.054908,10.07419,11.1751,12.40348],[5.851644,9.679195,10.72396,11.88823],[5.640156,9.271566,10.25915,11.35822],[5.422196,8.855064,9.785036,10.81854],[5.198646,8.431933,9.304293,10.27234],[4.970662,8.004744,8.819919,9.723124],[4.739483,7.576085,8.334894,9.174323],[4.506257,7.148268,7.851866,8.628959],[4.272282,6.723725,7.373581,8.09013],[4.038383,6.304043,6.901832,7.559855],[3.805588,5.891046,6.438648,7.040387],[3.574746,5.486003,5.985382,6.533156],[3.34728,5.091486,5.54492,6.041399],[3.124289,4.709172,5.119069,5.567052],[2.906658,4.340364,4.709214,5.111583],[2.695533,3.986698,4.317094,4.676826],[2.491673,3.649182,3.943752,4.263855],[2.29598,3.328971,3.590382,3.873886],[2.108924,3.026547,3.257433,3.507328],[1.931219,2.742685,2.945667,3.164909],[1.763294,2.477698,2.655337,2.846801],[1.605222,2.23136,2.386107,2.552541],[1.45834,2.00516,2.139468,2.283608],[1.321442,1.79702,1.913098,2.037399],[1.19445,1.606429,1.706346,1.813102],[1.07717,1.432708,1.518382,1.609715],[0.9692483,1.274959,1.34815,1.425998],[0.8699567,1.131807,1.19409,1.260186]],[[7.191919,12.12089,13.48236,15.00624],[7.028951,11.79741,13.11131,14.58062],[6.853709,11.45111,12.71444,14.1258],[6.666751,11.08369,12.29383,13.64429],[6.468851,10.6973,11.85208,13.13925],[6.261479,10.2953,11.39314,12.61531],[6.045448,9.879957,10.91974,12.07573],[5.822489,9.454993,10.43622,11.52558],[5.593397,9.022515,9.945092,10.96785],[5.359253,8.584987,9.449241,10.40589],[5.121233,8.144893,8.951539,9.843035],[4.880419,7.704446,8.454522,9.282174],[4.638059,7.266012,7.960865,8.726334],[4.394906,6.831073,7.47225,8.177414],[4.151944,6.401398,6.990651,7.637611],[3.91,5.978239,6.517403,7.10834],[3.670498,5.564195,6.055428,6.592882],[3.434567,5.161014,5.606617,6.093272],[3.20314,4.770096,5.172466,5.611102],[2.97746,4.393259,4.754916,5.14844],[2.758387,4.031689,4.355215,4.70658],[2.546968,3.686795,3.974832,4.287053],[2.343808,3.359286,3.614475,3.890547],[2.149808,3.050242,3.275238,3.51816],[1.965576,2.760263,2.957688,3.170407],[1.79134,2.489367,2.661757,2.847117],[1.628751,2.239496,2.389426,2.550297],[1.476622,2.008616,2.138416,2.277392],[1.335017,1.796417,1.908298,2.027826],[1.203866,1.602384,1.698412,1.80078],[1.0829,1.425731,1.507818,1.59513],[0.9714193,1.265102,1.334973,1.409127],[0.8692113,1.119801,1.179039,1.241766]],[[7.475226,12.4646,13.83527,15.3665],[7.29682,12.11285,13.43231,14.90486],[7.106411,11.73949,13.00507,14.41596],[6.90474,11.34665,12.55612,13.90288],[6.693263,10.93765,12.08938,13.37024],[6.47273,10.51466,11.60748,12.8212],[6.244859,10.0814,11.11473,12.26079],[6.010356,9.639828,10.61351,11.69184],[5.770237,9.192311,10.10658,11.1176],[5.525612,8.741237,9.596714,10.54126],[5.277493,8.288709,9.086329,9.965606],[5.027075,7.837013,8.578015,9.393564],[4.775022,7.387504,8.073316,8.826885],[4.522255,6.941869,7.574117,8.267674],[4.269565,6.501307,7.081703,7.717292],[4.018351,6.068407,6.598985,7.179014],[3.769749,5.644949,6.127894,6.654926],[3.524708,5.232379,5.669985,6.146686],[3.284547,4.832659,5.227359,5.656544],[3.0502,4.447116,4.801421,5.185973],[2.822839,4.077377,4.393889,4.736776],[2.603191,3.72436,4.005699,4.3099],[2.392337,3.389443,3.638273,3.906803],[2.191068,3.073516,3.292498,3.528348],[1.999772,2.776854,2.968587,3.174673],[1.820445,2.501905,2.669064,2.848371],[1.651926,2.246683,2.391711,2.546955],[1.494449,2.011131,2.136363,2.270133],[1.348094,1.794941,1.902586,2.017324],[1.212711,1.597482,1.6896,1.787576],[1.08765,1.417457,1.495924,1.5792],[0.9727887,1.254273,1.320824,1.391298],[0.867593,1.106805,1.163005,1.222389]],[[7.759506,12.79736,14.17352,15.70779],[7.565603,12.41798,13.73955,15.21137],[7.360133,12.01862,13.28333,14.69017],[7.144555,11.60262,12.80879,14.14882],[6.919555,11.17206,12.31845,13.59039],[6.686848,10.73063,11.81663,13.01988],[6.44706,10.2802,11.30556,12.44],[6.20114,9.823024,10.78793,11.85389],[5.950139,9.361397,10.26638,11.26461],[5.694999,8.89732,9.743229,10.67484],[5.436858,8.432992,9.220969,10.0874],[5.176282,7.969625,8.700989,9.503872],[4.914118,7.508799,8.185062,8.926237],[4.651098,7.051635,7.674386,8.355767],[4.38858,6.600673,7.171828,7.795694],[4.127684,6.157689,6.679315,7.248101],[3.869345,5.724132,6.19841,6.714665],[3.614934,5.302061,5.731326,6.197758],[3.365428,4.892899,5.279579,5.698983],[3.122105,4.498459,4.845091,5.22037],[2.885785,4.11983,4.428992,4.763083],[2.657722,3.75867,4.033013,4.328917],[2.438882,3.416153,3.65835,3.91908],[2.229812,3.092812,3.305502,3.53402],[2.03288,2.791637,2.977578,3.17696],[1.84695,2.510703,2.672427,2.845491],[1.672452,2.250236,2.39019,2.539651],[1.509644,2.010182,2.130705,2.259148],[1.358524,1.79011,1.893406,2.003258],[1.218517,1.588824,1.676914,1.770397],[1.089625,1.405882,1.480654,1.559833],[0.9713688,1.240216,1.303386,1.370137],[0.8634516,1.090994,1.144128,1.200153]],[[8.042683,13.11567,14.49328,16.02596],[7.833448,12.70986,14.02985,15.49671],[7.613827,12.28696,13.54762,14.94679],[7.384452,11.84899,13.04904,14.37917],[7.14704,11.39965,12.53841,13.79888],[6.902141,10.94068,12.01788,13.20848],[6.650646,10.47426,11.49,12.61102],[6.393549,10.00259,10.95735,12.00946],[6.131724,9.527588,10.42213,11.40636],[5.866254,9.051353,9.886741,10.80444],[5.597599,8.574946,9.352402,10.20509],[5.326524,8.099824,8.820755,9.610166],[5.053688,7.627008,8.29289,9.020815],[4.780389,7.15896,7.77159,8.440183],[4.50771,6.697413,7.258744,7.870315],[4.236548,6.24378,6.755876,7.312851],[3.968297,5.800174,6.265263,6.770236],[3.703947,5.368065,5.788478,6.24414],[3.444854,4.949407,5.3276,5.736771],[3.191905,4.545421,4.883909,5.249461],[2.946506,4.158012,4.459411,4.784308],[2.709782,3.788619,4.05559,4.342838],[2.482434,3.438024,3.67322,3.925799],[2.267221,3.109785,3.316024,3.537077],[2.063026,2.802037,2.981917,3.17434],[1.870491,2.515315,2.671378,2.837991],[1.69008,2.249861,2.38456,2.528074],[1.521963,2.005488,2.121156,2.244143],[1.365669,1.781137,1.879936,1.98477],[1.221359,1.576574,1.66054,1.749448],[1.08864,1.390829,1.46183,1.536853],[0.9673032,1.223168,1.282921,1.345925],[0.8566218,1.072208,1.122249,1.174902]],[[8.324027,13.41849,14.7935,16.31997],[8.100447,12.98886,14.30376,15.76168],[7.86681,12.54368,13.79716,15.18514],[7.624842,12.0867,13.27804,14.5954],[7.375024,11.61954,12.74843,13.99493],[7.118192,11.14431,12.2108,13.38667],[6.85529,10.66315,11.66765,12.7735],[6.587127,10.17785,11.12108,12.15787],[6.314733,9.690441,10.57338,11.54239],[6.038465,9.201836,10.02563,10.92829],[5.758996,8.713357,9.479314,10.31725],[5.476905,8.225903,8.935396,9.710295],[5.193412,7.741834,8.396553,9.110449],[4.909546,7.262812,7.864594,8.519677],[4.626142,6.790175,7.34097,7.939539],[4.344592,6.326049,6.827974,7.372507],[4.065871,5.871905,6.327184,6.820259],[3.791381,5.42979,5.840786,6.285125],[3.522044,5.001007,5.370155,5.768545],[3.259391,4.587674,4.91753,5.272876],[3.004689,4.191459,4.484651,4.799926],[2.758773,3.813368,4.072539,4.350714],[2.524803,3.457548,3.68555,3.92981],[2.30167,3.122173,3.321648,3.53494],[2.090239,2.808113,2.981674,3.166898],[1.891197,2.515929,2.666125,2.826098],[1.704914,2.245721,2.375,2.512421],[1.531043,1.996604,2.107254,2.224637],[1.369943,1.768604,1.862802,1.962529],[1.221338,1.560899,1.640661,1.724932],[1.085143,1.372901,1.440094,1.51094],[0.9606717,1.20326,1.259569,1.318817],[0.8476692,1.051183,1.098142,1.14745]],[[8.600291,13.70099,15.06903,16.58437],[8.362634,13.24908,14.55494,15.9995],[8.116388,12.78497,14.02792,15.40099],[7.861969,12.31022,13.4899,14.7912],[7.600163,11.82685,12.94327,14.17298],[7.331869,11.33694,12.39047,13.54916],[7.057838,10.84219,11.83349,12.92206],[6.779051,10.34457,11.27456,12.29423],[6.495759,9.844819,10.71458,11.66669],[6.208545,9.344137,10.15489,11.041],[5.917901,8.843291,9.596311,10.41799],[5.624959,8.34452,9.041398,9.800581],[5.330676,7.849388,8.491855,9.19061],[5.035808,7.359125,7.949014,8.589522],[4.741719,6.875836,7.415153,7.999768],[4.44934,6.400945,6.891801,7.422984],[4.160091,5.936545,6.3812,6.861563],[3.874893,5.483969,5.884763,6.316993],[3.595374,5.045502,5.404914,5.791836],[3.322913,4.623001,4.943605,5.288132],[3.058451,4.217661,4.50206,4.80713],[2.805558,3.834215,4.085272,4.354084],[2.563107,3.470853,3.691229,3.926752],[2.332188,3.128783,3.321136,3.526322],[2.113724,2.80891,2.975861,3.153611],[1.908306,2.511648,2.655741,2.808857],[1.715729,2.236318,2.35995,2.491068],[1.536581,1.983257,2.088734,2.200376],[1.370741,1.751839,1.841316,1.935834],[1.218282,1.541678,1.617169,1.696753],[1.078592,1.351501,1.414838,1.481474],[0.9515173,1.180625,1.233487,1.288991],[0.836295,1.027613,1.071499,1.117486]],[[8.886632,13.98906,15.34879,16.85149],[8.635771,13.51716,14.8131,16.24332],[8.376437,13.03421,14.26596,15.62341],[8.109379,12.54216,13.70972,14.99453],[7.835457,12.04303,13.14674,14.35945],[7.555372,11.53848,12.57894,13.72041],[7.270065,11.03039,12.0085,13.07989],[6.979687,10.51938,11.43613,12.43875],[6.684731,10.00649,10.86306,11.79838],[6.385606,9.492374,10.28996,11.15947],[6.083349,8.979143,9.719245,10.52479],[5.778839,8.468248,9.152504,9.896051],[5.472732,7.960785,8.590926,9.274549],[5.166353,7.458806,8.036734,8.662676],[4.860562,6.963655,7.491373,8.061981],[4.556769,6.47743,6.957095,7.474871],[4.255865,6.001441,6.435295,6.902823],[3.959543,5.538093,5.928529,6.348545],[3.669263,5.08939,5.438912,5.814259],[3.386045,4.656665,4.967827,5.301391],[3.113865,4.245237,4.520893,4.815867],[2.851542,3.853264,4.096074,4.355428],[2.600391,3.482288,3.694935,3.921654],[2.361573,3.133564,3.318722,3.515767],[2.135909,2.807837,2.968128,3.138388],[1.92335,2.504656,2.642572,2.788787],[1.724746,2.224712,2.342675,2.467496],[1.540153,1.967618,2.067913,2.173832],[1.369847,1.733243,1.818027,1.90739],[1.213314,1.520435,1.591683,1.666632],[1.070546,1.328672,1.388215,1.450726],[0.9408218,1.156551,1.20603,1.257875],[0.8236688,1.00299,1.043886,1.086653]],[[9.121273,14.18187,15.52146,16.99839],[8.859213,13.69484,14.96991,16.37368],[8.58915,13.19832,14.40881,15.73953],[8.311907,12.69425,13.84047,15.09865],[8.028131,12.18421,13.26673,14.45317],[7.738721,11.67002,12.68967,13.80548],[7.443729,11.15215,12.10988,13.15629],[7.14356,10.63151,11.52841,12.50683],[6.838535,10.10863,10.94583,11.85765],[6.529589,9.58548,10.36437,11.21133],[6.217508,9.063366,9.785487,10.56946],[5.902838,8.543235,9.210206,9.933128],[5.586835,8.027051,8.640654,9.304645],[5.270265,7.516033,8.078147,8.685421],[4.954496,7.012237,7.524896,8.077821],[4.640349,6.516901,6.982221,7.483249],[4.329544,6.032488,6.452749,6.904496],[4.023582,5.561088,5.938691,6.343891],[3.723519,5.104122,5.441533,5.802977],[3.433711,4.667453,4.967476,5.288307],[3.152892,4.249161,4.514413,4.79756],[2.882577,3.851101,4.084248,4.332678],[2.62416,3.474871,3.678599,3.895288],[2.378693,3.121556,3.298524,3.486406],[2.14629,2.790948,2.943705,3.105583],[1.928086,2.484132,2.615185,2.753801],[1.724344,2.201008,2.312741,2.4307],[1.535579,1.941755,2.036445,2.136219],[1.361418,1.705401,1.78515,1.869021],[1.202038,1.491653,1.558425,1.628514],[1.056803,1.299196,1.354771,1.412994],[0.9253335,1.127043,1.173034,1.221123],[0.8069715,0.9738852,1.011732,1.05123]],[[9.35461,14.3647,15.68197,17.13078],[9.08171,13.86399,15.11633,16.49172],[8.801351,13.35533,14.54303,15.84546],[8.514137,12.84023,13.96381,15.19406],[8.220931,12.32046,13.38072,14.53985],[7.921693,11.79634,12.79418,13.88337],[7.616744,11.2687,12.20514,13.22572],[7.306324,10.73791,11.61401,12.5673],[6.991269,10.2058,11.02289,11.91055],[6.672275,9.673571,10.43308,11.25687],[6.349767,9.141987,9.845438,10.6072],[6.024929,8.612911,9.261978,9.963715],[5.698408,8.087412,8.683857,9.327654],[5.371512,7.567468,8.113205,8.701304],[5.044966,7.054204,7.551227,8.085945],[4.720485,6.550096,7.000567,7.484396],[4.399577,6.057271,6.463481,6.899038],[4.083296,5.577178,5.94149,6.331461],[3.776362,5.116191,5.441349,5.78881],[3.477374,4.672259,4.960814,5.268628],[3.188023,4.247503,4.502083,4.773181],[2.909919,3.843848,4.067127,4.304472],[2.644338,3.462707,3.657359,3.863902],[2.391547,3.104109,3.272717,3.451302],[2.152983,2.769557,2.914688,3.068127],[1.929133,2.459261,2.583385,2.714371],[1.720782,2.173759,2.279254,2.390374],[1.527723,1.912298,2.00138,2.09504],[1.350364,1.674871,1.749634,1.828091],[1.188188,1.460303,1.522656,1.587967],[1.040944,1.26775,1.31944,1.37348],[0.9080498,1.095973,1.13857,1.183021],[0.7885966,0.9433609,0.9782532,1.014597]],[[9.586207,14.53783,15.83085,17.24955],[9.302909,14.02487,15.2529,16.59827],[9.012472,13.50507,14.66861,15.94138],[8.715735,12.98016,14.07997,15.28118],[8.41257,12.45034,13.48728,14.61807],[8.103223,11.91631,12.89136,13.953],[7.787862,11.37836,12.29251,13.28626],[7.467225,10.83818,11.69268,12.62012],[7.141921,10.29682,11.09305,11.95587],[6.81226,9.754909,10.49429,11.29422],[6.479341,9.214186,9.898288,10.63724],[6.143689,8.675549,9.306034,9.985971],[5.806531,8.140877,8.719546,9.342591],[5.468469,7.61114,8.139867,8.708213],[5.13119,7.088792,7.569623,8.085635],[4.796179,6.575947,7.011061,7.477237],[4.46445,6.074028,6.46568,6.884591],[4.141063,5.589888,5.940744,6.315389],[3.824435,5.12127,5.433805,5.766963],[3.516402,4.670525,4.947309,5.241852],[3.21876,4.239862,4.483536,4.742395],[2.932994,3.831001,4.044229,4.270349],[2.659508,3.444188,3.629567,3.825806],[2.400043,3.081353,3.241489,3.410704],[2.155324,2.743032,2.880455,3.02541],[1.926424,2.430155,2.54733,2.670704],[1.71333,2.142223,2.241468,2.345772],[1.516717,1.879571,1.963093,2.050713],[1.336221,1.641209,1.711041,1.784165],[1.171763,1.426496,1.484513,1.545154],[1.022873,1.23431,1.282212,1.33219],[0.8886901,1.063075,1.102375,1.143304],[0.7704297,0.9137139,0.9458371,0.9792313]],[[9.817188,14.70323,15.9704,17.35736],[9.523709,14.17902,15.38136,16.69535],[9.223664,13.64934,14.78757,16.02959],[8.916846,13.11426,14.18922,15.36038],[8.603432,12.57439,13.58702,14.68854],[8.283523,12.02993,12.98116,14.01426],[7.957771,11.48242,12.37346,13.33967],[7.626701,10.93283,11.76498,12.6659],[7.290509,10.3816,11.15621,11.9935],[6.950216,9.830376,10.54893,11.3244],[6.606213,9.279866,9.943934,10.65945],[6.259636,8.73183,9.343108,10.00069],[5.910948,8.187059,8.747311,9.349026],[5.561782,7.647947,8.159105,8.707202],[5.213573,7.116556,7.580687,8.077544],[4.867258,6.594231,7.013479,7.461549],[4.528222,6.088271,6.465219,6.867414],[4.194645,5.596141,5.933175,6.292182],[3.868469,5.12037,5.419987,5.738601],[3.55165,4.663409,4.928199,5.209299],[3.245848,4.227245,4.459844,4.706346],[2.951582,3.81231,4.015301,4.230055],[2.670893,3.420951,3.596961,3.782845],[2.404736,3.054036,3.205634,3.365457],[2.154495,2.712908,2.842624,2.979137],[1.920362,2.397346,2.507582,2.623387],[1.703318,2.108077,2.201141,2.298733],[1.50318,1.84434,1.922377,2.004065],[1.320083,1.60575,1.670757,1.738684],[1.153709,1.39136,1.445162,1.501281],[1.003279,1.199673,1.243908,1.289965],[0.870338,1.031981,1.068202,1.105851],[0.7515119,0.8837296,0.9132081,0.9437946]],[[10.04549,14.85901,16.09883,17.45254],[9.742341,14.32487,15.50025,16.78162],[9.432113,13.78492,14.89666,16.10677],[9.114927,13.23969,14.28869,15.42874],[8.790826,12.68928,13.67645,14.74761],[8.460381,12.13513,13.06163,14.06537],[8.124043,11.5781,12.44517,13.38304],[7.781899,11.01848,11.8274,12.701],[7.434894,10.4578,11.21,12.02105],[7.083288,9.896609,10.59356,11.34384],[6.72812,9.336522,9.979834,10.67127],[6.369697,8.778133,9.369467,10.00402],[6.009586,8.22375,8.764934,9.344735],[5.649143,7.675347,8.168339,8.695654],[5.289201,7.134148,7.580981,8.058147],[4.93545,6.607861,7.011035,7.440873],[4.585781,6.093613,6.455415,6.840511],[4.242207,5.59405,5.916896,6.259957],[3.906806,5.111817,5.39823,5.702068],[3.581382,4.649123,4.901691,5.169175],[3.266528,4.206535,4.427812,4.66176],[2.964571,3.786803,3.979411,4.182701],[2.67669,3.391107,3.557636,3.733099],[2.40458,3.021217,3.164241,3.314678],[2.148648,2.677204,2.799187,2.92727],[1.910206,2.360221,2.463558,2.571875],[1.689281,2.069777,2.156711,2.247676],[1.486259,1.805795,1.878434,1.95431],[1.301014,1.567554,1.627842,1.690707],[1.132885,1.353689,1.403382,1.45511],[0.9838206,1.165946,1.206731,1.249112],[0.8501869,0.9994395,1.032698,1.0672],[0.731879,0.8535394,0.8805172,0.9084567]],[[10.27275,15.00758,16.2188,17.53807],[9.959323,14.46309,15.61033,16.85797],[9.638617,13.91289,14.99703,16.17422],[9.310628,13.35701,14.37893,15.4868],[8.975856,12.7968,13.75761,14.7976],[8.634684,12.23301,13.13392,14.10753],[8.2871,11.66581,12.50805,13.41681],[7.93398,11.09662,11.88154,12.72713],[7.575453,10.52581,11.25483,12.03894],[7.212463,9.95488,10.62952,11.354],[6.845156,9.384201,10.00603,10.67274],[6.475015,8.815981,9.386738,9.997703],[6.103304,8.252075,8.773613,9.330997],[5.730721,7.693548,8.167794,8.673819],[5.363248,7.148492,7.577861,8.03526],[4.998442,6.61363,7.000311,7.411565],[4.638346,6.091676,6.437993,6.805715],[4.285121,5.58541,5.893809,6.220731],[3.940676,5.09721,5.37022,5.659149],[3.605639,4.627728,4.867854,5.121558],[3.282596,4.180075,4.389916,4.611251],[2.972926,3.755723,3.937867,4.129666],[2.678633,3.356858,3.513904,3.678995],[2.400335,2.983844,3.1183,3.259403],[2.139694,2.63829,2.752617,2.872393],[1.896966,2.319998,2.416522,2.517475],[1.672821,2.029249,2.110177,2.194674],[1.467363,1.765598,1.83298,1.903216],[1.280088,1.527857,1.583565,1.641533],[1.113425,1.318332,1.364178,1.411805],[0.9634788,1.131803,1.169283,1.208154],[0.8303144,0.9678135,0.9982841,1.029834],[0.7123007,0.823951,0.8485771,0.8740342]],[[10.49728,15.14711,16.32849,17.61214],[10.17327,14.59227,15.71022,16.92306],[9.841658,14.03133,15.0867,16.22983],[9.502878,13.46555,14.45943,15.53426],[9.157257,12.89561,13.82915,14.83715],[8.804689,12.32152,13.19593,14.13859],[8.44599,11.74465,12.56124,13.44017],[8.081164,11.16519,11.92529,12.74214],[7.711066,10.58451,11.28959,12.04612],[7.335677,10.00278,10.65434,11.35232],[6.956393,9.42208,10.02176,10.66314],[6.57437,8.84414,9.3937,9.980543],[6.190152,8.26983,8.771101,9.305522],[5.809999,7.707603,8.162918,8.647565],[5.431093,7.153723,7.565173,8.002423],[5.055471,6.610922,6.980737,7.373107],[4.685342,6.082064,6.412608,6.762742],[4.322677,5.569638,5.863368,6.173999],[3.968092,5.074316,5.333677,5.60751],[3.6244,4.599534,4.827083,5.066934],[3.293148,4.147008,4.345315,4.553997],[2.976634,3.719326,3.890993,4.071342],[2.675674,3.317126,3.464684,3.619447],[2.392287,2.942485,3.068444,3.200334],[2.126967,2.595517,2.702269,2.813861],[1.8807,2.276896,2.36673,2.460481],[1.653848,1.986496,2.06156,2.139767],[1.446095,1.723355,1.785621,1.850388],[1.260441,1.490437,1.541843,1.595227],[1.092722,1.282191,1.32434,1.368039],[0.9432247,1.098401,1.13276,1.168327],[0.8102914,0.9365952,0.9644333,0.9932034],[0.6926458,0.7948049,0.8172196,0.8403489]],[[10.7157,15.27401,16.42431,17.67119],[10.3807,14.70835,15.79574,16.97257],[10.03819,14.13743,15.16297,16.27112],[9.688462,13.56183,14.52667,15.56758],[9.331316,12.98149,13.88677,14.8619],[8.967521,12.39766,13.24467,14.15558],[8.596965,11.8104,12.60043,13.44872],[8.220416,11.22097,11.95543,12.74279],[7.837697,10.62932,11.30962,12.03778],[7.450116,10.03743,10.66514,11.33596],[7.058715,9.446859,10.02368,10.63913],[6.663868,8.858283,9.385944,9.948044],[6.272108,8.280491,8.761251,9.272573],[5.880201,7.709246,8.1451,8.60792],[5.490153,7.147251,7.540339,7.957078],[5.10418,6.597407,6.950006,7.323218],[4.724281,6.06226,6.37675,6.709089],[4.351007,5.542439,5.821192,6.115287],[3.987366,5.041652,5.287173,5.545788],[3.635032,4.561812,4.776634,5.002545],[3.296571,4.105871,4.292584,4.488615],[2.972971,3.674715,3.835855,4.00476],[2.66661,3.270887,3.408993,3.553518],[2.378218,2.894815,3.012326,3.135099],[2.109113,2.54759,2.646862,2.750411],[1.859941,2.229441,2.312704,2.399412],[1.630604,1.939665,2.008984,2.081055],[1.42475,1.681988,1.739416,1.799028],[1.237944,1.450529,1.497769,1.546728],[1.07075,1.245375,1.284004,1.323975],[0.9215087,1.064036,1.095423,1.12785],[0.7889674,0.9045428,0.9298814,0.9560208],[0.6729909,0.76625,0.7866073,0.8075767]],[[10.93157,15.39214,16.5102,17.71923],[10.58557,14.81641,15.8723,17.0123],[10.23201,14.23558,15.23042,16.3028],[9.870623,13.64948,14.58439,15.5906],[9.502142,13.05932,13.93555,14.87711],[9.126342,12.465,13.2838,14.16227],[8.743916,11.86767,12.63041,13.44744],[8.354529,11.26709,11.97513,12.73237],[7.959408,10.66512,11.31998,12.01923],[7.559482,10.0632,10.66648,11.30964],[7.154945,9.461751,10.01512,10.60413],[6.752599,8.86991,9.375553,9.912908],[6.348766,8.282891,8.742716,9.230603],[5.94539,7.703336,8.119392,8.560138],[5.544668,7.134134,7.508615,7.904685],[5.148585,6.577841,6.913047,7.26701],[4.757582,6.034977,6.3332,6.647607],[4.374817,5.509467,5.773151,6.0507],[4.002051,5.003366,5.234995,5.478411],[3.642086,4.519947,4.722083,4.934163],[3.296045,4.0603,4.235464,4.41895],[2.966651,3.627415,3.77816,3.935813],[2.654861,3.222024,3.350817,3.485297],[2.362329,2.845646,2.954893,3.068781],[2.090005,2.498887,2.590884,2.686636],[1.838026,2.181337,2.258227,2.338129],[1.610781,1.897584,1.961526,2.027869],[1.403544,1.641405,1.694196,1.748885],[1.217216,1.413269,1.456588,1.501394],[1.050166,1.210698,1.246012,1.282484],[0.9011952,1.031767,1.060366,1.089859],[0.7703598,0.8760207,0.8990649,0.9227948],[0.6567262,0.7418998,0.7603986,0.7794205]],[[11.13354,15.4895,16.57408,17.74414],[10.77643,14.90383,15.92704,17.02915],[10.41114,14.31245,15.2754,16.31096],[10.03836,13.71652,14.62042,15.59096],[9.657784,13.1158,13.96189,14.86892],[9.270031,12.51137,13.30098,14.1461],[8.874619,11.9028,12.63723,13.42207],[8.472701,11.29184,11.97256,12.69886],[8.065098,10.67979,11.30835,11.97794],[7.651822,10.06685,10.64485,11.25958],[7.239945,9.462482,9.992039,10.55437],[6.825324,8.86133,9.344278,9.856306],[6.409822,8.265942,8.704251,9.168215],[5.995588,7.679167,8.074945,8.493226],[5.584567,7.103521,7.458991,7.834076],[5.177044,6.539365,6.856739,7.191094],[4.776292,5.990787,6.27244,6.568692],[4.384113,5.459924,5.708283,5.9691],[4.003505,4.950321,5.167906,5.396043],[3.635688,4.463219,4.652527,4.8507],[3.283708,4.00203,4.165607,4.336574],[2.948723,3.567759,3.708086,3.854522],[2.632722,3.162352,3.281867,3.40639],[2.336964,2.786799,2.88785,2.992969],[2.061835,2.441,2.525793,2.613864],[1.812524,2.130482,2.20127,2.274682],[1.584007,1.848677,1.907341,1.968086],[1.377573,1.596495,1.644807,1.694758],[1.191648,1.371512,1.411034,1.451836],[1.025123,1.171888,1.204,1.237104],[0.8782934,0.9974181,1.023374,1.050094],[0.7503119,0.8466125,0.8675099,0.888992],[0.6394127,0.7169936,0.7337617,0.7509755]],[[11.32158,15.56645,16.61643,17.74655],[10.95266,14.97017,15.95959,17.02282],[10.57593,14.36894,15.29899,16.29684],[10.19097,13.76241,14.63429,15.56825],[9.798369,13.15156,13.96658,14.83824],[9.397495,12.5358,13.29523,14.10617],[8.989438,11.91679,12.62205,13.37396],[8.574916,11.29569,11.94829,12.64296],[8.153767,10.6725,11.27397,11.91319],[7.733335,10.05699,10.60941,11.19558],[7.309,9.443228,9.948357,10.4835],[6.88253,8.833653,9.293387,9.779671],[6.456008,8.231035,8.647409,9.087135],[6.031305,7.63782,8.012979,8.408553],[5.608522,7.054159,7.390235,7.744042],[5.191004,6.484253,6.783553,7.098147],[4.780553,5.930267,6.195153,6.473136],[4.380323,5.395961,5.628905,5.872983],[3.991587,4.882676,5.086135,5.298985],[3.617679,4.394198,4.570702,4.755064],[3.259931,3.931771,4.083798,4.242346],[2.920652,3.497749,3.627754,3.763127],[2.601402,3.093503,3.203869,3.318615],[2.30282,2.719248,2.81223,2.908754],[2.030953,2.381515,2.459448,2.540228],[1.780464,2.07338,2.138216,2.20532],[1.553075,1.796253,1.849848,1.905237],[1.347293,1.547794,1.591797,1.637207],[1.162133,1.326294,1.362172,1.399144],[0.9981881,1.131864,1.16096,1.190902],[0.8547374,0.9631329,0.9866326,1.010782],[0.729988,0.8175656,0.836478,0.8558874],[0.6222697,0.6928318,0.7080117,0.7235702]],[[11.49234,15.61956,16.63384,17.72303],[11.11193,15.01343,15.96804,16.99152],[10.72295,14.40156,15.29768,16.25694],[10.32591,13.78488,14.6238,15.52039],[9.920074,13.16262,13.94559,14.78106],[9.506462,12.53638,13.26478,14.0408],[9.085706,11.9072,12.5825,13.30081],[8.657473,11.27486,11.89854,12.5609],[8.229386,10.64946,11.22357,11.83232],[7.796349,10.0245,10.55074,11.10784],[7.360024,9.402291,9.882482,10.39004],[6.922413,8.785502,9.221616,9.68186],[6.485295,8.176478,8.570588,8.985853],[6.048549,7.57512,7.929285,8.301873],[5.615567,6.985703,7.302157,7.634553],[5.18811,6.410364,6.691404,6.986141],[4.769446,5.853026,6.10107,6.360799],[4.360855,5.315068,5.532528,5.759878],[3.965923,4.800608,4.989984,5.187668],[3.586119,4.311082,4.474837,4.645514],[3.224045,3.849217,3.989811,4.136123],[2.88155,3.41675,3.536584,3.661103],[2.559514,3.014201,3.115565,3.220735],[2.264892,2.64916,2.734457,2.822825],[1.992008,2.314325,2.385567,2.459265],[1.743056,2.011652,2.07077,2.131838],[1.516648,1.738917,1.787636,1.837891],[1.311955,1.494581,1.534447,1.575513],[1.129918,1.279135,1.311579,1.344952],[0.9699903,1.09138,1.117669,1.144677],[0.8303805,0.9287583,0.9499832,0.9717587],[0.7094044,0.7888992,0.8059863,0.8234943],[0.6050985,0.6691851,0.6829103,0.6969563]],[[11.64482,15.64838,16.62599,17.67344],[11.2521,15.03157,15.95041,16.93332],[10.85099,14.40954,15.27086,16.19078],[10.44061,13.78136,14.58641,15.44485],[10.02195,13.14859,13.89872,14.69733],[9.595564,12.51216,13.2088,13.94929],[9.160951,11.87165,12.51624,13.20033],[8.726021,11.23748,11.83205,12.46206],[8.285206,10.60259,11.14879,11.72662],[7.840063,9.969169,10.46876,10.99646],[7.392503,9.339773,9.794667,10.2744],[6.944196,8.716619,9.128831,9.562873],[6.49478,8.099335,8.470849,8.861427],[6.04766,7.492221,7.825208,8.174736],[5.604523,6.897348,7.194039,7.504984],[5.168714,6.318751,6.581507,6.856461],[4.741476,5.757792,5.988973,6.230514],[4.326606,5.218864,5.420934,5.631738],[3.925668,4.703546,4.878943,5.061642],[3.541525,4.214901,4.366075,4.523306],[3.176289,3.754996,3.884356,4.018698],[2.831066,3.324637,3.434495,3.548415],[2.513747,2.932509,3.025321,3.121424],[2.218294,2.570908,2.648733,2.7292],[1.947402,2.242369,2.307201,2.37414],[1.699799,1.944806,1.998438,2.053736],[1.474841,1.676883,1.720933,1.766289],[1.273873,1.439535,1.475512,1.512506],[1.096562,1.231787,1.261041,1.291083],[0.941155,1.051101,1.074798,1.099101],[0.8059823,0.8950994,0.914237,0.9338399],[0.6890258,0.7610808,0.7764995,0.792274],[0.5900138,0.6483341,0.6607707,0.6734794]],[[11.77533,15.64924,16.58925,17.59418],[11.37044,15.02225,15.90446,16.8461],[10.95589,14.38866,15.21429,16.09412],[10.53263,13.74995,14.52034,15.34],[10.10113,13.10697,13.82353,14.58472],[9.660763,12.45912,13.12326,13.82765],[9.219716,11.81716,12.43089,13.08078],[8.77196,11.17348,11.7384,12.33566],[8.318952,10.53013,11.04797,11.59459],[7.862512,9.889564,10.36218,10.86028],[7.404191,9.253864,9.683211,10.135],[6.943367,8.622351,9.010354,9.418001],[6.483438,7.99933,8.348095,8.71395],[6.025985,7.386759,7.698456,8.02492],[5.574398,6.788743,7.065677,7.355286],[5.129841,6.206577,6.451054,6.70633],[4.696285,5.644878,5.859322,6.082898],[4.275341,5.10531,5.292125,5.486603],[3.870101,4.591228,4.752846,4.920843],[3.482904,4.104989,4.243816,4.387908],[3.115055,3.647656,3.766011,3.888676],[2.775401,3.229019,3.329402,3.433289],[2.457505,2.840943,2.925445,3.012773],[2.164584,2.486563,2.557232,2.630163],[1.895494,2.163946,2.222632,2.283112],[1.649792,1.871986,1.920368,1.970163],[1.429273,1.612115,1.651775,1.69254],[1.233865,1.383633,1.415997,1.449219],[1.061881,1.18406,1.210366,1.237335],[0.911702,1.011054,1.032368,1.054194],[0.7812796,0.8618568,0.8790834,0.8967022],[0.6705138,0.735923,0.7498597,0.7640973],[0.574192,0.6271519,0.6383992,0.6498764]],[[11.8813,15.61988,16.52144,17.48317],[11.46291,14.9813,15.82601,16.72564],[11.03544,14.33718,15.12636,15.96551],[10.59932,13.68829,14.42333,15.20368],[10.15376,13.03386,13.71616,14.43937],[9.707253,12.38499,13.01654,13.68488],[9.253325,11.73354,12.3159,12.93122],[8.793335,11.08144,11.6163,12.18055],[8.329014,10.43103,10.92022,11.43548],[7.861795,9.784267,10.22969,10.69811],[7.390786,9.140149,9.543674,9.96737],[6.919359,8.502956,8.866635,9.247899],[6.448966,7.87451,8.200452,8.541629],[5.983013,7.258943,7.549401,7.852969],[5.522549,6.657439,6.914665,7.183092],[5.07168,6.07479,6.301164,6.537039],[4.632025,5.512695,5.710584,5.91647],[4.20686,4.974746,5.146557,5.325046],[3.798718,4.46355,4.611674,4.765332],[3.409071,3.980383,4.10714,4.238441],[3.04772,3.536141,3.644059,3.755688],[2.707794,3.122214,3.213409,3.307606],[2.393039,2.742352,2.818912,2.897884],[2.102438,2.394776,2.458597,2.524338],[1.835767,2.078629,2.131443,2.185775],[1.595308,1.795884,1.839338,1.883983],[1.381288,1.546165,1.581752,1.618269],[1.192118,1.327085,1.356112,1.385861],[1.026262,1.136376,1.159975,1.184132],[0.8816698,0.9712602,0.9903955,1.00996],[0.758458,0.8314056,0.8469348,0.8627945],[0.6509309,0.7101668,0.7227368,0.7355602],[0.5590601,0.6071866,0.6173674,0.6277425]],[[11.96179,15.55968,16.42203,17.33995],[11.53045,14.91058,15.71714,16.57429],[11.0901,14.2563,15.00845,15.8065],[10.63983,13.59592,14.29503,15.03563],[10.18844,12.94089,13.58894,14.27436],[9.729004,12.28254,12.88108,13.51313],[9.262808,11.6227,12.17339,12.754],[8.791498,10.96363,11.46825,11.99945],[8.31639,10.30711,10.76755,11.25147],[7.836319,9.65186,10.06992,10.50862],[7.354623,9.002104,9.379795,9.775519],[6.872605,8.359498,8.698879,9.053915],[6.39366,7.728176,8.031448,8.348224],[5.918694,7.109167,7.378531,7.659464],[5.451911,6.507398,6.74519,6.992822],[4.994902,5.924551,6.133099,6.349952],[4.551085,5.364408,5.546087,5.734725],[4.123146,4.829771,4.986955,5.149923],[3.712687,4.322091,4.457087,4.59685],[3.330459,3.853352,3.968712,4.087976],[2.969111,3.414427,3.512277,3.613297],[2.632914,3.009673,3.092131,3.177145],[2.320973,2.637459,2.706456,2.777497],[2.033283,2.297184,2.354498,2.413432],[1.772652,1.991404,2.038736,2.087344],[1.539637,1.720104,1.75901,1.798915],[1.332778,1.481027,1.512875,1.545501],[1.150653,1.272018,1.298,1.324586],[0.9912397,1.09031,1.111449,1.133054],[0.854921,0.9358449,0.9530559,0.9706274],[0.7355019,0.8014167,0.8153916,0.8296441],[0.6331342,0.6868456,0.6981988,0.7097654],[0.5473278,0.5915393,0.6008631,0.6103549]],[[12.01379,15.46625,16.28878,17.16246],[11.56956,14.80701,15.57488,16.38919],[11.115,14.14123,14.85579,15.61236],[10.65922,13.48066,14.1439,14.845],[10.19487,12.81617,13.42961,14.07704],[9.723166,12.14949,12.71477,13.31043],[9.245671,11.48278,12.00166,12.54757],[8.763594,10.81771,11.29203,11.79027],[8.275504,10.15266,10.5842,11.0368],[7.7847,9.491836,9.882561,10.29172],[7.292325,8.836702,9.188625,9.55658],[6.801744,8.191364,8.506642,8.835778],[6.313694,7.556671,7.837457,8.130142],[5.832448,6.937639,7.186228,7.444962],[5.35953,6.335897,6.554575,6.78184],[4.898469,5.755366,5.946478,6.144803],[4.452063,5.199,5.364894,5.536802],[4.022005,4.668372,4.81134,4.959279],[3.619974,4.17653,4.299134,4.425823],[3.238097,3.71378,3.81815,3.92585],[2.881156,3.285067,3.373343,3.464312],[2.548358,2.888893,2.963032,3.039331],[2.23992,2.524912,2.586725,2.650258],[1.959194,2.196289,2.247524,2.300119],[1.707095,1.903397,1.945666,1.989003],[1.482314,1.644142,1.678866,1.714425],[1.283572,1.416511,1.444939,1.474018],[1.108901,1.217785,1.240993,1.264705],[0.9589995,1.048229,1.067188,1.086537],[0.8271606,0.9000693,0.9155129,0.9312582],[0.7137575,0.7733493,0.7859347,0.798753],[0.6182738,0.6674378,0.6777975,0.6883409],[0.5360278,0.5764739,0.5849739,0.5936167]],[[12.03577,15.3387,16.12097,16.95015],[11.57727,14.66794,15.39665,16.16783],[11.11752,14.00236,14.6795,15.39496],[10.64876,13.33236,13.95944,14.62095],[10.17214,12.65959,13.23824,13.84769],[9.689161,11.98614,12.5181,13.07748],[9.20093,11.31354,11.80062,12.31201],[8.705757,10.63988,11.08384,11.54922],[8.206901,9.969322,10.37208,10.79362],[7.705345,9.303148,9.666685,10.04659],[7.204409,8.645415,8.971848,9.312454],[6.704642,7.996766,8.288207,8.59184],[6.210361,7.362276,7.620978,7.8901],[5.722994,6.74348,6.971692,7.208745],[5.246145,6.144401,6.344435,6.551914],[4.78269,5.568096,5.742274,5.922676],[4.334374,5.016219,5.166812,5.322565],[3.913776,4.502835,4.632412,4.766242],[3.512458,4.017643,4.12833,4.242494],[3.13569,3.56615,3.660098,3.756867],[2.782758,3.146959,3.226144,3.3076],[2.454086,2.759971,2.826229,2.8943],[2.153585,2.408969,2.464087,2.520643],[1.882547,2.094742,2.140377,2.187146],[1.63983,1.815373,1.852997,1.891509],[1.424323,1.569026,1.599937,1.631541],[1.234137,1.353057,1.378377,1.404238],[1.070328,1.168102,1.188856,1.21003],[0.9256695,1.005816,1.022777,1.040063],[0.8007978,0.866509,0.8803743,0.8944921],[0.6951834,0.7495268,0.7609679,0.7726085],[0.6040312,0.6488631,0.6582771,0.6678467],[0.5267113,0.5638513,0.5716304,0.5795314]],[[12.0251,15.17475,15.91638,16.70089],[11.56172,14.50458,15.19441,15.92294],[11.08897,13.82958,14.46912,15.14346],[10.60794,13.15135,13.74221,14.36423],[10.12008,12.4719,13.0158,13.58748],[9.626407,11.79266,12.29141,12.8148],[9.124978,11.11143,11.56675,12.04382],[8.619016,10.43232,10.84611,11.279],[8.109346,9.756434,10.13065,10.52152],[7.59924,9.087786,9.424503,9.775672],[7.089048,8.426792,8.728087,9.041837],[6.583104,7.778554,8.046646,8.325403],[6.08272,7.144486,7.381589,7.627758],[5.591543,6.528674,6.737067,6.953114],[5.112496,5.934242,6.116222,6.304613],[4.647343,5.362882,5.520695,5.683839],[4.209528,4.829632,4.96585,5.106472],[3.790006,4.323538,4.440277,4.560627],[3.394507,3.850631,3.950048,4.052404],[3.022365,3.409589,3.49367,3.580123],[2.674194,3.000532,3.07113,3.14363],[2.354463,2.627866,2.6868,2.747246],[2.06485,2.292805,2.341771,2.391933],[1.804397,1.99363,2.03414,2.075591],[1.572178,1.728697,1.762094,1.796229],[1.3664,1.495463,1.522914,1.550941],[1.188522,1.294985,1.31756,1.340584],[1.030786,1.118335,1.136844,1.155703],[0.8941313,0.9661364,0.9813158,0.9967668],[0.7780323,0.8377303,0.8502874,0.8630596],[0.6776074,0.7269964,0.7373586,0.7478891],[0.5921756,0.6332046,0.6417915,0.6505106],[0.5198378,0.5540952,0.5612477,0.5685043]],[[11.98702,14.98245,15.68374,16.4241],[11.51067,14.30293,14.95372,15.63964],[11.0257,13.61982,14.2217,14.85506],[10.53352,12.93505,13.48975,14.07253],[10.03506,12.24996,12.75926,13.2935],[9.528136,11.5621,12.02771,12.51535],[9.015949,10.87552,11.29932,11.74248],[8.49917,10.19117,10.57508,10.97591],[7.981017,9.51299,9.859072,10.21985],[7.461644,8.841181,9.151475,9.474453],[6.945385,8.18085,8.457546,8.745121],[6.433415,7.533266,7.778546,8.033091],[5.929401,6.902549,7.118663,7.342613],[5.436286,6.291854,6.481072,6.67687],[4.955826,5.702879,5.867426,6.037455],[4.502283,5.151578,5.294021,5.441006],[4.065981,4.626314,4.748758,4.874936],[3.653066,4.133595,4.238198,4.345847],[3.262895,3.672139,3.76089,3.852108],[2.896245,3.242264,3.317029,3.393775],[2.558133,2.84898,2.9116,2.975801],[2.250623,2.493928,2.54613,2.599587],[1.972942,2.175589,2.218922,2.263245],[1.724364,1.892533,1.928377,1.964999],[1.50321,1.642333,1.671893,1.702061],[1.311367,1.426497,1.450885,1.47575],[1.140546,1.23552,1.255579,1.27601],[0.99202,1.070372,1.086874,1.103666],[0.8652856,0.93041,0.9440962,0.9580125],[0.7553999,0.8094293,0.8207554,0.8322622],[0.6616449,0.7066522,0.7160642,0.7256185],[0.5820541,0.6197359,0.6275975,0.6355715],[0.5169619,0.5491367,0.5558396,0.562635]],[[11.91485,14.75381,15.41474,16.1111],[11.42634,14.06628,14.6781,15.32168],[10.93031,13.37677,13.94119,14.53397],[10.42761,12.68652,13.20533,13.74934],[9.915858,11.99282,12.46772,12.96489],[9.398214,11.29972,11.73256,12.18499],[8.875207,10.60797,11.00066,11.41048],[8.350007,9.921473,10.27604,10.64552],[7.822567,9.240205,9.558679,9.890035],[7.297219,8.569272,8.853811,9.149415],[6.774985,7.909779,8.162537,8.424735],[6.259532,7.265849,7.489052,7.720253],[5.753796,6.640646,6.836539,7.03916],[5.259504,6.035841,6.206627,6.383029],[4.791697,5.468253,5.616494,5.769399],[4.34004,4.925535,5.053323,5.184952],[3.911058,4.414629,4.524116,4.636745],[3.504095,3.934251,4.027426,4.123153],[3.120065,3.484884,3.563618,3.644408],[2.764514,3.072127,3.13828,3.206078],[2.439886,2.698034,2.753359,2.809992],[2.145594,2.36129,2.407363,2.454472],[1.881115,2.060688,2.098922,2.137971],[1.644902,1.793931,1.825563,1.857835],[1.439293,1.56301,1.58919,1.615873],[1.255462,1.357834,1.379435,1.401429],[1.095047,1.179759,1.197584,1.215717],[0.9575854,1.028175,1.042997,1.058063],[0.8380952,0.896822,0.9091222,0.921615],[0.7358387,0.7848925,0.7951423,0.8055443],[0.6487973,0.6899785,0.6985636,0.7072692],[0.5772827,0.6125083,0.6198412,0.6272734],[0.515792,0.5458748,0.5521241,0.5584536]],[[11.80278,14.48364,15.10432,15.75701],[11.30332,13.78988,14.36298,14.96466],[10.79689,13.09507,13.62235,14.17506],[10.2809,12.39626,12.87942,13.38507],[9.758499,11.69745,12.13835,12.59904],[9.230075,10.99929,11.3998,11.81764],[8.698752,10.30558,10.66774,11.04498],[8.164296,9.616115,9.941907,10.28075],[7.631025,8.935976,9.227549,9.530347],[7.099814,8.266112,8.525596,8.794669],[6.574309,7.610628,7.840227,8.077962],[6.057426,6.972671,7.174607,7.3834],[5.550845,6.35387,6.530327,6.712518],[5.070328,5.771838,5.925373,6.083678],[4.604878,5.213515,5.346203,5.48283],[4.161362,4.686227,4.800215,4.917432],[3.739076,4.188656,4.28593,4.385832],[3.339041,3.721415,3.803848,3.888401],[2.967309,3.29066,3.360123,3.431287],[2.626685,2.898842,2.957108,3.01673],[2.316753,2.544836,2.593504,2.643249],[2.0372,2.227654,2.268164,2.309524],[1.786609,1.945144,1.97876,2.013046],[1.567786,1.699783,1.727689,1.756123],[1.371369,1.480912,1.504005,1.527512],[1.199381,1.290286,1.309398,1.328834],[1.051411,1.127349,1.143279,1.159467],[0.9224616,0.985804,0.9990598,1.012519],[0.811788,0.8648337,0.8759089,0.8871455],[0.7173361,0.7619826,0.7712832,0.7807121],[0.6394,0.6776562,0.6856142,0.6936779],[0.5723784,0.6051277,0.6119264,0.6188106],[0.5186934,0.5473842,0.5533335,0.5593553]],[[11.6514,14.17361,14.7544,15.36398],[11.14165,13.47472,14.00952,14.56994],[10.62193,12.77139,13.26188,13.77505],[10.09537,12.0676,12.51564,12.98365],[9.562228,11.36384,11.7713,12.19625],[9.025592,10.66389,11.03278,11.41691],[8.485044,9.96732,10.29962,10.64512],[7.944888,9.279206,9.577042,9.886241],[7.405854,8.600335,8.865821,9.141025],[6.871567,7.934796,8.170116,8.413693],[6.344902,7.285697,7.493057,7.707384],[5.827484,6.654609,6.836174,7.023575],[5.335743,6.059875,6.218198,6.381383],[4.858019,5.487725,5.624865,5.766026],[4.40148,4.94582,5.063917,5.185316],[3.965353,4.432782,4.533815,4.637541],[3.550738,3.949322,4.035163,4.123182],[3.164154,3.502112,3.574641,3.64892],[2.808747,3.093974,3.154979,3.217382],[2.484266,2.723964,2.775062,2.827273],[2.190591,2.391304,2.433955,2.477488],[1.926441,2.093982,2.129476,2.165665],[1.695087,1.834973,1.86452,1.894617],[1.486648,1.603056,1.627575,1.652525],[1.303536,1.400398,1.420745,1.441432],[1.145407,1.226509,1.243509,1.26078],[1.007261,1.075079,1.089261,1.103657],[0.8883626,0.9452946,0.9571723,0.96922],[0.7866371,0.8346693,0.8446681,0.8548024],[0.7023688,0.7435949,0.7521647,0.7608463],[0.6298793,0.6652498,0.6725878,0.6800165],[0.5715932,0.602623,0.6090531,0.6155603],[0.5219475,0.5491435,0.5547688,0.560458]],[[11.45954,13.82338,14.36481,14.93201],[10.93654,13.11606,13.61301,14.13279],[10.40635,12.40792,12.86224,13.33668],[9.869116,11.6993,12.11287,12.54408],[9.327888,10.99396,11.36877,11.75896],[8.78208,10.29126,10.62929,10.98065],[8.235976,9.596268,9.899632,10.21448],[7.690167,8.909622,9.180414,9.461034],[7.148254,8.235383,8.475773,8.724523],[6.613077,7.576624,7.788804,8.008045],[6.086195,6.934849,7.120968,7.313009],[5.58464,6.329055,6.491661,6.659209],[5.096115,5.744785,5.885923,6.031154],[4.628038,5.189981,5.311783,5.436952],[4.17955,4.663184,4.767622,4.874811],[3.751809,4.165178,4.254121,4.345292],[3.351762,3.703106,3.778438,3.855565],[2.982867,3.280131,3.343652,3.40861],[2.645024,2.895473,2.948815,3.003302],[2.338301,2.548557,2.593197,2.638746],[2.061543,2.237506,2.274752,2.312717],[1.818473,1.96577,1.996857,2.028513],[1.598714,1.721602,1.747465,1.773777],[1.405065,1.507577,1.529094,1.550964],[1.237257,1.323279,1.341297,1.359596],[1.090303,1.162403,1.177469,1.192758],[0.96349,1.024153,1.0368,1.049625],[0.8547342,0.9060274,0.9166979,0.9275105],[0.7643197,0.8084148,0.8175748,0.8268524],[0.6865113,0.7244212,0.7322812,0.7402367],[0.623737,0.6570384,0.6639349,0.6709127],[0.5703437,0.5995889,0.6056346,0.6117478],[0.5269088,0.5531671,0.5585905,0.5640728]],[[11.23654,13.44297,13.94569,14.47138],[10.70314,12.73096,13.1909,13.67108],[10.16231,12.01807,12.4371,12.87389],[9.617069,11.30801,11.68812,12.08373],[9.066663,10.59996,10.94312,11.29972],[8.51536,9.898974,10.20729,10.52719],[7.96361,9.205529,9.481083,9.76656],[7.414988,8.523664,8.768615,9.022012],[6.872293,7.85641,8.072936,8.296605],[6.337022,7.205207,7.395446,7.591682],[5.826783,6.589668,6.756164,6.927672],[5.32863,5.994643,6.139429,6.28837],[4.850205,5.428322,5.553519,5.682141],[4.39053,4.889123,4.996698,5.107073],[3.950787,4.377875,4.469689,4.563776],[3.53833,3.902162,3.980103,4.059878],[3.156909,3.465465,3.531342,3.598689],[2.806561,3.067154,3.122609,3.179238],[2.487531,2.706846,2.75337,2.800828],[2.198794,2.3828,2.421716,2.461371],[1.944528,2.098947,2.13151,2.16466],[1.713847,1.843001,1.870161,1.897784],[1.509952,1.61796,1.640612,1.66363],[1.332659,1.423495,1.442505,1.461809],[1.177009,1.253321,1.269255,1.285421],[1.042324,1.106676,1.120082,1.133674],[0.9265267,0.981061,0.9923978,1.003883],[0.8299139,0.876873,0.8866212,0.8964922],[0.7467128,0.7871687,0.795551,0.8040333],[0.6793657,0.7149531,0.7223183,0.7297686],[0.6221501,0.6534656,0.6599354,0.666476],[0.5754087,0.6035577,0.6093681,0.6152405],[0.5332178,0.5583374,0.5635139,0.5687426]],[[10.97791,13.02874,13.4936,13.97881],[10.43396,12.31214,12.73594,13.17761],[9.885255,11.59799,11.98274,12.38309],[9.33089,10.88534,11.233,11.59418],[8.775113,10.1792,10.49185,10.81618],[8.218242,9.479903,9.759633,10.04937],[7.663822,8.791465,9.04042,9.297899],[7.114615,8.116875,8.337226,8.56479],[6.572065,7.45752,7.651395,7.851331],[6.054309,6.833578,7.003518,7.178528],[5.547777,6.229228,6.377253,6.529487],[5.060299,5.652867,5.781093,5.91279],[4.590759,5.102775,5.213158,5.326384],[4.140341,4.579791,4.674187,4.770894],[3.716765,4.0919,4.172199,4.254364],[3.324052,3.642877,3.710891,3.780406],[2.962355,3.232218,3.2896,3.348182],[2.632084,2.85972,2.90797,2.957177],[2.332334,2.523767,2.564221,2.605435],[2.067726,2.228756,2.262687,2.29722],[1.826871,1.961872,1.99024,2.019084],[1.613369,1.726531,1.750247,1.77434],[1.427123,1.522496,1.542442,1.562689],[1.263211,1.343513,1.360267,1.377262],[1.120999,1.188862,1.20299,1.217309],[0.9984294,1.056061,1.068033,1.08016],[0.8958202,0.9455264,0.955838,0.9662771],[0.8073786,0.8502855,0.8591699,0.8681585],[0.7355709,0.773366,0.7811832,0.789089],[0.674622,0.7079435,0.7148236,0.7217777],[0.6246377,0.6546236,0.6608096,0.6670602],[0.5796111,0.6064212,0.611943,0.6175194],[0.5436607,0.5682287,0.5732854,0.578391]],[[10.68323,12.58084,13.00878,13.45468],[10.13156,11.8632,12.25197,12.65641],[9.573826,11.14663,11.49818,11.86333],[9.014242,10.4361,10.75252,11.08067],[8.453,9.731822,10.01518,10.3086],[7.893617,9.037769,9.290205,9.551226],[7.33882,8.356901,8.580581,8.811533],[6.790012,7.690563,7.887609,8.090769],[6.265822,7.059452,7.232404,7.410475],[5.75208,6.447106,6.597975,6.753097],[5.256777,5.862098,5.99299,6.127395],[4.778646,5.302551,5.415416,5.531161],[4.318849,4.769293,4.865981,4.965012],[3.885438,4.270667,4.353067,4.437362],[3.482673,3.81071,3.880638,3.952092],[3.11081,3.389029,3.448144,3.508481],[2.770409,3.00558,3.055392,3.106178],[2.460675,2.658867,2.70072,2.743347],[2.18665,2.353728,2.388908,2.424704],[1.936456,2.076833,2.10631,2.136274],[1.714077,1.832002,1.856699,1.881782],[1.519505,1.619092,1.639904,1.661027],[1.347861,1.431885,1.449404,1.46717],[1.19856,1.269712,1.284515,1.299516],[1.069571,1.130117,1.142687,1.155416],[0.9612453,1.013547,1.02439,1.035365],[0.8677837,0.9130146,0.9223745,0.9318421],[0.7916866,0.8315821,0.8398287,0.848167],[0.7271432,0.7623791,0.7696503,0.7769982],[0.6740237,0.7057676,0.7123124,0.7189244],[0.6262509,0.6546835,0.6605363,0.6664459],[0.5879305,0.6140083,0.6193728,0.6247882],[0.5552439,0.5793547,0.5843117,0.5893146]],[[10.3553,12.10318,12.49539,12.90335],[9.794706,11.38328,11.73817,12.10672],[9.231907,10.66905,10.98869,11.32014],[8.666964,9.96055,10.24702,10.54361],[8.103365,9.261734,9.517161,9.781227],[7.543804,8.575527,8.802074,9.03594],[6.989658,7.903249,8.10303,8.308971],[6.460009,7.266074,7.441631,7.622347],[5.940128,6.646943,6.800276,6.9579],[5.438141,6.05457,6.187782,6.324539],[4.952618,5.486915,5.601945,5.719886],[4.484686,4.944773,5.043467,5.144531],[4.042691,4.436807,4.521053,4.607218],[3.631102,3.96728,4.038897,4.112061],[3.250262,3.535894,3.596545,3.658436],[2.900864,3.14275,3.193951,3.246141],[2.582217,2.78646,2.829562,2.873453],[2.299755,2.472272,2.508574,2.545503],[2.041126,2.186361,2.216838,2.247813],[1.810681,1.932931,1.958517,1.984498],[1.608499,1.711929,1.733531,1.75545],[1.429744,1.517179,1.535397,1.553869],[1.273883,1.348064,1.363488,1.379114],[1.138919,1.202159,1.215281,1.228565],[1.025239,1.079949,1.091284,1.102755],[0.9270521,0.9744465,0.9842484,0.9941611],[0.8469022,0.8887594,0.8974064,0.9061479],[0.7789579,0.8159877,0.8236248,0.831341],[0.7228608,0.7562565,0.7631381,0.7700889],[0.6724741,0.7024354,0.7085996,0.7148226],[0.6318889,0.6593924,0.6650473,0.6707548],[0.5972363,0.6226852,0.6279145,0.6331915],[0.5648363,0.5881356,0.5929162,0.597738]],[[9.991993,11.59388,11.95158,12.323],[9.426526,10.87658,11.19894,11.53316],[8.858511,10.16458,10.45367,10.75294],[8.291393,9.461797,9.719754,9.986391],[7.727836,8.771122,9.000095,9.236426],[7.169208,8.093871,8.295971,8.504266],[6.635,7.451647,7.629416,7.812377],[6.109975,6.826845,6.982278,7.142032],[5.602374,6.228306,6.363498,6.502264],[5.110601,5.653814,5.7707,5.89052],[4.635735,5.104121,5.204539,5.30735],[4.18638,4.58817,4.674008,4.761785],[3.767191,4.110424,4.183502,4.258144],[3.378571,3.670652,3.732637,3.795876],[3.021335,3.269084,3.321495,3.37491],[2.694889,2.904437,2.948632,2.993628],[2.405026,2.58233,2.619618,2.657542],[2.138943,2.288471,2.319831,2.351697],[1.90133,2.027418,2.053792,2.080568],[1.692349,1.799204,1.821508,1.844135],[1.507206,1.597693,1.616537,1.635639],[1.345421,1.422322,1.438302,1.454489],[1.205031,1.270699,1.284317,1.298101],[1.086459,1.143347,1.155127,1.167046],[0.983933,1.033291,1.043493,1.053809],[0.9000482,0.9436911,0.9527021,0.9618099],[0.8289668,0.8676342,0.8756048,0.8836567],[0.7701129,0.8050206,0.81221,0.8194705],[0.7173004,0.7486647,0.7551144,0.7616245],[0.6746061,0.703421,0.7093426,0.7153182],[0.6381181,0.6648002,0.6702802,0.6758092],[0.6041147,0.6285788,0.6335962,0.638656],[0.5778321,0.6008457,0.6055635,0.6103206]]],"V":[[[5.040355,9.004372,10.13197,11.40722],[4.945004,8.80897,9.906502,11.1471],[4.838308,8.590634,9.654643,10.85661],[4.720029,8.349161,9.376226,10.53564],[4.590316,8.085162,9.072022,10.18516],[4.449453,7.799557,8.743169,9.806565],[4.298133,7.494125,8.3918,9.402402],[4.137301,7.171205,8.020696,8.97598],[3.968265,6.833847,7.633458,8.531541],[3.792549,6.485522,7.234163,8.073868],[3.611865,6.130041,6.827271,7.608176],[3.427994,5.771282,6.417295,7.139717],[3.242612,5.412811,6.008376,6.673289],[3.057377,5.05803,5.604428,6.213395],[2.873857,4.710031,5.208984,5.76407],[2.693328,4.371271,4.824835,5.328478],[2.516981,4.043929,4.454432,4.909369],[2.34585,3.729799,4.099762,4.508947],[2.180845,3.430356,3.76244,4.128967],[2.022324,3.145877,3.442678,3.769555],[1.871327,2.878176,3.1425,3.432966],[1.728142,2.627454,2.86205,3.119267],[1.593443,2.394443,2.602041,2.829132],[1.4668,2.178165,2.361315,2.561194],[1.34825,1.978331,2.139465,2.314898],[1.237643,1.79435,1.93575,2.089327],[1.134653,1.625368,1.749149,1.883261],[1.039128,1.470778,1.578904,1.695768],[0.9504966,1.329381,1.423628,1.525238],[0.8684915,1.200421,1.28241,1.370587],[0.7926631,1.082901,1.154092,1.230467],[0.7225495,0.9758348,1.037531,1.103557],[0.6577332,0.8783228,0.9316847,0.9886532]],[[5.267817,9.331923,10.48312,11.78311],[5.159258,9.110362,10.22766,11.48861],[5.038836,8.865159,9.945079,11.16299],[4.906647,8.596824,9.636028,10.80709],[4.762909,8.306162,9.301515,10.42216],[4.608252,7.99483,8.943534,10.01059],[4.443545,7.665031,8.564717,9.575517],[4.270026,7.319692,8.168522,9.121028],[4.089153,6.962167,7.758899,8.651762],[3.902578,6.59617,7.340199,8.172814],[3.712036,6.225506,6.91686,7.689353],[3.519168,5.8537,6.492973,7.206127],[3.325628,5.48416,6.07247,6.727664],[3.133003,5.120034,5.658949,6.258077],[2.942597,4.763856,5.255293,5.800639],[2.755664,4.41794,4.864108,5.35828],[2.573323,4.084251,4.48758,4.93343],[2.396592,3.764476,4.127563,4.528122],[2.225946,3.459111,3.784519,4.142758],[2.062566,3.170238,3.460775,3.77994],[1.906881,2.898306,3.156754,3.440046],[1.759753,2.644373,2.873529,3.124152],[1.62084,2.407618,2.61012,2.831089],[1.490311,2.187972,2.366364,2.560572],[1.368127,1.985026,2.141719,2.311902],[1.254047,1.798059,1.935307,2.084015],[1.148008,1.626593,1.746512,1.876131],[1.049472,1.469472,1.573988,1.686684],[0.9582199,1.325997,1.416885,1.514647],[0.8738148,1.195172,1.274039,1.358665],[0.7957886,1.075982,1.144272,1.21737],[0.7237077,0.9674811,1.026486,1.089493],[0.6571247,0.8687319,0.9196026,0.9737921]],[[5.496838,9.651461,10.82302,12.14391],[5.374337,9.402666,10.53643,11.81382],[5.239764,9.130191,10.22276,11.45276],[5.093276,8.834731,9.882883,11.06183],[4.935441,8.517831,9.518674,10.6433],[4.767057,8.181566,9.132617,10.20012],[4.589292,7.828738,8.728034,9.736235],[4.403533,7.46258,8.308738,9.256129],[4.211367,7.086696,7.878957,8.764762],[4.014474,6.704803,7.443032,8.267197],[3.814443,6.32035,7.004978,7.7681],[3.612906,5.936724,6.568701,7.271973],[3.41145,5.557092,6.137827,6.782967],[3.211388,5.184027,5.715289,6.304416],[3.014014,4.819936,5.303799,5.839376],[2.82051,4.466921,4.905705,5.390462],[2.631988,4.126851,4.523069,4.959943],[2.449023,3.800417,4.156571,4.548474],[2.272934,3.489957,3.808831,4.158982],[2.104281,3.196165,3.480546,3.792158],[1.944128,2.920437,3.173166,3.449495],[1.79222,2.662121,2.885901,3.130038],[1.648881,2.421403,2.61887,2.833813],[1.514197,2.198083,2.371761,2.560377],[1.388035,1.99161,2.143884,2.30887],[1.270446,1.801682,1.934812,2.078715],[1.160944,1.627217,1.743278,1.868433],[1.059382,1.467609,1.568531,1.6771],[0.965355,1.321899,1.409442,1.503391],[0.878407,1.189069,1.264825,1.345927],[0.7981016,1.068148,1.133549,1.203399],[0.7239724,0.958147,1.014476,1.074491],[0.6556236,0.8581996,0.9065993,0.9580449]],[[5.728771,9.964815,11.15366,12.49178],[5.591841,9.68826,10.83543,12.12563],[5.442658,9.388115,10.49032,11.72886],[5.281731,9.065827,10.12009,11.30359],[5.109793,8.723348,9.727087,10.85264],[4.927943,8.363366,9.3145,10.3798],[4.737501,7.988992,8.886009,9.889407],[4.539982,7.603716,8.445716,9.386274],[4.337002,7.211148,7.997848,8.875344],[4.130092,6.814651,7.54632,8.361175],[3.920845,6.417555,7.094983,7.84821],[3.710829,6.023016,6.647452,7.340592],[3.501347,5.633608,6.206667,6.841669],[3.29371,5.251792,5.775407,6.354578],[3.089143,4.879766,5.35613,5.882062],[2.888827,4.519549,4.95107,5.426587],[2.693424,4.171991,4.561092,4.989017],[2.504373,3.839669,4.189082,4.572585],[2.32236,3.523504,3.835996,4.17827],[2.148652,3.225238,3.503669,3.807994],[1.983082,2.944387,3.1915,3.461016],[1.826134,2.681412,2.899912,3.137699],[1.678043,2.436355,2.628863,2.837896],[1.538797,2.208865,2.37788,2.560988],[1.408589,1.998858,2.146775,2.306658],[1.287006,1.805362,1.934402,2.073553],[1.173996,1.62791,1.740153,1.860908],[1.06921,1.46561,1.562972,1.667469],[0.9722231,1.317475,1.401701,1.491885],[0.8826162,1.182539,1.255212,1.33284],[0.7999172,1.059783,1.122325,1.188973],[0.7237164,0.9482962,1.001983,1.059059],[0.6535336,0.8470964,0.8930605,0.9418123]],[[5.96255,10.2704,11.47334,12.82491],[5.810693,9.965613,11.12305,12.42235],[5.646726,9.638038,10.74691,11.99048],[5.471319,9.289521,10.34715,11.53198],[5.285511,8.922637,9.92685,11.05052],[5.090552,8.540389,9.489556,10.55028],[4.88789,8.146148,9.039241,10.03594],[4.679073,7.743415,8.580013,9.512314],[4.465563,7.335447,8.115671,8.98383],[4.248903,6.925501,7.649986,8.454846],[4.030628,6.516689,7.186531,7.92946],[3.812008,6.111551,6.72821,7.410988],[3.594353,5.712566,6.277829,6.9026],[3.378905,5.321989,5.837911,6.407119],[3.166897,4.941943,5.410814,5.927153],[2.959049,4.573407,4.997549,5.463734],[2.75691,4.219162,4.601235,5.02036],[2.561273,3.880336,4.223062,4.598274],[2.373606,3.559011,3.865243,4.199817],[2.193821,3.25486,3.527357,3.824453],[2.022571,2.968628,3.210139,3.472893],[1.860246,2.700621,2.913842,3.145314],[1.706976,2.45072,2.638247,2.841377],[1.563114,2.219094,2.383442,2.561067],[1.428344,2.004919,2.148442,2.303207],[1.302738,1.80791,1.932838,2.067242],[1.186022,1.627281,1.735684,1.852038],[1.07783,1.462114,1.555893,1.656314],[0.9777772,1.31148,1.392372,1.47879],[0.8854077,1.174361,1.243937,1.318093],[0.8003127,1.049823,1.109501,1.172959],[0.7219891,0.9368269,0.9878715,1.042022],[0.6499894,0.8344363,0.8779723,0.9240509]],[[6.199169,10.56924,11.78312,13.14442],[6.032173,10.2364,11.4011,12.70597],[5.85334,9.881928,10.99468,12.24003],[5.663653,9.508303,10.56685,11.75014],[5.4643,9.118424,10.12103,11.24038],[5.256663,8.715554,9.661073,10.71527],[5.04222,8.303084,9.190973,10.17951],[4.822361,7.884154,8.7144,9.637375],[4.598569,7.461932,8.235028,9.093128],[4.372334,7.039466,7.75636,8.550791],[4.144878,6.619232,7.281233,8.01361],[3.917485,6.203686,6.812432,7.484736],[3.691395,5.795102,6.352509,6.967028],[3.467868,5.39567,5.903898,6.463187],[3.247662,5.006452,5.467707,5.974355],[3.032408,4.630398,5.047251,5.504254],[2.822992,4.268812,4.643916,5.054352],[2.621073,3.924103,4.260279,4.627392],[2.426629,3.596077,3.896074,4.223014],[2.240476,3.285764,3.552351,3.842282],[2.06317,2.993744,3.229666,3.485707],[1.894987,2.720146,2.928076,3.153254],[1.736469,2.465434,2.64799,2.845259],[1.587409,2.228959,2.388615,2.560758],[1.44803,2.010664,2.149789,2.299458],[1.318166,1.809915,1.930727,2.0604],[1.197525,1.625898,1.730454,1.842422],[1.085788,1.457762,1.547957,1.644322],[0.9825347,1.304523,1.382082,1.464756],[0.8873782,1.165254,1.231747,1.30246],[0.7998075,1.038882,1.095714,1.156013],[0.7193562,0.9244177,0.9728449,1.02411],[0.6454848,0.8208052,0.8619404,0.9053871]],[[6.438202,10.86083,12.08251,13.44986],[6.255948,10.5004,11.66944,12.97648],[6.062421,10.12011,11.23415,12.47826],[5.858756,9.722758,10.77998,11.95916],[5.646269,9.311506,10.31067,11.42361],[5.426375,8.889642,9.830092,10.87615],[5.200388,8.460189,9.341788,10.32094],[4.969726,8.026215,8.849325,9.762108],[4.735825,7.590687,8.356121,9.203593],[4.499844,7.155991,7.864916,8.648534],[4.263024,6.724531,7.37844,8.100028],[4.026583,6.298559,6.899226,7.560917],[3.791782,5.880294,6.429745,7.033947],[3.559394,5.47084,5.971154,6.52032],[3.33111,5.073274,5.526915,6.023928],[3.107883,4.689036,5.098573,5.546416],[2.891551,4.32084,4.68904,5.090904],[2.682137,3.968596,4.298171,4.657172],[2.480615,3.633605,3.92732,4.246619],[2.2877,3.31672,3.577344,3.860091],[2.103824,3.018328,3.248586,3.49787],[1.929727,2.73921,2.941803,3.160672],[1.76533,2.478928,2.656433,2.847785],[1.611034,2.237688,2.392599,2.55923],[1.466802,2.015051,2.149726,2.29427],[1.332449,1.810354,1.927001,2.051916],[1.207744,1.622863,1.723533,1.831094],[1.092328,1.451665,1.538243,1.630537],[0.9858605,1.295881,1.370091,1.449021],[0.8878428,1.154431,1.217829,1.285106],[0.7978056,1.026295,1.08028,1.137438],[0.7151808,0.9103513,0.9561673,1.004566],[0.6395535,0.805704,0.8444584,0.8853063]],[[6.68075,11.14606,12.37239,13.74211],[6.483421,10.75917,11.92973,13.23564],[6.275519,10.35449,11.46737,12.7074],[6.058306,9.935096,10.98897,12.1617],[5.833131,9.504172,10.49829,11.60297],[5.601238,9.064629,9.998745,11.03524],[5.363976,8.619433,9.493796,10.46251],[5.122723,8.171459,8.986758,9.888616],[4.87856,7.722982,8.480252,9.316566],[4.632673,7.276329,7.976924,8.749367],[4.386237,6.833697,7.479253,8.189807],[4.140493,6.397292,6.989698,7.640623],[3.896205,5.96822,6.509423,7.103026],[3.655097,5.549643,6.04199,6.58103],[3.418163,5.143092,5.58905,6.076399],[3.187406,4.751557,5.15382,5.592595],[2.962864,4.375011,4.736232,5.129487],[2.745657,4.015005,4.337919,4.688786],[2.536649,3.672652,3.960026,4.271657],[2.336423,3.348592,3.603178,3.878695],[2.14593,3.043942,3.268499,3.511018],[1.965225,2.758487,2.955673,3.168187],[1.794912,2.492743,2.66516,2.850584],[1.635105,2.246499,2.396632,2.557744],[1.485754,2.019287,2.149486,2.2889],[1.346746,1.810537,1.923005,2.043167],[1.217807,1.619451,1.71623,1.819399],[1.098673,1.445237,1.528209,1.616463],[0.9888811,1.286843,1.357722,1.432943],[0.8879806,1.143253,1.203588,1.267475],[0.7953905,1.013301,1.064475,1.118543],[0.7106817,0.8960413,0.9392955,0.9848929],[0.6332342,0.7903159,0.8267409,0.865055]],[[6.925645,11.42357,12.6514,14.01985],[6.71357,11.01168,12.18099,13.48261],[6.491736,10.58433,11.69372,12.92701],[6.261438,10.14465,11.19327,12.3574],[6.023847,9.695412,10.68294,11.77765],[5.780248,9.239496,10.16608,11.19167],[5.531955,8.77968,9.645889,10.60317],[5.279968,8.318112,9.124865,10.01502],[5.025403,7.857022,8.605546,9.430104],[4.769378,7.398524,8.090322,8.851122],[4.513094,6.94478,7.581607,8.280764],[4.257279,6.496851,7.080519,7.720195],[4.003669,6.057947,6.590681,7.173499],[3.753272,5.629645,6.113795,6.642508],[3.508234,5.215174,5.653348,6.130978],[3.268577,4.814522,5.209294,5.638812],[3.035548,4.42946,4.783511,5.167994],[2.810147,4.061335,4.377406,4.719983],[2.593095,3.71103,3.991872,4.295667],[2.385552,3.379996,3.628402,3.896573],[2.187716,3.068252,3.286936,3.52254],[2.000404,2.776648,2.968299,3.174352],[1.823909,2.505241,2.672455,2.851857],[1.658335,2.253796,2.399049,2.554558],[1.503716,2.021952,2.14759,2.28181],[1.359898,1.809072,1.917291,2.03265],[1.226719,1.614496,1.707337,1.806087],[1.103778,1.437243,1.516579,1.600777],[0.9906705,1.276338,1.343872,1.415387],[0.8868238,1.130599,1.187866,1.248375],[0.7918131,0.9990603,1.04744,1.098446],[0.7049814,0.880484,0.9211969,0.964027],[0.6258221,0.7738544,0.8079825,0.843808]],[[7.171185,11.69075,12.91679,14.28019],[6.944886,11.25576,12.42099,13.71507],[6.709667,10.80769,11.9112,13.13505],[6.466634,10.34925,11.39063,12.54392],[6.217012,9.883207,10.86252,11.94544],[5.96205,9.412246,10.32997,11.34323],[5.702662,8.938387,9.795331,10.73999],[5.439888,8.463743,9.26102,10.13849],[5.174772,7.990327,8.729316,9.541299],[4.908464,7.520226,8.202553,8.951026],[4.641631,7.054421,7.681767,8.368748],[4.375997,6.596126,7.170588,7.798562],[4.112556,6.146921,6.670726,7.242317],[3.853579,5.710238,6.185895,6.704016],[3.599036,5.286024,5.71601,6.183531],[3.350274,4.876232,5.263155,5.683075],[3.108409,4.482412,4.82896,5.204356],[2.874283,4.105658,4.414557,4.74853],[2.64926,3.747753,4.021801,4.31752],[2.433671,3.408939,3.650882,3.911441],[2.228561,3.090419,3.303008,3.531494],[2.03441,2.792543,2.978461,3.177873],[1.851503,2.515345,2.677179,2.8504],[1.680048,2.258714,2.39894,2.548717],[1.520036,2.022223,2.143179,2.272098],[1.371442,1.805395,1.909275,2.019759],[1.233958,1.607363,1.696197,1.790475],[1.107253,1.427233,1.502885,1.582998],[0.9907875,1.263849,1.328007,1.3958],[0.8841667,1.116256,1.170449,1.227588],[0.7867131,0.983163,1.02875,1.076712],[0.6978978,0.8634922,0.9016829,0.941778],[0.6172805,0.7563061,0.7881746,0.8215616]],[[7.418869,11.94958,13.17071,14.52554],[7.17894,11.49353,12.65204,13.93562],[6.930729,11.02637,12.12179,13.33372],[6.675402,10.5508,11.5831,12.72351],[6.41415,10.0694,11.03899,12.10849],[6.147797,9.584064,10.49165,11.4912],[5.877305,9.096781,9.943382,10.87428],[5.603636,8.609446,9.396325,10.26015],[5.32787,8.124046,8.852711,9.651308],[5.050602,7.641458,8.31346,9.048711],[4.773518,7.164858,7.782167,8.456424],[4.497571,6.695783,7.260502,7.876251],[4.225136,6.237834,6.752363,7.312402],[3.956097,5.790864,6.257569,6.764652],[3.691873,5.356959,5.778356,6.235384],[3.433667,4.93783,5.316536,5.726511],[3.182417,4.534747,4.873437,5.239408],[2.939682,4.149805,4.451257,4.776374],[2.705906,3.783449,4.050411,4.337777],[2.482365,3.437241,3.672499,3.925242],[2.269735,3.111831,3.318131,3.539324],[2.068495,2.807552,2.98757,3.180194],[1.879049,2.524584,2.680906,2.847833],[1.701562,2.262748,2.39784,2.5418],[1.536179,2.021799,2.138002,2.261574],[1.382716,1.801037,1.900532,2.006113],[1.240947,1.599696,1.684504,1.774308],[1.110396,1.416688,1.488652,1.564694],[0.9907257,1.25111,1.311914,1.376027],[0.8812617,1.101648,1.152797,1.206615],[0.781472,0.967191,1.010033,1.055014],[0.6909035,0.8467527,0.8824876,0.9199286],[0.6086661,0.7388401,0.7685102,0.7995325]],[[7.652057,12.17944,13.39168,14.7335],[7.399073,11.70432,12.85259,14.12178],[7.138507,11.22007,12.30429,13.50092],[6.871494,10.72919,11.7497,12.8743],[6.598773,10.23346,11.19088,12.24433],[6.321223,9.734727,10.62999,11.61348],[6.039722,9.234769,10.06903,10.98405],[5.755273,8.735458,9.510122,10.35839],[5.468382,8.237539,8.954035,9.7373],[5.180681,7.744124,8.404299,9.12478],[4.893058,7.256665,7.862497,8.522546],[4.607966,6.778893,7.332666,7.934961],[4.325175,6.310513,6.814478,7.361645],[4.046145,5.853705,6.31027,6.805097],[3.772137,5.41029,5.821981,6.267375],[3.504157,4.981673,5.351092,5.750027],[3.243933,4.570225,4.900106,5.255686],[2.99201,4.17657,4.469636,4.784941],[2.749884,3.802614,4.061659,4.339832],[2.518423,3.449313,3.67712,3.921275],[2.298309,3.117308,3.316614,3.529805],[2.090159,2.807096,2.980577,3.165775],[1.894337,2.518789,2.669023,2.82908],[1.711184,2.252419,2.381874,2.519514],[1.540675,2.007499,2.118499,2.236274],[1.382723,1.783445,1.878161,1.978451],[1.236947,1.579279,1.659711,1.744698],[1.103098,1.394199,1.462184,1.53387],[0.980532,1.226906,1.2841,1.344281],[0.8687402,1.07629,1.124184,1.174474],[0.7672767,0.9413436,0.9812713,1.023111],[0.675189,0.8204615,0.8535879,0.8882293],[0.5924773,0.7132362,0.7406124,0.7691828]],[[7.89563,12.41718,13.61982,14.94784],[7.629608,11.92383,13.06141,14.31576],[7.356671,11.42316,12.49597,13.67711],[7.07748,10.91682,11.92544,13.03418],[6.792835,10.40656,11.35183,12.38931],[6.503532,9.894032,10.77703,11.74462],[6.210492,9.380982,10.20301,11.10235],[5.914126,8.868013,9.630404,10.46312],[5.615998,8.35815,9.062639,9.830834],[5.316916,7.852736,8.501185,9.207088],[5.019397,7.355601,7.950189,8.596363],[4.723056,6.866252,7.40911,7.998057],[4.429373,6.386914,6.880342,7.414735],[4.139636,5.919475,6.365902,6.848542],[3.854885,5.465424,5.867364,6.301139],[3.576998,5.027372,5.3875,5.77545],[3.306587,4.606078,4.927074,5.272237],[3.045358,4.203775,4.48842,4.793928],[2.794361,3.82171,4.072801,4.341788],[2.554477,3.46083,3.681146,3.916716],[2.326543,3.121964,3.314249,3.519449],[2.11114,2.805538,2.972463,3.150252],[1.908834,2.511905,2.656056,2.809283],[1.719783,2.240832,2.364663,2.496028],[1.544074,1.991966,2.097794,2.209835],[1.381453,1.764489,1.854466,1.94953],[1.231795,1.557748,1.633867,1.714125],[1.094515,1.370497,1.434568,1.501985],[0.9691534,1.201669,1.255332,1.311682],[0.8553009,1.050269,1.095002,1.14188],[0.7519563,0.9145992,0.9516987,0.9904989],[0.6591586,0.7942651,0.8249059,0.8568875],[0.5760142,0.6877631,0.7129627,0.7392131]],[[8.094189,12.57261,13.7556,15.05872],[7.81772,12.0666,13.18434,14.41375],[7.53452,11.55418,12.6072,13.76363],[7.245308,11.037,12.02605,13.11055],[6.950791,10.51655,11.44264,12.4565],[6.651803,9.994461,10.85879,11.80353],[6.348649,9.47118,10.27497,11.1521],[6.042806,8.949604,9.694466,10.50596],[5.734977,8.430932,9.118599,9.866541],[5.427718,7.91905,8.551576,9.238395],[5.120462,7.413224,7.992601,8.620651],[4.814668,6.915666,7.444058,8.015866],[4.511613,6.428276,6.907983,7.426212],[4.212336,5.952566,6.385984,6.853391],[3.918822,5.491333,5.881033,6.300555],[3.631714,5.04542,5.393998,5.76858],[3.352898,4.617346,4.927524,5.260239],[3.083585,4.208619,4.483161,4.777111],[2.82484,3.820477,4.062159,4.320444],[2.577718,3.454081,3.66567,3.891369],[2.343021,3.11019,3.294408,3.490536],[2.121558,2.78951,2.949019,3.118513],[1.913702,2.492111,2.629466,2.775135],[1.719748,2.217923,2.335558,2.460069],[1.539603,1.966348,2.066543,2.172385],[1.373313,1.736947,1.821836,1.91133],[1.220386,1.528586,1.600121,1.675386],[1.080456,1.340295,1.400258,1.463222],[0.953185,1.171147,1.221157,1.273565],[0.8375523,1.019394,1.060878,1.104265],[0.7336714,0.8847001,0.9189592,0.9547196],[0.6405935,0.7654611,0.7936269,0.8229699],[0.5575721,0.6603607,0.6834179,0.7073929]],[[8.291501,12.72022,13.88197,15.15854],[8.004619,12.20229,13.29885,14.50194],[7.711236,11.67886,12.71093,13.84151],[7.411973,11.15131,12.11981,13.17909],[7.107581,10.62112,11.52718,12.51658],[6.798263,10.0886,10.93332,11.85427],[6.485399,9.556505,10.34141,11.19575],[6.169583,9.025877,9.752578,10.54227],[5.853397,8.500639,9.171072,9.898423],[5.536069,7.979778,8.595804,9.26302],[5.219012,7.465459,8.029108,8.638573],[4.903462,6.959539,7.47298,8.027216],[4.590423,6.463508,6.929008,7.430636],[4.281954,5.980296,6.400316,6.852152],[3.978695,5.510774,5.887807,6.29269],[3.682679,5.057704,5.394393,5.755313],[3.395252,4.622813,4.921868,5.241872],[3.11764,4.207602,4.471768,4.753927],[2.851102,3.813548,4.04559,4.292982],[2.596658,3.441737,3.644403,3.860075],[2.355369,3.093241,3.269247,3.456197],[2.127838,2.76846,2.920439,3.081562],[1.914593,2.46765,2.598136,2.736207],[1.715733,2.190473,2.301861,2.419497],[1.531509,1.936757,2.03131,2.130973],[1.361561,1.705532,1.785338,1.869293],[1.205649,1.495976,1.562957,1.633283],[1.063543,1.307279,1.363195,1.421789],[0.9342295,1.137678,1.18409,1.23263],[0.8179349,0.986946,1.025287,1.065309],[0.7136734,0.8534011,0.884924,0.917766],[0.6206627,0.7356494,0.7614491,0.7882777],[0.5380091,0.6322086,0.6532307,0.6750506]],[[8.486854,12.85962,13.99873,15.24731],[8.189639,12.33053,13.40468,14.58024],[7.886039,11.79656,12.80662,13.91031],[7.576729,11.25911,12.20612,13.23929],[7.261811,10.7183,11.6033,12.56728],[6.942574,10.17678,11.00119,11.89772],[6.619493,9.635416,10.40074,11.23167],[6.295172,9.098155,9.806231,10.57375],[5.968615,8.56368,9.216244,9.922427],[5.641172,8.034075,8.633028,9.280126],[5.314011,7.511118,8.058499,8.648895],[4.988065,6.99622,7.494168,8.030343],[4.665442,6.492402,6.943259,7.427903],[4.346735,6.000504,6.406648,6.842481],[4.034094,5.523478,5.887461,6.277373],[3.728963,5.063227,5.387682,5.734643],[3.432704,4.621471,4.909092,5.216118],[3.146757,4.199973,4.453498,4.723643],[2.872347,3.800128,4.022306,4.258621],[2.610783,3.423376,3.616952,3.822469],[2.362904,3.070455,3.238117,3.415792],[2.12949,2.741976,2.886336,3.039031],[1.910857,2.437901,2.561453,2.691893],[1.707495,2.158372,2.263494,2.374268],[1.519207,1.902631,1.991538,2.085046],[1.345919,1.670059,1.744807,1.823274],[1.187551,1.460018,1.522505,1.587977],[1.043122,1.270769,1.322691,1.37699],[0.913016,1.102251,1.145177,1.189982],[0.7962353,0.9527375,0.9880455,1.024831],[0.691983,0.8207833,0.8496857,0.8797417],[0.5993149,0.7048117,0.7283595,0.7528025],[0.5173842,0.6034075,0.6225087,0.6423005]],[[8.684448,12.99609,14.11143,15.33093],[8.376854,12.45629,13.50708,14.65419],[8.063038,11.91226,12.89948,13.97551],[7.74301,11.364,12.28862,13.2948],[7.41797,10.81401,11.67736,12.61538],[7.088274,10.263,11.06651,11.9381],[6.756553,9.714937,10.46034,11.2676],[6.421569,9.168183,9.857106,10.60199],[6.084593,8.624712,9.25894,9.943563],[5.746706,8.086191,8.66764,9.294256],[5.408741,7.553912,8.084591,8.655546],[5.072822,7.030934,7.513063,8.030918],[4.739459,6.518012,6.953851,7.421196],[4.410885,6.01824,6.410234,6.82985],[4.088605,5.533636,5.884331,6.259091],[3.774079,5.066093,5.378109,5.710957],[3.4689,4.617616,4.893643,5.187585],[3.174473,4.189881,4.432645,4.690707],[2.892346,3.784677,3.996927,4.222149],[2.623587,3.40308,3.587534,3.782909],[2.369234,3.046066,3.205393,3.373845],[2.129841,2.713924,2.850695,2.995035],[1.906162,2.407156,2.523849,2.646773],[1.698197,2.125257,2.224199,2.328232],[1.506072,1.867865,1.951238,2.038737],[1.3299,1.634575,1.704409,1.777563],[1.168768,1.423713,1.481836,1.54261],[1.023263,1.235451,1.283568,1.333786],[0.8924079,1.068057,1.107677,1.148951],[0.7754214,0.9200741,0.9525303,0.9862806],[0.6713294,0.7898563,0.8163123,0.8437738],[0.5792436,0.6759057,0.6973707,0.7196122],[0.4981918,0.5766732,0.5940132,0.6119494]],[[8.880853,13.1258,14.21624,15.40553],[8.562902,12.57581,13.60222,14.71992],[8.238209,12.02082,12.98411,14.03142],[7.90789,11.46323,12.36467,13.34318],[7.572191,10.90358,11.74452,12.65588],[7.233772,10.34587,11.12796,11.9742],[6.891144,9.788111,10.51289,11.29585],[6.545492,9.23217,9.901307,10.62299],[6.197792,8.679572,9.294871,9.957406],[5.848753,8.131455,8.694802,9.300405],[5.500494,7.590878,8.104376,8.655481],[5.153401,7.058455,7.52424,8.023306],[4.809757,6.537371,6.957777,7.407468],[4.471091,6.029708,6.407179,6.810262],[4.138921,5.537471,5.874541,6.233869],[3.81496,5.06286,5.362153,5.680661],[3.500759,4.607787,4.871983,5.152654],[3.198083,4.174361,4.406192,4.652048],[2.908217,3.763981,3.96617,4.180213],[2.632456,3.377986,3.553234,3.738428],[2.371591,3.017001,3.167936,3.327153],[2.126666,2.681918,2.811099,2.947121],[1.897901,2.372527,2.482376,2.597834],[1.685659,2.08877,2.18158,2.278953],[1.490285,1.830529,1.908455,1.990064],[1.310966,1.596246,1.661243,1.729188],[1.148551,1.386394,1.440301,1.496551],[1.002111,1.199279,1.243735,1.29004],[0.8709158,1.033475,1.069939,1.107852],[0.7539887,0.8873042,0.9170555,0.9479354],[0.6504231,0.7592117,0.7833674,0.8083959],[0.559193,0.6475524,0.6670748,0.6872681],[0.4791027,0.5505355,0.5662415,0.5824601]],[[9.076733,13.24975,14.31424,15.47236],[8.747755,12.68866,13.68958,14.77681],[8.412619,12.12422,13.06278,14.08066],[8.07146,11.5568,12.43429,13.38441],[7.726978,10.99046,11.80847,12.69278],[7.377432,10.42288,11.18284,12.00309],[7.023914,9.855767,10.55927,11.31737],[6.667287,9.290515,9.939262,10.63722],[6.308118,8.728072,9.323834,9.963746],[5.948499,8.171469,8.716234,9.300416],[5.588661,7.621131,8.116915,8.647699],[5.230904,7.080286,7.529309,8.009236],[4.876745,6.551023,6.955621,7.387347],[4.527719,6.035404,6.398016,6.784291],[4.185617,5.535768,5.858934,6.20261],[3.852103,5.05421,5.340549,5.644542],[3.529126,4.593121,4.845324,5.112616],[3.218167,4.154187,4.374962,4.608542],[2.92076,3.739097,3.931154,4.133998],[2.637932,3.348807,3.514808,3.689825],[2.371026,2.984616,3.127177,3.277216],[2.120494,2.646632,2.768253,2.896029],[1.886972,2.335145,2.438216,2.546313],[1.671074,2.050379,2.137167,2.228025],[1.472116,1.790933,1.863509,1.939354],[1.291268,1.557661,1.617994,1.680934],[1.127688,1.348952,1.39881,1.450731],[0.9807296,1.163461,1.204429,1.247018],[0.8494487,0.9995167,1.032994,1.067735],[0.7329501,0.8555484,0.8827626,0.9109571],[0.6301764,0.7298405,0.7518563,0.7746271],[0.539854,0.6204784,0.6382034,0.6565062],[0.4610419,0.5259857,0.5401967,0.5548473]],[[9.268395,13.36335,14.40066,15.52641],[8.928845,12.7927,13.7672,14.82312],[8.582713,12.2183,13.13122,14.11885],[8.232745,11.64424,12.49714,13.41836],[7.876951,11.06788,11.86211,12.7186],[7.516333,10.49081,11.22788,12.02146],[7.151634,9.914252,10.59577,11.32835],[6.783271,9.338953,9.966587,10.64017],[6.41329,8.767892,9.343526,9.960301],[6.041743,8.201269,8.726805,9.288986],[5.670919,7.64231,8.119857,8.629868],[5.302285,7.093061,7.524845,7.985225],[4.937358,6.555588,6.943944,7.357336],[4.577968,6.032308,6.379687,6.748845],[4.225846,5.525445,5.834386,6.162148],[3.883092,5.037619,5.310757,5.600047],[3.551347,4.570763,4.810771,5.06454],[3.232367,4.126883,4.336459,4.557674],[2.927394,3.707249,3.889065,4.080649],[2.638072,3.313569,3.470277,3.635122],[2.365093,2.946276,3.080436,3.221318],[2.109379,2.606042,2.720121,2.839709],[1.871854,2.29348,2.389841,2.490681],[1.651986,2.007384,2.088204,2.172634],[1.451326,1.749061,1.816431,1.88669],[1.269156,1.517039,1.57285,1.630955],[1.104956,1.310102,1.356064,1.403833],[0.9578458,1.126633,1.164264,1.20331],[0.8269764,0.965086,0.9957293,1.027471],[0.7112882,0.8237116,0.848537,0.8742105],[0.6094478,0.7004932,0.7205039,0.7411649],[0.5204724,0.5938736,0.6099324,0.6264869],[0.4431924,0.5021317,0.5149686,0.5281814]],[[9.458338,13.47027,14.47952,15.57213],[9.107646,12.88954,13.83676,14.86061],[8.752693,12.30855,13.19527,14.15219],[8.391243,11.72434,12.55185,13.44346],[8.024213,11.13839,11.90813,12.73618],[7.652228,10.55174,11.26524,12.03156],[7.275546,9.964942,10.62379,11.33027],[6.896162,9.380908,9.986886,10.63564],[6.513925,8.799579,9.354483,9.947596],[6.131095,8.224149,8.729982,9.26977],[5.749053,7.656573,8.115455,8.604345],[5.369262,7.098864,7.513024,7.953547],[4.993549,6.553467,6.925258,7.320066],[4.623675,6.022672,6.354547,6.706387],[4.261847,5.509273,5.803797,6.11552],[3.909829,5.0154,5.27519,5.549693],[3.569564,4.543332,4.771056,5.011275],[3.242486,4.094619,4.292939,4.501789],[2.930525,3.671363,3.842948,4.023338],[2.634609,3.274323,3.421767,3.576516],[2.355957,2.904562,3.030391,3.162231],[2.095824,2.563119,2.669776,2.781339],[1.853858,2.249017,2.33877,2.432494],[1.632043,1.96409,2.039141,2.11738],[1.429824,1.707051,1.769408,1.834305],[1.24685,1.476876,1.528367,1.581866],[1.082346,1.272049,1.314311,1.358149],[0.9355464,1.091097,1.125588,1.161306],[0.8054218,0.9322791,0.9602762,0.989224],[0.6906055,0.793508,0.8161142,0.8394513],[0.5900976,0.6731749,0.6913438,0.7100711],[0.5026613,0.56945,0.5839923,0.5989588],[0.4270449,0.4805417,0.4921397,0.5040586]],[[9.641757,13.56506,14.54523,15.60379],[9.282264,12.97782,13.89706,14.88825],[8.91569,12.38657,13.24614,14.17152],[8.542876,11.79268,12.59396,13.45521],[8.164334,11.19706,11.94151,12.7404],[7.780164,10.60003,11.28916,12.0275],[7.392308,10.00444,10.63995,11.31975],[7.000396,9.409941,9.993533,10.6168],[6.606641,8.819681,9.35326,9.922203],[6.212319,8.235486,8.721071,9.238004],[5.818802,7.65927,8.098987,8.566335],[5.427877,7.09345,7.489553,7.909862],[5.041293,6.540328,6.895176,7.271096],[4.661327,6.002817,6.318895,6.653194],[4.28982,5.483179,5.763039,6.058546],[3.928866,4.983922,5.230184,5.489786],[3.580053,4.506829,4.722126,4.948711],[3.245581,4.054369,4.241365,4.43784],[2.926592,3.627605,3.788911,3.958112],[2.624602,3.227994,3.366174,3.510878],[2.341213,2.85702,2.974579,3.097485],[2.076262,2.513956,2.613236,2.71686],[1.832223,2.201228,2.28453,2.371332],[1.60873,1.91778,1.987216,2.059453],[1.405649,1.662832,1.720344,1.780077],[1.222348,1.435026,1.482363,1.53145],[1.058186,1.233012,1.271745,1.311845],[0.9121989,1.0551,1.086616,1.119193],[0.7830155,0.8991694,0.924671,0.9509913],[0.6696505,0.7635973,0.7841324,0.8052949],[0.5708202,0.6464689,0.6629331,0.6798751],[0.4851981,0.5458769,0.5590274,0.57254],[0.4116731,0.4602116,0.4706877,0.4814371]],[[9.822045,13.65233,14.60276,15.62673],[9.450811,13.05475,13.94509,14.90281],[9.07277,12.45376,13.28536,14.17847],[8.688326,11.85015,12.62441,13.45461],[8.297427,11.24403,11.96239,12.73144],[7.901961,10.63816,11.30227,12.0121],[7.501336,10.03194,10.64341,11.29592],[7.097706,9.428418,9.989058,10.58638],[6.692221,8.829272,9.341011,9.885361],[6.286137,8.236282,8.701149,9.194847],[5.88117,7.651789,8.07194,8.51743],[5.479014,7.07805,7.45575,7.855583],[5.081976,6.518042,6.85569,7.212544],[4.691934,5.974106,6.274178,6.590805],[4.311085,5.448914,5.713969,5.993193],[3.941136,4.944431,5.17706,5.421724],[3.584518,4.463455,4.666297,4.879287],[3.242565,4.007314,4.182978,4.36713],[2.917079,3.57785,3.728919,3.88703],[2.610006,3.176995,3.306017,3.440832],[2.321377,2.804276,2.913649,3.027748],[2.054196,2.462768,2.554875,2.650807],[1.808323,2.151688,2.228736,2.308855],[1.583872,1.870549,1.93458,2.001058],[1.380398,1.618202,1.671074,1.72588],[1.197429,1.393478,1.43687,1.481779],[1.034107,1.194789,1.230194,1.266781],[0.8890858,1.020018,1.048741,1.078379],[0.7614302,0.8675719,0.8907564,0.9146433],[0.6498391,0.7354859,0.7541146,0.7732799],[0.5529313,0.6217598,0.6366686,0.6519851],[0.4695445,0.5246964,0.5365946,0.5488012],[0.3988818,0.4432466,0.4527857,0.4625611]],[[9.993609,13.72521,14.64492,15.63343],[9.610828,13.11786,13.97842,14.90189],[9.221066,12.50711,13.30989,14.16999],[8.824124,11.8929,12.6393,13.43772],[8.421844,11.27794,11.96953,12.70815],[8.01341,10.66132,11.29964,11.98029],[7.600912,10.04601,10.63281,11.25752],[7.185364,9.433523,9.970644,10.54155],[6.767884,8.825472,9.31485,9.834183],[6.350089,8.224085,8.667785,9.137889],[5.933588,7.63153,8.031722,8.455051],[5.520675,7.050788,7.409783,7.788925],[5.113223,6.484224,6.804418,7.14204],[4.713494,5.934619,6.218503,6.517358],[4.323262,5.404058,5.654166,5.917038],[3.945158,4.895618,5.114552,5.34429],[3.580667,4.410852,4.6012,4.800621],[3.231851,3.95195,4.116297,4.288202],[2.901,3.521289,3.662205,3.809366],[2.588323,3.118639,3.238562,3.3636],[2.297388,2.747763,2.849142,2.954679],[2.028298,2.408177,2.493299,2.581772],[1.781455,2.099738,2.170735,2.244413],[1.556634,1.821548,1.880377,1.941331],[1.353574,1.572678,1.621118,1.671232],[1.171567,1.351691,1.39134,1.432297],[1.009325,1.156519,1.18878,1.222056],[0.8660023,0.9856449,1.011756,1.038651],[0.7403106,0.83709,0.8581242,0.8797586],[0.6308415,0.7087949,0.7256688,0.743],[0.5364054,0.5990014,0.6124975,0.6263406],[0.4561301,0.5065583,0.5173951,0.5284982],[0.387293,0.4277064,0.4363593,0.4452137]],[[10.15525,13.78272,14.6708,15.62308],[9.760679,13.16557,13.99549,14.88399],[9.3583,12.54417,13.31727,14.14363],[8.949919,11.92114,12.63896,13.40502],[8.5345,11.2953,11.95934,12.66685],[8.114073,10.66956,11.28148,11.93243],[7.689505,10.04524,10.60681,11.20325],[7.261767,9.423765,9.936839,10.48091],[6.832357,8.807227,9.273788,9.767749],[6.402768,8.197663,8.619795,9.066006],[5.975249,7.598017,7.977944,8.378904],[5.551627,7.010616,7.350653,7.708942],[5.134186,6.438299,6.740861,7.059157],[4.724725,5.883211,6.150766,6.431787],[4.326028,5.348648,5.583751,5.830295],[3.939691,4.836338,5.041543,5.256392],[3.568006,4.348781,4.526656,4.712597],[3.213581,3.888766,4.041889,4.201703],[2.876788,3.45629,3.58712,3.723453],[2.561776,3.055826,3.166863,3.28239],[2.268901,2.687205,2.780798,2.878025],[1.998879,2.350659,2.429018,2.510296],[1.751738,2.045589,2.110757,2.17825],[1.527468,1.771349,1.8252,1.880889],[1.325549,1.526709,1.570937,1.616607],[1.14479,1.309694,1.345798,1.383025],[0.9844757,1.118914,1.148226,1.178407],[0.8433652,0.9524196,0.9761005,1.00045],[0.7200523,0.808125,0.8271739,0.8467336],[0.6133517,0.6842488,0.6995235,0.7151869],[0.5223239,0.5795459,0.5918341,0.6044212],[0.4441474,0.4901022,0.4999355,0.5099956],[0.3780082,0.4149348,0.4228088,0.4308549]],[[10.30788,13.82614,14.6818,15.59718],[9.900589,13.19826,13.99674,14.84958],[9.486729,12.56805,13.31083,14.10294],[9.065055,11.93404,12.62258,13.35566],[8.637542,11.29907,11.93498,12.61096],[8.204915,10.66427,11.24926,11.87012],[7.767986,10.03089,10.56674,11.13455],[7.328122,9.400843,9.889468,10.40641],[6.886677,8.776017,9.219415,9.687768],[6.445832,8.159278,8.559592,8.981767],[6.007329,7.55287,7.912333,8.290826],[5.573431,6.959626,7.280578,7.617988],[5.145917,6.3817,6.666539,6.965511],[4.727686,5.822552,6.073775,6.337049],[4.320393,5.284017,5.504132,5.734445],[3.92652,4.768857,4.960405,5.160514],[3.548967,4.280243,4.445793,4.618472],[3.188232,3.818354,3.960369,4.108271],[2.84906,3.388389,3.509403,3.63524],[2.532058,2.990491,3.092902,3.199232],[2.238269,2.62529,2.71137,2.800611],[1.967999,2.292516,2.364383,2.438778],[1.721526,1.991855,2.051466,2.113084],[1.498555,1.72233,1.771468,1.822186],[1.298027,1.482104,1.522358,1.563847],[1.119406,1.269972,1.302764,1.336515],[0.9615346,1.084056,1.110634,1.137952],[0.8230413,0.9222862,0.9437311,0.9657441],[0.7027813,0.7828988,0.8001449,0.8178248],[0.5997626,0.6645713,0.6784772,0.6927173],[0.5111044,0.563281,0.574437,0.5858474],[0.4359005,0.4779251,0.4868799,0.4960282],[0.3724547,0.406361,0.4135621,0.4209106]],[[10.42601,13.82771,14.64969,15.52704],[10.00727,13.19113,13.95707,14.7733],[9.580054,12.54994,13.26123,14.01802],[9.146293,11.90688,12.56511,13.26433],[8.706571,11.26293,11.86975,12.51334],[8.261549,10.61914,11.17629,11.76625],[7.812455,9.97727,10.48657,11.02503],[7.360496,9.339016,9.802413,10.29156],[6.907762,8.707148,9.126707,9.568881],[6.455888,8.083793,8.461671,8.859292],[6.007084,7.471737,7.810202,8.16579],[5.563071,6.873086,7.174464,7.490594],[5.126819,6.291415,6.558144,6.837493],[4.70001,5.728618,5.963154,6.208404],[4.285272,5.187664,5.392509,5.606382],[3.885764,4.672062,4.849765,5.035015],[3.502082,4.18214,4.335158,4.494431],[3.139548,3.723794,3.85468,3.990711],[2.799005,3.297469,3.408655,3.524037],[2.481824,2.904192,2.998,3.095204],[2.1886,2.544038,2.622645,2.70398],[1.919917,2.217049,2.282486,2.350097],[1.675736,1.922538,1.976667,2.032514],[1.45516,1.658844,1.703335,1.749174],[1.257862,1.424986,1.461346,1.498757],[1.082804,1.219203,1.248762,1.279136],[0.9286787,1.039473,1.063393,1.087938],[0.7944052,0.8840809,0.903369,0.9231368],[0.6789523,0.7516414,0.7672263,0.7831817],[0.5794071,0.6380573,0.650589,0.6634034],[0.4947727,0.5421082,0.5521886,0.5624848],[0.4232256,0.4614899,0.4696122,0.4778993],[0.3619421,0.3928706,0.3994153,0.4060856]],[[10.53017,13.81095,14.59865,15.43752],[10.09798,13.16334,13.89605,14.67512],[9.658647,12.51313,13.1924,13.9135],[9.212618,11.86111,12.48856,13.15359],[8.760408,11.20816,11.78547,12.39639],[8.303105,10.55586,11.08481,11.64368],[7.841764,9.905732,10.3882,10.89714],[7.378367,9.260415,9.698397,10.15969],[6.914419,8.621888,9.017475,9.433458],[6.452048,7.992854,8.348241,8.721368],[5.992878,7.375321,7.692767,8.025539],[5.539909,6.772921,7.0548,7.349831],[5.094802,6.187551,6.436262,6.696177],[4.660291,5.622333,5.840334,6.067805],[4.239748,5.081059,5.270868,5.468623],[3.83383,4.564156,4.72821,4.898874],[3.448418,4.078201,4.219061,4.365377],[3.084577,3.623918,3.744034,3.868618],[2.743997,3.202724,3.304454,3.409814],[2.427565,2.815042,2.900613,2.989109],[2.13619,2.461298,2.532799,2.60664],[1.870114,2.141126,2.200488,2.261707],[1.62863,1.853078,1.902044,1.952474],[1.411665,1.596448,1.636604,1.677904],[1.218337,1.369638,1.402392,1.436035],[1.047446,1.170727,1.197315,1.22459],[0.8980149,0.9980909,1.019596,1.041629],[0.7689934,0.8503085,0.8677275,0.8855551],[0.6574814,0.7232592,0.7373024,0.7516585],[0.5624102,0.615626,0.6269502,0.6385139],[0.4818403,0.5249553,0.5341012,0.5434305],[0.4126631,0.4475874,0.4549732,0.4624993],[0.3554402,0.3840914,0.3901372,0.3962932]],[[10.60898,13.76351,14.51613,15.31588],[10.16468,13.10695,13.80581,14.54725],[9.713065,12.44784,13.09452,13.7795],[9.254508,11.78685,12.383,13.01346],[8.789965,11.12542,11.67278,12.25071],[8.320334,10.46489,10.96526,11.49276],[7.847485,9.807744,10.26308,10.74235],[7.372776,9.155806,9.568137,10.00146],[6.898233,8.51166,8.883117,9.272875],[6.425353,7.87718,8.209955,8.558584],[5.957132,7.256009,7.552416,7.862465],[5.495164,6.64999,6.912368,7.186402],[5.042248,6.062347,6.293105,6.533748],[4.601934,5.497106,5.698726,5.908665],[4.174888,4.954736,5.129626,5.31146],[3.767533,4.442462,4.593178,4.749647],[3.381119,3.961253,4.090253,4.223982],[3.017647,3.512898,3.622564,3.736085],[2.678282,3.098161,3.190754,3.286465],[2.364265,2.717855,2.795512,2.875673],[2.076131,2.371953,2.436664,2.503369],[1.813385,2.05925,2.112821,2.167969],[1.576241,1.779356,1.823443,1.868767],[1.364011,1.530876,1.566959,1.604007],[1.175632,1.312031,1.341418,1.371552],[1.010276,1.121341,1.145184,1.169604],[0.866894,0.9573717,0.9767351,0.9965465],[0.742637,0.816024,0.831678,0.847676],[0.6363816,0.6959044,0.7085605,0.7214807],[0.5460906,0.5944315,0.6046784,0.6151282],[0.4683668,0.5076136,0.5159081,0.5243583],[0.4038492,0.4360943,0.4428941,0.4498164],[0.3489549,0.3754004,0.3809623,0.3866193]],[[10.66723,13.69155,14.40863,15.16896],[10.21064,13.02614,13.69073,14.39428],[9.746457,12.35808,12.9718,13.62045],[9.275514,11.68864,12.25319,12.84893],[8.798558,11.01897,11.53612,12.08098],[8.317346,10.35144,10.8231,11.31924],[7.833081,9.687688,10.11581,10.56546],[7.347666,9.03015,9.416823,9.822307],[6.86245,8.38054,8.727894,9.091582],[6.380393,7.742471,8.05276,8.377141],[5.902983,7.117682,7.39319,7.680771],[5.433042,6.509447,6.75253,7.00588],[4.974259,5.921972,6.135072,6.356839],[4.527263,5.355718,5.541206,5.733953],[4.098985,4.818515,4.978935,5.145387],[3.690833,4.311536,4.449343,4.592125],[3.30509,3.836916,3.954502,4.07616],[2.943186,3.395739,3.49539,3.598347],[2.606686,2.9892,3.073092,3.159646],[2.296426,2.617624,2.68779,2.760085],[2.012134,2.280058,2.33836,2.398351],[1.754339,1.976467,2.02462,2.074104],[1.522579,1.7057,1.74525,1.785842],[1.315966,1.466158,1.49848,1.531612],[1.133859,1.256556,1.282867,1.309806],[0.9752446,1.075481,1.096911,1.118829],[0.8373661,0.9189077,0.9362842,0.9540368],[0.7190667,0.7853882,0.7994772,0.8138557],[0.6182309,0.6722365,0.6836746,0.6953357],[0.5311695,0.5751271,0.58441,0.5938646],[0.458622,0.4948011,0.5024249,0.510184],[0.3968387,0.4265772,0.4328275,0.4391831],[0.3453027,0.3699051,0.3750628,0.3803029]],[[10.70631,13.59712,14.27836,14.99912],[10.23712,12.92278,13.55284,14.2184],[9.760499,12.24628,12.82684,13.43914],[9.277066,11.56859,12.1014,12.66244],[8.788464,10.89195,11.37886,11.89077],[8.295738,10.2178,10.66075,11.1257],[7.800662,9.548454,9.949456,10.36973],[7.304414,8.885414,9.246551,9.624458],[6.809893,8.232235,8.55571,8.893683],[6.318451,7.590516,7.878555,8.179046],[5.832892,6.963527,7.218434,7.483961],[5.356998,6.355601,6.579777,6.812942],[4.891322,5.767137,5.962913,6.16624],[4.443272,5.206532,5.376431,5.552626],[4.014373,4.675113,4.821581,4.973258],[3.607158,4.175325,4.300756,4.430463],[3.2233,3.708546,3.815239,3.925415],[2.864677,3.27634,3.366494,3.459464],[2.532418,2.879373,2.95506,3.033006],[2.226477,2.516954,2.580079,2.645002],[1.947718,2.189425,2.241755,2.295507],[1.69593,1.895911,1.939049,1.983304],[1.470435,1.635036,1.670415,1.706667],[1.270819,1.40575,1.434652,1.464232],[1.096131,1.206702,1.230315,1.254457],[0.9437601,1.033995,1.053203,1.072821],[0.8125439,0.8861598,0.9017826,0.9177209],[0.7003079,0.7604286,0.7731498,0.7861148],[0.6030611,0.652134,0.662488,0.6730302],[0.5216791,0.5621523,0.5706734,0.5793433],[0.4522688,0.4856207,0.4926248,0.499745],[0.3942417,0.4219025,0.4276971,0.4335827],[0.3474108,0.3708126,0.375707,0.3806756]],[[10.71652,13.47034,14.1154,14.79645],[10.23489,12.78761,13.38288,14.01037],[9.745753,12.10289,12.65009,13.226],[9.250666,11.41829,11.91926,12.44567],[8.75052,10.73509,11.19172,11.67078],[8.246953,10.05542,10.46969,10.90363],[7.740968,9.380604,9.754543,10.14564],[7.235381,8.714101,9.049864,9.400492],[6.731386,8.057336,8.357102,8.669663],[6.231739,7.413541,7.679567,7.956529],[5.740282,6.787135,7.021777,7.265701],[5.257448,6.1784,6.38395,6.597316],[4.791088,5.596256,5.775212,5.960704],[4.342803,5.042137,5.196929,5.357145],[3.915342,4.518752,4.651769,4.789252],[3.510589,4.027738,4.141282,4.258476],[3.130712,3.571001,3.667288,3.766537],[2.77712,3.149533,3.230662,3.314175],[2.449981,2.762895,2.830805,2.900619],[2.150503,2.411815,2.468316,2.526327],[1.878742,2.095711,2.142455,2.190389],[1.634248,1.813458,1.851931,1.891337],[1.41687,1.564283,1.595823,1.628088],[1.225742,1.34692,1.372769,1.399186],[1.05844,1.157647,1.178743,1.20028],[0.9138215,0.9950081,1.01222,1.029773],[0.789676,0.8561769,0.8702341,0.8845561],[0.6817081,0.7361445,0.7476194,0.7592993],[0.5909596,0.6359545,0.645419,0.6550457],[0.5134214,0.550595,0.5583949,0.5663218],[0.4484425,0.4793517,0.4858216,0.4923915],[0.3957906,0.4219841,0.4274582,0.4330137],[0.3517685,0.3740055,0.3786424,0.3833448]],[[10.69173,13.30536,13.91397,14.55522],[10.19761,12.61451,13.17478,13.76416],[9.696872,11.92301,12.43676,12.97634],[9.190275,11.23197,11.70106,12.19295],[8.679323,10.54338,10.96975,11.41616],[8.164841,9.858341,10.244,10.64715],[7.649554,9.180226,9.527275,9.889511],[7.134477,8.51026,8.820837,9.14451],[6.6223,7.851611,8.127927,8.415461],[6.116893,7.208743,7.453114,7.707028],[5.618541,6.581789,6.796468,7.019202],[5.135498,5.980134,6.167594,6.361806],[4.669402,5.405278,5.567928,5.736197],[4.223182,4.860148,5.000366,5.145224],[3.798897,4.346597,4.466683,4.590574],[3.398976,3.866839,3.96902,4.074294],[3.025085,3.422169,3.508559,3.597447],[2.677593,3.012382,3.084945,3.159511],[2.358048,2.638587,2.699169,2.761345],[2.066773,2.300504,2.350798,2.402351],[1.803563,1.997271,2.038808,2.081335],[1.568553,1.728423,1.762589,1.797528],[1.360982,1.492804,1.520893,1.549588],[1.178642,1.286903,1.309899,1.333368],[1.020437,1.109302,1.128122,1.147308],[0.8841413,0.9571439,0.9725603,0.9882618],[0.7651606,0.8250876,0.837708,0.8505498],[0.664729,0.7143713,0.7248037,0.7354116],[0.5787456,0.6198625,0.6284823,0.6372398],[0.5065138,0.5407875,0.5479559,0.5552329],[0.4477597,0.4768537,0.482929,0.489093],[0.3986529,0.4234111,0.4285699,0.4338004],[0.3587127,0.3799997,0.3844257,0.3889098]],[[10.63125,13.1023,13.67438,14.27591],[10.12559,12.4048,12.9301,13.48157],[9.613394,11.70698,12.18734,12.69085],[9.096038,11.01068,11.44803,11.90574],[8.574174,10.31681,10.71312,11.12722],[8.05043,9.628625,9.985966,10.35877],[7.525635,8.947151,9.267616,9.601443],[7.002391,8.27546,8.561223,8.858452],[6.484577,7.618035,7.871376,8.13449],[5.972307,6.974836,7.197968,7.429369],[5.474197,6.355665,6.551036,6.753355],[4.991891,5.76204,5.932039,6.107832],[4.528458,5.197065,5.344054,5.495841],[4.0861,4.662766,4.78904,4.919256],[3.667471,4.161628,4.269413,4.380415],[3.274467,3.695213,3.786636,3.880664],[2.907639,3.263531,3.340574,3.41971],[2.568862,2.868061,2.932595,2.9988],[2.258724,2.508818,2.56257,2.617647],[1.977271,2.185216,2.229755,2.275338],[1.724936,1.89711,1.933865,1.971438],[1.501085,1.64348,1.673788,1.70474],[1.303758,1.421061,1.445951,1.471344],[1.13192,1.228492,1.248923,1.269746],[0.9833507,1.062912,1.079697,1.096787],[0.853165,0.9186563,0.9324357,0.9464523],[0.7428177,0.7971895,0.8086054,0.8202096],[0.6481376,0.6932834,0.7027396,0.712344],[0.5683989,0.6061236,0.6140072,0.6220081],[0.5033,0.5353788,0.5420719,0.548861],[0.4488988,0.476261,0.4819581,0.4877328],[0.4046274,0.428211,0.4331111,0.4380744],[0.3681491,0.3888961,0.3932019,0.3975614]],[[10.53471,12.86173,13.39741,13.95956],[10.01765,12.15803,12.64854,13.16247],[9.49475,11.45508,11.90233,12.3702],[8.966499,10.7536,11.15952,11.5835],[8.435421,10.05673,10.42337,10.80573],[7.902159,9.365274,9.694707,10.03773],[7.369216,8.682213,8.976571,9.282613],[6.840455,8.012017,8.273546,8.545052],[6.315809,7.354453,7.585334,7.824671],[5.804223,6.719699,6.922356,7.132131],[5.307314,6.109258,6.286056,6.468803],[4.828257,5.526362,5.679648,5.837872],[4.369361,4.973175,5.105233,5.241358],[3.933473,4.452408,4.565462,4.681842],[3.522687,3.965855,4.062036,4.160917],[3.13771,3.513713,3.595015,3.678492],[2.780726,3.097809,3.166123,3.236178],[2.452583,2.718449,2.775528,2.83399],[2.153571,2.375318,2.422761,2.471298],[1.884434,2.068602,2.107876,2.148009],[1.644671,1.797429,1.829909,1.863066],[1.432596,1.558808,1.585562,1.612846],[1.247257,1.351464,1.373488,1.395927],[1.086452,1.172542,1.190687,1.209155],[0.9450126,1.016067,1.031004,1.046192],[0.8246421,0.8837624,0.896164,0.9087662],[0.7211217,0.7703287,0.7806265,0.7910827],[0.6337117,0.6749279,0.683534,0.6922657],[0.5620959,0.5972043,0.6045235,0.6119457],[0.5022488,0.5322634,0.5385081,0.5448361],[0.4535194,0.4794508,0.4848349,0.4902871],[0.413175,0.4360179,0.4407552,0.4455506],[0.3769687,0.3969494,0.4010851,0.4052689]],[[10.4029,12.58532,13.08492,13.60819],[9.875202,11.87662,12.33274,12.80971],[9.341429,11.16858,11.58313,12.01597],[8.804009,10.46421,10.83923,11.23018],[8.263392,9.764128,10.10165,10.45296],[7.721983,9.07119,9.37332,9.687324],[7.183615,8.389841,8.6588,8.937912],[6.648025,7.71964,7.957578,8.204134],[6.12446,7.071109,7.280426,7.497011],[5.614489,6.445703,6.628744,6.817872],[5.121359,5.846749,6.005844,6.17],[4.647452,5.276502,5.413922,5.555521],[4.195778,4.737863,4.855828,4.977217],[3.768591,4.232821,4.333461,4.436887],[3.366728,3.761725,3.84704,3.934606],[2.992661,3.326729,3.398625,3.472325],[2.647481,2.928411,2.988659,3.050345],[2.331721,2.566721,2.616948,2.668314],[2.046432,2.242184,2.283884,2.326483],[1.791257,1.954077,1.988661,2.023955],[1.564795,1.699704,1.728273,1.757399],[1.366201,1.477898,1.501483,1.525504],[1.193307,1.285833,1.305316,1.325141],[1.04066,1.117225,1.133305,1.149651],[0.9102407,0.9740832,0.9874633,1.001056],[0.7978043,0.8510653,0.8622019,0.8735065],[0.7026167,0.7473307,0.7566595,0.7661218],[0.6243585,0.6625118,0.6704594,0.6785165],[0.5589442,0.5916336,0.5984294,0.6053142],[0.5056592,0.5339662,0.5398393,0.5457853],[0.4613432,0.4863123,0.4914869,0.4967237],[0.4216373,0.4435275,0.4480556,0.4526351],[0.3891842,0.4088086,0.4128643,0.4169649]],[[10.2228,12.26026,12.72415,13.20909],[9.684326,11.54663,11.96875,12.40934],[9.141505,10.8359,11.21827,11.61674],[8.594613,10.12847,10.4731,10.83169],[8.045952,9.4271,9.736072,10.05708],[7.499323,8.736198,9.011711,9.297529],[6.954277,8.055125,8.299304,8.552242],[6.420326,7.394698,7.609924,7.832549],[5.898973,6.756309,6.944908,7.139713],[5.393514,6.143345,6.307632,6.477088],[4.90638,5.558124,5.700357,5.846865],[4.440701,5.003694,5.126085,5.251985],[3.998866,4.482199,4.586875,4.694413],[3.581812,3.994113,4.083077,4.174357],[3.192271,3.541881,3.617047,3.694076],[2.831555,3.126329,3.189485,3.254128],[2.500427,2.747663,2.800455,2.854427],[2.200234,2.406726,2.450674,2.495554],[1.93076,2.102951,2.139492,2.176772],[1.690887,1.83393,1.864194,1.895039],[1.479867,1.598598,1.623647,1.649151],[1.295581,1.394173,1.414916,1.436016],[1.13232,1.214095,1.231255,1.248695],[0.9923425,1.060664,1.074971,1.089501],[0.8713959,0.9285124,0.9404459,0.9525561],[0.7687663,0.8168156,0.8268327,0.8369907],[0.6841444,0.725208,0.7337555,0.7424186],[0.6133932,0.648645,0.6559684,0.663386],[0.5557327,0.5863208,0.592663,0.5990825],[0.507592,0.5346061,0.540201,0.5458618],[0.4645177,0.4882486,0.4931545,0.4981153],[0.4291467,0.4504422,0.4548406,0.4592869],[0.3987161,0.4179712,0.4219449,0.4259607]],[[10.01478,11.90876,12.33768,12.78523],[9.467286,11.19253,11.58151,11.98675],[8.91495,10.47875,10.82979,11.19493],[8.359964,9.770058,10.08521,10.41254],[7.80609,9.070815,9.352268,9.644156],[7.252691,8.380184,8.630036,8.888771],[6.709525,7.709257,7.929875,8.158004],[6.178018,7.059345,7.253037,7.453037],[5.661493,6.43387,6.602935,6.777263],[5.162401,5.835182,5.981865,6.132908],[4.683968,5.266441,5.392944,5.523034],[4.228681,4.729908,4.838356,4.949733],[3.797551,4.22615,4.318543,4.413311],[3.393542,3.757873,3.83613,3.916301],[3.018168,3.32613,3.39205,3.459501],[2.672408,2.931369,2.986613,3.043075],[2.357908,2.574752,2.620861,2.667934],[2.074592,2.25587,2.294305,2.333505],[1.821644,1.972621,2.004536,2.037053],[1.598429,1.724061,1.750542,1.777497],[1.402876,1.507454,1.529437,1.551793],[1.229018,1.315962,1.334191,1.352713],[1.079421,1.152206,1.167436,1.182899],[0.9498417,1.010819,1.023549,1.036464],[0.8396089,0.8910121,0.90172,0.9125757],[0.7484454,0.7924471,0.8015991,0.8108725],[0.672191,0.7100398,0.717897,0.7258532],[0.6100168,0.6429259,0.6497447,0.6566449],[0.5579099,0.5870122,0.5930353,0.5991281],[0.5113336,0.5369509,0.5422434,0.5475939],[0.4729114,0.4959246,0.5006748,0.5054756],[0.439814,0.4606431,0.4649389,0.4692792],[0.4096891,0.4284075,0.4322619,0.4361541]],[[9.771203,11.52364,11.91843,12.32962],[9.214217,10.80445,11.16112,11.53204],[8.653814,10.08949,10.4101,10.74301],[8.093707,9.383099,9.669801,9.967051],[7.533077,8.684228,8.939107,9.202972],[6.981915,8.004227,8.229635,8.46265],[6.441559,7.344316,7.542546,7.747175],[5.915343,6.707933,6.881271,7.059954],[5.405719,6.097434,6.248114,6.403228],[4.915984,5.516065,5.646279,5.780145],[4.448693,4.966168,5.078032,5.192885],[4.004904,4.44837,4.543883,4.641824],[3.58778,3.965603,4.046688,4.129731],[3.199015,3.519124,3.587585,3.657615],[2.839788,3.109599,3.167109,3.225869],[2.512027,2.738499,2.786614,2.835722],[2.215794,2.405565,2.445766,2.486756],[1.950571,2.109001,2.142464,2.176548],[1.71584,1.847988,1.87582,1.904141],[1.509583,1.619839,1.642997,1.666541],[1.325578,1.417446,1.436692,1.456242],[1.166706,1.243763,1.259874,1.276226],[1.028753,1.093438,1.106931,1.120617],[0.9111026,0.9657372,0.9771098,0.9886364],[0.813528,0.8603697,0.8701051,0.8799673],[0.7318673,0.7722345,0.7806085,0.789086],[0.6652561,0.7004231,0.7077047,0.7150717],[0.6092352,0.6403746,0.646815,0.6533284],[0.5591953,0.5866582,0.5923284,0.5980595],[0.5177434,0.5424411,0.5475357,0.5526836],[0.481991,0.5043669,0.5089789,0.5136376],[0.449533,0.4696786,0.4738245,0.4780103],[0.4232553,0.4418016,0.4456159,0.4494661]],[[9.491465,11.1048,11.4664,11.84234],[8.926466,10.38455,10.70993,11.0477],[8.361045,9.672078,9.963375,10.26532],[7.794212,8.966165,9.225454,9.493818],[7.236172,8.278391,8.508012,8.745323],[6.688175,7.609882,7.812117,8.020825],[6.153552,6.964076,7.141198,7.323734],[5.634745,6.343324,6.497556,6.656284],[5.135101,5.750926,5.884451,6.021684],[4.657212,5.189277,5.304204,5.42217],[4.202161,4.659036,4.75736,4.858155],[3.773281,4.163329,4.246971,4.332609],[3.37242,3.703585,3.774354,3.846726],[3.000936,3.280669,3.340247,3.401104],[2.661023,2.896341,2.946297,2.997268],[2.352875,2.550486,2.592316,2.634954],[2.076267,2.241612,2.276507,2.312042],[1.830797,1.969018,1.998107,2.027699],[1.614497,1.73007,1.754326,1.77898],[1.420896,1.517396,1.537597,1.558112],[1.253195,1.334286,1.351226,1.368418],[1.107219,1.175417,1.189633,1.204048],[0.9824205,1.040129,1.052132,1.064296],[0.8786396,0.928191,0.9384822,0.9489049],[0.7917328,0.8345105,0.8433783,0.8523537],[0.7208142,0.7581489,0.7658742,0.7736883],[0.6609797,0.6940802,0.7009216,0.7078391],[0.607556,0.6368006,0.6428349,0.6489327],[0.5631338,0.5894615,0.594889,0.600372],[0.5247716,0.5486477,0.5535657,0.5585327],[0.4900181,0.511551,0.5159799,0.5204505],[0.4617436,0.4815826,0.4856604,0.4897758],[0.4373659,0.4557741,0.4595556,0.4633714]],[[9.177518,10.65508,10.98459,11.32658],[8.607591,9.937467,10.23276,10.53877],[8.035468,9.225567,9.488695,9.760974],[7.471549,8.531173,8.764471,9.005529],[6.916998,7.855318,8.061056,8.273333],[6.375136,7.201431,7.381873,7.567789],[5.848386,6.571844,6.729203,6.891113],[5.340125,5.969896,6.106346,6.246555],[4.852967,5.398005,5.515651,5.636378],[4.387994,4.856842,4.957669,5.061007],[3.94868,4.349689,4.435619,4.52358],[3.537003,3.878123,3.950966,4.025442],[3.154478,3.443184,3.504628,3.567377],[2.803546,3.0469,3.098524,3.151186],[2.484524,2.689291,2.732604,2.776744],[2.197474,2.369158,2.405366,2.442228],[1.942106,2.085921,2.116166,2.146927],[1.716495,1.836988,1.862259,1.887938],[1.513928,1.614732,1.63582,1.657229],[1.337925,1.422778,1.440492,1.458465],[1.184355,1.255843,1.270734,1.285831],[1.052751,1.113346,1.125941,1.138701],[0.9430338,0.9951378,1.005952,1.016901],[0.8510974,0.8961526,0.9054864,0.9149313],[0.7760479,0.8154368,0.823582,0.8318191],[0.7125432,0.7475074,0.7547295,0.7620302],[0.6558539,0.6867962,0.6931769,0.6996235],[0.6085557,0.6364403,0.6421853,0.6479879],[0.5676601,0.592972,0.5981827,0.6034442],[0.5306746,0.5535386,0.5582385,0.5629819],[0.5004527,0.521534,0.5258647,0.5302346],[0.4743724,0.4939469,0.4979658,0.5020202],[0.4498765,0.4678721,0.4715619,0.4752825]],[[8.832887,10.17899,10.47771,10.78722],[8.256304,9.462059,9.728494,10.00414],[7.687418,8.762095,8.998567,9.242856],[7.127307,8.080033,8.288804,8.504166],[6.579278,7.419289,7.602614,7.791461],[6.04573,6.782172,6.942256,7.106935],[5.530061,6.172044,6.311053,6.453861],[5.034885,5.591329,5.71136,5.834509],[4.561267,5.040685,5.143719,5.249295],[4.112798,4.523523,4.611477,4.701491],[3.691556,4.041537,4.116223,4.192567],[3.299196,3.595923,3.659032,3.723467],[2.938386,3.188951,3.24207,3.296245],[2.609555,2.820771,2.865418,2.910908],[2.313039,2.490463,2.527856,2.565917],[2.048657,2.197561,2.228855,2.260677],[1.814523,1.93951,1.965707,1.992321],[1.603684,1.708436,1.730336,1.752564],[1.419969,1.508287,1.526713,1.545403],[1.259302,1.33383,1.349344,1.365069],[1.121299,1.18457,1.197713,1.211025],[1.005973,1.06045,1.071749,1.083188],[0.9092735,0.9564524,0.9662202,0.9761021],[0.8303122,0.8716223,0.8801597,0.8887915],[0.76332,0.8000319,0.8076104,0.81527],[0.7035184,0.736057,0.742763,0.749537],[0.653471,0.6828229,0.6888667,0.6949699],[0.6101472,0.6368153,0.6423021,0.6478412],[0.5710186,0.5951423,0.6000985,0.6050996],[0.5389213,0.5611806,0.5657509,0.5703616],[0.5111984,0.5318806,0.5361246,0.5404054],[0.4852622,0.5043045,0.5082069,0.5121413],[0.4648374,0.4827812,0.4864569,0.4901623]]]}};
+</script>
+<script>
+/**
+ * De eenvoudige versie: alleen opzoeken, geen rekenkern.
+ *
+ * `InvaarOpzoek.maak(T)` krijgt de tabel uit `bouw/eenvoudig-tabel.mjs` en
+ * geeft functies terug die er de verhoging volgens de indexatiemethode uit
+ * aflezen. Wat hier nog aan rekenwerk staat:
+ *
+ *   - lineair interpoleren tussen twee tabelrijen (leeftijd, leeftijdsverschil);
+ *   - pensioen en partnerpensioen wegen met hun kapitaalwaarde uit de tabel;
+ *   - vermenigvuldigen met het aandeel bij de dekkingsgraad (ook uit de tabel).
+ *
+ * Geen sterftetafel, geen rentecurve, geen lijfrente: die zitten in de getallen.
+ * Dit bestand raakt het scherm niet aan en draait daarom ook in Node; de proef
+ * laadt precies dit bestand en legt het naast de volledige keten.
+ */
+var InvaarOpzoek = (function () {
+  'use strict';
+
+  function maak(T) {
+    function lin(a, b, f) { return a + (b - a) * f; }
+
+    /** Leeftijd in jaren op 1 januari 2027 bij een geboortemaand; midden van de maand. */
+    function leeftijd(jaar, maand) {
+      return ((2027 - jaar) * 12 - (maand - 1) - 0.5) / 12;
+    }
+
+    /** null als de tabel dit geval dekt, anders de reden. */
+    function buitenBereik(x, verschil) {
+      if (!(x >= T.xmin)) return 'TE_JONG';
+      if (!(x < T.xmax)) return 'TE_OUD';
+      if (verschil !== null && verschil !== undefined) {
+        if (!(verschil >= T.dmin)) return 'PARTNER_TE_JONG';
+        if (!(verschil < T.dmax)) return 'PARTNER_TE_OUD';
+      }
+      return null;
+    }
+
+    /** Kapitaalwaarde van 1 euro pensioen, bij pi-index i. */
+    function kvPensioen(g, x, i) {
+      var lo = Math.floor(x), R = T.op[g];
+      return lin(R[lo - T.xmin][i], R[lo + 1 - T.xmin][i], x - lo);
+    }
+
+    /** Kapitaalwaarde van 1 euro partnerpensioen, bij pi-index i. */
+    function kvPartner(g, x, verschil, i) {
+      var lo = Math.floor(x), f = x - lo;
+      var dlo = Math.floor(verschil), fd = verschil - dlo, R = T.np[g];
+      var q = function (xx, dd) { return R[xx - T.xmin][dd - T.dmin][i]; };
+      return lin(lin(q(lo, dlo), q(lo + 1, dlo), f), lin(q(lo, dlo + 1), q(lo + 1, dlo + 1), f), fd);
+    }
+
+    /**
+     * De waarde van 100% van de verwachte indexatie, als fractie van de
+     * kapitaalwaarde nu. `geval` = {g, x, partner: null | {verschil, deel}},
+     * waarin deel = partnerpensioen / pensioen.
+     */
+    function volleIndexatie(geval, i) {
+      var nu = kvPensioen(geval.g, geval.x, 0);
+      var straks = kvPensioen(geval.g, geval.x, i);
+      var p = geval.partner;
+      if (p && p.deel > 0) {
+        nu += p.deel * kvPartner(geval.g, geval.x, p.verschil, 0);
+        straks += p.deel * kvPartner(geval.g, geval.x, p.verschil, i);
+      }
+      return straks / nu - 1;
+    }
+
+    /** Aandeel van de verwachte indexatie bij een dekkingsgraad in hele procenten. */
+    function aandeel(dg) { return T.aandeel[dg]; }
+
+    /** De verhoging (fractie) bij dekkingsgraad dg (hele procenten) en pi-index i. */
+    function verhoging(geval, dg, i) {
+      return aandeel(dg) * volleIndexatie(geval, i);
+    }
+
+    return {
+      leeftijd: leeftijd, buitenBereik: buitenBereik, kvPensioen: kvPensioen, kvPartner: kvPartner,
+      volleIndexatie: volleIndexatie, aandeel: aandeel, verhoging: verhoging,
+    };
+  }
+
+  return {maak: maak};
+})();
+
+</script>
+<script>
+/**
+ * Het scherm van InvaarPlus. Eén formulier met de schatting, en een
+ * tweede pagina met de gevoeligheid. Alle getallen komen uit `InvaarOpzoek` (zie eenvoudig-opzoek.js);
+ * dit bestand leest alleen de invoer en zet de uitkomst neer.
+ */
+(function () {
+  'use strict';
+
+  var T = INVAAR_TABEL;
+  var Z = InvaarOpzoek.maak(T);
+  var MAANDEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli',
+    'augustus', 'september', 'oktober', 'november', 'december'];
+  var FONDS_I = T.pi.indexOf(T.piFonds);
+
+  var DGS = [125, 130, 135, 140, 145];
+  var v = {scherm: 'hoofd', g: '', gj: '', gm: '', dg: '135', partner: 'nee', pj: '', pm: '', deel: '70'};
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  /** 0.2304 -> "23,0%" */
+  function pct(f, dec) { return (f * 100).toFixed(dec === undefined ? 1 : dec).replace('.', ',') + '%'; }
+  function naarGetal(s) {
+    var t = String(s).trim().replace('%', '').replace(',', '.');
+    if (t === '' || !/^\d+(\.\d+)?$/.test(t)) return null;
+    return Number(t);
+  }
+  function jarenEnMaanden(x) {
+    var m = Math.floor(x * 12 + 1e-9);
+    return Math.floor(m / 12) + ' jaar en ' + (m % 12) + (m % 12 === 1 ? ' maand' : ' maanden');
+  }
+
+  function opties(waarden, gekozen, namen) {
+    return waarden.map(function (w, i) {
+      return '<option value="' + w + '"' + (String(w) === String(gekozen) ? ' selected' : '') + '>' +
+        esc(namen ? namen[i] : w) + '</option>';
+    }).join('');
+  }
+  function reeks(van, tot, stap) { var r = []; for (var i = van; stap > 0 ? i <= tot : i >= tot; i += stap) r.push(i); return r; }
+
+  /** Twee knoppen naast elkaar, samen één vak breed. */
+  function knoppen(id, veld, label, keuzes) {
+    return '<div class="vak"><span class="vak-kop" id="' + id + '-kop">' + esc(label) + '</span>' +
+      '<div class="paar" role="group" aria-labelledby="' + id + '-kop">' +
+      keuzes.map(function (k) {
+        var aan = v[veld] === k[0];
+        return '<button type="button" class="keuzeknop' + (aan ? ' aan' : '') + '" id="' + id + '-' + k[0] +
+          '" data-veld="' + veld + '" data-waarde="' + k[0] + '" aria-pressed="' + (aan ? 'true' : 'false') + '">' +
+          esc(k[1]) + '</button>';
+      }).join('') + '</div></div>';
+  }
+  /** Maand en jaar naast elkaar, over de volle breedte. */
+  function maandJaar(id, label, veldM, veldJ, jaarVan, jaarTot) {
+    return '<div class="vak breed"><span class="vak-kop" id="' + id + '-kop">' + esc(label) + '</span>' +
+      '<div class="paar" role="group" aria-labelledby="' + id + '-kop">' +
+      '<select id="' + id + '-m" data-veld="' + veldM + '" aria-label="Maand"><option value="">maand</option>' +
+      opties(reeks(1, 12, 1), v[veldM], MAANDEN) + '</select>' +
+      '<select id="' + id + '-j" data-veld="' + veldJ + '" aria-label="Jaar"><option value="">jaar</option>' +
+      opties(reeks(jaarTot, jaarVan, -1), v[veldJ]) + '</select></div></div>';
+  }
+
+  function formulier() {
+    var h = '<div class="rooster">' +
+      maandJaar('in-g', 'Geboren', 'gm', 'gj', 1931, 1971) +
+      knoppen('in-geslacht', 'g', 'Geslacht', [['M', 'Man'], ['V', 'Vrouw']]) +
+      '<div class="vak"><label class="vak-kop" for="in-dg">Dekkingsgraad</label>' +
+      '<select id="in-dg" data-veld="dg">' + opties(DGS, v.dg, DGS.map(function (d) { return d + '%'; })) + '</select></div>' +
+      knoppen('in-partner', 'partner', 'Partnerpensioen', [['ja', 'Ja'], ['nee', 'Nee']]);
+    if (v.partner === 'ja') {
+      h += '<div class="vak"><label class="vak-kop" for="in-deel">% van uw pensioen</label>' +
+        '<input type="text" id="in-deel" data-veld="deel" inputmode="decimal" autocomplete="off" value="' + esc(v.deel) + '"></div>' +
+        maandJaar('in-p', 'Partner geboren', 'pm', 'pj', 1915, 1990);
+    }
+    return h + '</div>';
+  }
+
+  /** Leest de invoer; geeft {geval} of {melding}. */
+  function lees() {
+    if (!v.gm || !v.gj || !v.g) return {melding: 'Vul geboortemaand, -jaar en geslacht in.'};
+    var x = Z.leeftijd(Number(v.gj), Number(v.gm));
+    var geval = {g: v.g, x: x, partner: null};
+    var verschil = null;
+    if (v.partner === 'ja') {
+      if (!v.pm || !v.pj) return {melding: 'Vul geboortemaand en -jaar van uw partner in.'};
+      var deel = naarGetal(v.deel);
+      if (deel === null || deel > 200) return {melding: 'Vul het partnerpensioen in als % van uw pensioen.'};
+      verschil = Z.leeftijd(Number(v.pj), Number(v.pm)) - x;
+      geval.partner = {verschil: verschil, deel: deel / 100};
+    }
+    var buiten = Z.buitenBereik(x, verschil);
+    if (buiten === 'TE_JONG') return {melding: 'Vanaf ' + T.xmin + ' jaar op 1 januari 2027.'};
+    if (buiten === 'TE_OUD') return {melding: 'Tot ' + T.xmax + ' jaar op 1 januari 2027.'};
+    if (buiten === 'PARTNER_TE_JONG') return {melding: 'Partner hooguit ' + (-T.dmin) + ' jaar jonger.'};
+    if (buiten === 'PARTNER_TE_OUD') return {melding: 'Partner minder dan ' + T.dmax + ' jaar ouder.'};
+    return {geval: geval};
+  }
+
+  function uitkomst() {
+    var r = lees();
+    if (r.melding) return '<div class="uitkomst" id="uit"><p class="uit-melding" id="uit-melding">' + esc(r.melding) + '</p></div>';
+    var dg = Number(v.dg);
+    return '<div class="uitkomst" id="uit"><p class="uit-lijn"><span class="uit-naam">Geschatte verhoging</span>' +
+      '<span class="uit-getal"><span class="uit-pm" aria-hidden="true">\u00b1</span><span class="sr-only">ongeveer </span> <span id="uit-kop">' + pct(Z.verhoging(r.geval, dg, FONDS_I)) + '</span></span></p></div>';
+  }
+
+  function hoofd() {
+    return '<section class="kaart">' + formulier() + uitkomst() +
+      '<div class="paar knoppen-onder">' +
+      '<button type="button" class="keuzeknop" id="knop-gevoelig" data-scherm="gevoelig">Gevoeligheid</button>' +
+      '<button type="button" class="keuzeknop" id="knop-uitleg" data-scherm="uitleg">Uitleg</button></div></section>';
+  }
+
+  /** De tweede pagina: dezelfde schatting bij andere DG en andere indexatie. */
+  function gevoeligheid() {
+    var r = lees();
+    var terug = '<p class="knoprij-schatter"><button type="button" class="keuzeknop" id="knop-terug" data-scherm="hoofd">Terug</button></p>';
+    if (r.melding) {
+      return '<section class="kaart"><h2 id="pagina-kop" tabindex="-1">Gevoeligheid</h2>' +
+        '<p class="uit-melding" id="uit-melding">' + esc(r.melding) + '</p>' + terug + '</section>';
+    }
+    var g = r.geval, dg = Number(v.dg);
+    var kolommen = [];
+    for (var i = 1; i < T.pi.length; i++) kolommen.push(i);
+    return '<section class="kaart" id="gevoelig"><h2 id="pagina-kop" tabindex="-1">Gevoeligheid</h2>' +
+      '<p class="kaart-intro">Uw schatting bij een andere dekkingsgraad (DG) of indexatie.</p>' +
+      '<div class="tabel-wrap"><table class="data smal" id="uit-tabel">' +
+      '<thead><tr><th scope="col">DG</th>' +
+      kolommen.map(function (i) { return '<th scope="col">' + pct(T.pi[i]) + '</th>'; }).join('') +
+      '</tr></thead><tbody>' +
+      DGS.map(function (d) {
+        return '<tr><th scope="row">' + d + '%</th>' +
+          kolommen.map(function (i) {
+            var uw = d === dg && i === FONDS_I, t = pct(Z.verhoging(g, d, i));
+            return '<td id="c-' + d + '-' + i + '">' +
+              (uw ? '<span class="uw" id="uw-schatting">' + t + '</span><span class="sr-only"> (uw schatting)</span>' : t) + '</td>';
+          }).join('') + '</tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<p class="legenda">Omcirkeld: uw schatting.</p>' + terug + '</section>';
+  }
+
+  function uitleg() {
+    return '<section class="kaart"><h2 id="pagina-kop" tabindex="-1">Uitleg</h2><div class="lange-tekst">' +
+      '<p>Een schatting volgens de indexatiemethode, afgelezen uit een tabel die met de volledige InvaarVergelijker is gemaakt. ' +
+      'De werkelijke verhoging hangt af van de dekkingsgraad bij het invaren en de berekening van het fonds.</p>' +
+      '<p>Uitgegaan is van één levenslang pensioen vanaf 1 januari 2027 en een partner van het andere geslacht. ' +
+      'Hoog/laag, partnerpensioen in perioden en AOW-compensatie zitten er niet in.</p>' +
+      '</div>' +
+      '<p class="knoprij-schatter"><button type="button" class="keuzeknop" id="knop-terug" data-scherm="hoofd">Terug</button></p></section>';
+  }
+
+  /* De teksten van Privacy en Disclaimer zijn letterlijk die van de
+     InvaarVergelijker (ui/ui.js, schermPrivacy en schermDisclaimer). Wijzigt
+     daar iets, neem het hier over. */
+  function privKaart(titel, inhoud, uitgelicht) {
+    return '<div class="priv-kaart' + (uitgelicht ? ' uitgelicht' : '') + '">' +
+      '<h3>' + esc(titel) + '</h3><p>' + inhoud + '</p></div>';
+  }
+  function privacy() {
+    return '<section class="kaart"><h2 id="pagina-kop" tabindex="-1">Privacy</h2>' +
+      '<div class="priv-kaarten">' +
+      privKaart('Geen invoer verlaat uw browser',
+        esc('Deze calculator werkt volledig lokaal in uw browser. Alles wat u invult \u2014 ' +
+          'uw leeftijd, uw jaarpensioen, de gegevens van uw partner en elk ander getal \u2014 ' +
+          'blijft op uw eigen computer. Het wordt niet naar een server verstuurd, niet ' +
+          'opgeslagen, niet met anderen gedeeld en niet gebruikt voor analyse of profilering. ' +
+          'Het rekenen gebeurt in programmacode die met de pagina is meegestuurd. Sluit u het ' +
+          'tabblad of de browser, dan zijn alle gegevens weg.'), true) +
+      privKaart('Geen cookies, geen profilering',
+        esc('De calculator plaatst geen cookies en bewaart niets in uw browser. Er worden geen ' +
+          'persoonsgegevens verzameld, geen profielen opgebouwd, en u wordt niet over websites ' +
+          'heen gevolgd. Voor het tellen van het aantal bezoeken gebruikt de pagina wel een ' +
+          'privacyvriendelijke, anonieme teller.')) +
+      privKaart('Anonieme bezoektelling (GoatCounter)',
+        esc('Om te zien hoeveel mensen de calculator gebruiken, telt deze pagina bezoeken via ' +
+          'GoatCounter: opensource, privacyvriendelijke webanalyse zonder cookies. ' +
+          'GoatCounter bewaart geen IP-adressen en niet de volledige browseridentificatie. ' +
+          'Er wordt niets in uw browser geplaatst: geen cookies, geen lokale opslag. ' +
+          'Alleen opgetelde aantallen worden bewaard: hoe vaak een pagina is bekeken en ' +
+          'via welke website u binnenkwam. Daarnaast bij benadering uw browsertype, ' +
+          'besturingssysteem, schermgrootte en land. Dat land wordt afgeleid uit het ' +
+          'IP-adres; dat adres zelf wordt niet bewaard. Deze gegevens zijn niet tot u ' +
+          'te herleiden. ') +
+        '<a href="https://www.goatcounter.com/help/privacy" target="_blank" rel="noopener">' +
+        'Privacybeleid van GoatCounter</a>.') +
+      privKaart('Hosting via GitHub Pages',
+        esc('Deze calculator wordt gehost via GitHub Pages, een dienst van GitHub, Inc. ' +
+          '(onderdeel van Microsoft). Haalt uw browser de pagina op, dan legt GitHub ' +
+          'standaard servergegevens vast: uw IP-adres, uw browser, het tijdstip van het ' +
+          'bezoek en welke bestanden zijn opgevraagd. Dat gebeurt voor de beveiliging en ' +
+          'het beheer van de servers. Daar heeft de auteur geen invloed op. ') +
+        '<a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" ' +
+        'target="_blank" rel="noopener">Privacybeleid van GitHub</a>.') +
+      '</div>' +
+      '<p class="knoprij-schatter"><button type="button" class="keuzeknop" id="knop-terug" data-scherm="hoofd">Terug</button></p></section>';
+  }
+  function disclaimer() {
+    var alineas = [
+      'De resultaten, berekeningen en overige informatie die via deze calculator ' +
+      'worden verstrekt, zijn uitsluitend bedoeld ter informatie en dienen als indicatie.',
+      'Hoewel de ontwikkelaar en aanbieder van deze calculator de grootst mogelijke ' +
+      'zorgvuldigheid betracht bij de ontwikkeling, het onderhoud en de werking ervan, kan de ' +
+      'juistheid, volledigheid, actualiteit en betrouwbaarheid van de verstrekte informatie en ' +
+      'resultaten niet worden gegarandeerd.',
+      'Aan de resultaten en informatie die door deze calculator worden verstrekt, kunnen geen ' +
+      'rechten worden ontleend.',
+      'Het gebruik van de calculator en de interpretatie en toepassing van de verstrekte ' +
+      'resultaten geschieden voor eigen rekening en risico van de gebruiker. De gebruiker blijft ' +
+      'zelf verantwoordelijk voor beslissingen en handelingen die op basis van deze resultaten ' +
+      'worden genomen.',
+      'De ontwikkelaar, tevens aanbieder van deze calculator, is voor zover wettelijk toegestaan ' +
+      'niet aansprakelijk voor directe of indirecte schade, gevolgschade, financi\u00eble ' +
+      'verliezen of andere nadelige gevolgen die voortvloeien uit het gebruik van de calculator, ' +
+      'eventuele fouten of onjuistheden in de resultaten, technische storingen of beslissingen ' +
+      'die op basis van de verstrekte informatie worden genomen.',
+      'Deze beperking van aansprakelijkheid geldt uitsluitend voor zover de wet dit toestaat.'
+    ];
+    return '<section class="kaart"><h2 id="pagina-kop" tabindex="-1">Disclaimer en aansprakelijkheidsbeperking</h2>' +
+      '<div class="lange-tekst">' +
+      alineas.map(function (a) { return '<p>' + esc(a) + '</p>'; }).join('') +
+      '</div>' +
+      '<p class="knoprij-schatter"><button type="button" class="keuzeknop" id="knop-terug" data-scherm="hoofd">Terug</button></p></section>';
+  }
+
+  var app = document.getElementById('app');
+  var terugNaar = 'knop-gevoelig';
+  function teken(focusId) {
+    document.body.className = 'schatter scherm-' + v.scherm;
+    app.innerHTML = v.scherm === 'gevoelig' ? gevoeligheid() : v.scherm === 'uitleg' ? uitleg() :
+      v.scherm === 'privacy' ? privacy() : v.scherm === 'disclaimer' ? disclaimer() : hoofd();
+    if (focusId) { var el = document.getElementById(focusId); if (el) el.focus(); }
+  }
+  function alleenUitkomst() {
+    var oud = document.getElementById('uit');
+    var doos = document.createElement('div');
+    doos.innerHTML = uitkomst();
+    oud.parentNode.replaceChild(doos.firstChild, oud);
+  }
+
+  document.addEventListener('click', function (e) {
+    var s = e.target.closest ? e.target.closest('button[data-scherm]') : null;
+    if (s) {
+      if (v.scherm === 'hoofd' || !app.contains(s)) terugNaar = s.id;
+      v.scherm = s.getAttribute('data-scherm');
+      teken(v.scherm === 'hoofd' ? terugNaar : 'pagina-kop');
+      window.scrollTo(0, 0);
+      return;
+    }
+    var k = e.target.closest ? e.target.closest('button[data-veld]') : null;
+    if (!k) return;
+    v[k.getAttribute('data-veld')] = k.getAttribute('data-waarde');
+    teken(k.id);
+  });
+  app.addEventListener('change', function (e) {
+    var el = e.target, veld = el.getAttribute && el.getAttribute('data-veld');
+    if (!veld || el.tagName !== 'SELECT') return;
+    v[veld] = el.value;
+    alleenUitkomst();
+  });
+  app.addEventListener('input', function (e) {
+    var el = e.target, veld = el.getAttribute && el.getAttribute('data-veld');
+    if (!veld || el.tagName !== 'INPUT') return;
+    v[veld] = el.value;
+    alleenUitkomst();
+  });
+
+  teken(null);
+})();
+
+</script>
+
+</body>
+</html>
