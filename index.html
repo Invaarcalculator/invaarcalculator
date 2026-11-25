@@ -22,6 +22,7 @@
     .button { display: flex; align-items: center; justify-content: space-between; min-height: 55px; padding: 0 18px; border-radius: 12px; color: #9b5106; font-size: 16px; font-weight: 800; text-decoration: none; }
     .primary { background: #fff0d2; }
     .secondary { border: 1px solid var(--line); background: #fff; }
+    .divider { width: 100%; height: 0; margin: 2px 0; border: 0; border-top: 1px solid var(--line); }
     .button b { font-size: 22px; font-weight: 500; }
     footer { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 25px; color: #8993a2; font-size: 11px; }
     footer a { color: inherit; text-decoration: none; }
@@ -31,15 +32,20 @@
 </head>
 <body>
   <main>
-    <header class="top"><span>Invaarcalculator</span><span class="online">5 online</span></header>
+    <header class="top"><span>Invaarcalculator</span><span class="online">6 online</span></header>
     <section class="hero">
       <h1>De volgende calculators zijn <strong>online:</strong></h1>    </section>
     <nav class="actions" aria-label="Acties">
-      <a class="button primary" href="basic.html"><span>Open Basic-calculator</span><b aria-hidden="true">→</b></a>
       <a class="button primary" href="https://invaarcalculator.nl/invaarvergelijker.html"><span>Open InvaarVergelijker</span><b aria-hidden="true">→</b></a>
-      <a class="button primary" href="https://invaarcalculator.nl/invaarrentes.html"><span>Open InvaarRentes</span><b aria-hidden="true">→</b></a>
+      <hr class="divider">
       <a class="button primary" href="https://invaarcalculator.nl/invaarplus.html"><span>Open InvaarPlus</span><b aria-hidden="true">→</b></a>
-      <a class="button primary" href="https://invaarcalculator.nl/expert.html"><span>Open Expert-calculator</span><b aria-hidden="true">→</b></a>
+      <a class="button primary" href="https://invaarcalculator.nl/invaarrentes.html"><span>Open InvaarRentes</span><b aria-hidden="true">→</b></a>
+      <hr class="divider">
+      <a class="button primary" href="basic.html"><span>Open Basic</span><b aria-hidden="true">→</b></a>
+      <a class="button primary" href="https://invaarcalculator.nl/expert.html"><span>Open Expert</span><b aria-hidden="true">→</b></a>
+      <hr class="divider">
+      <a class="button primary" href="https://invaarcalculator.nl/ec-flow.html"><span>Equivalent Capital</span><b aria-hidden="true">→</b></a>
+      <hr class="divider">
       <a class="button secondary" href="mailto:hans@invaarcalculator.nl?subject=Toegang%20verzoek&amp;cc="><span>Neem contact op</span><b aria-hidden="true">→</b></a>
     </nav>
     <footer><a href="https://innovation-nestor.godaddysites.com/">Innovation Nestor</a><span class="dot">·</span><a href="mailto:hans@invaarcalculator.nl?subject=Toegang%20verzoek&amp;cc=">Contact</a><span class="dot">·</span><a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a></footer>
