@@ -707,8 +707,10 @@ body.schatter { --veld-hoogte: 2.75rem; }
    rechts, zoals bij de uitkomstregel. Op 320 px is er 260 px; naam en twee
    bedragen samen vragen er ongeveer 340. */
 #uit .uit-lijn:has(.uit-twee) { flex-wrap: wrap; row-gap: 0; }
-.uit-twee { display: inline-grid; grid-template-columns: repeat(2, 5.3em); column-gap: 0.5em; margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
-.uit-groot .uit-twee { grid-template-columns: repeat(2, 4.6em); }
+/* In rem, niet in em: de rekenrente staat groter, en met em werden haar
+   kolommen breder dan die eronder (opdrachtgever, 27 november: de 5,69%
+   stond niet recht boven de bedragen). */
+.uit-twee { display: inline-grid; grid-template-columns: repeat(2, 5.3rem); column-gap: 0.5rem; margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
 .uit-groot .uit-waarde { font-weight: 700; }
 .uit-kolomkop { margin-top: 0.1rem; }
 .uit-melding { margin: 0.6rem 0; font-size: var(--txt-s); }
