@@ -701,6 +701,16 @@ body.schatter { --veld-hoogte: 2.75rem; }
 .uit-groot { flex-wrap: wrap; gap: 0 0.5rem; margin-top: 0.15rem; font-size: clamp(1.125rem, 4.7vw, 1.3rem); line-height: 1.25; }
 .uit-groot .uit-getal { margin-left: auto; }
 .uit-getal #uit-kop { font-variant-numeric: tabular-nums; }
+/* Het scherm Rekenrente: twee kolommen, standaard en indexatie (27 november).
+   Even breed en rechts uitgelijnd, zodat de getallen recht onder elkaar staan.
+   Past een regel niet, dan gaan de twee getallen samen naar de volgende regel,
+   rechts, zoals bij de uitkomstregel. Op 320 px is er 260 px; naam en twee
+   bedragen samen vragen er ongeveer 340. */
+#uit .uit-lijn:has(.uit-twee) { flex-wrap: wrap; row-gap: 0; }
+.uit-twee { display: inline-grid; grid-template-columns: repeat(2, 5.3em); column-gap: 0.5em; margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+.uit-groot .uit-twee { grid-template-columns: repeat(2, 4.6em); }
+.uit-groot .uit-waarde { font-weight: 700; }
+.uit-kolomkop { margin-top: 0.1rem; }
 .uit-melding { margin: 0.6rem 0; font-size: var(--txt-s); }
 .knoprij-schatter { margin: 0; }
 .schatter .kaart-intro { margin-bottom: 0.8rem; }
@@ -4963,6 +4973,61 @@ var InvaarRente = (function () {
       return {s: o.s, kapitaalVoor: pensioenVoor * kv, verhoging: naOpCurve(geval, o.s, dg) / kv - 1};
     }
 
+    /* ---- De standaardmethode -----------------------------------------
+       Besluit van de opdrachtgever, 27 november 2026: het scherm Rekenrente
+       toont naast de indexatiemethode ook de standaardmethode, op dezelfde
+       regel. De standaardmethode is die van de InvaarVergelijker: M2 uit de
+       kern (`computeM2`), het surplus van het fonds verdeeld via de
+       cohorten. Zij wordt niet nagebouwd; hieronder staat dezelfde aanroep
+       als in de keten (`berekenResultaatProjectieV4`): M1 met de
+       spreiding, en M2 met het fondsvermogen bij de gekozen dekkingsgraad en
+       zonder bijstort.
+
+       M2 rekent bij een vlakke rente. De verhouding kapitaal na / kapitaal
+       voor hangt daar nauwelijks van af (gemeten, maart 1956 met partner,
+       DG 140%: 26,70% bij 2,5% en 26,67% bij 3,5%). Zij hangt ook niet af
+       van de hoogte van het pensioen: het compensatiedepot in de
+       modelparameters van M2 is 0, dus elk deel van M2 is evenredig met het
+       pensioen (gemeten van 5.000 tot 60.000 per jaar, DG 125% tot 145%). Daarom rekent dit
+       blok per euro pensioen, bij de vlakke rente die de curve plus de
+       opslag voor dit geval gelijk maakt (`curveGelijkeRente`). Dat is een
+       keuze van de bouwer, net als de twee rondes in `opslagStandaard`. */
+    var M2 = K.MODELCONTEXT.m2;
+    if (M2.compensatiedepot !== 0) throw Error('InvaarRentes: het compensatiedepot is niet 0; de standaardmethode per euro klopt dan niet.');
+    var memoStSleutel = null, memoSt = {};
+    /** De standaardmethode van de kern voor 1 euro pensioen bij vlakke rente `rente`: {KV, ppk, ratio}. */
+    function standaard(geval, rente, dg) {
+      var s = sleutel(geval) + '|' + dg;
+      if (s !== memoStSleutel) { memoStSleutel = s; memoSt = {}; }
+      var n = Math.round(rente * PER);
+      if (memoSt[n] !== undefined) return memoSt[n];
+      var d = deelnemer(geval), r = n / PER;
+      K.wisLijfrenteCachesV353();
+      var m = K.computeM1(d, Object.assign({}, P, {r: r}), {spreidingN: M2.spreidingN}, AG);
+      var q = Object.assign({}, M2, {r: r, dekkingsgraad: dg,
+        fondsvermogen: dg * (M2.fondsvermogen / M2.dekkingsgraad), bijstort: 0});
+      var u = K.computeM2(d, {KV: m.KV, KV_OP: m.KV_OP, KV_NP: m.KV_NP,
+        cw_star_op: m.cw_star_op || 0, cw_star_np: m.cw_star_np || 0}, q, AG);
+      memoSt[n] = {KV: m.KV, ppk: u.ppkTotal, ratio: u.ppkTotal / m.KV};
+      return memoSt[n];
+    }
+    /**
+     * De opslag op de DNB-curve waarbij het pensioen voor invaren, verhoogd
+     * volgens de standaardmethode, precies het kapitaal na invaren waard is.
+     * Eerst met de verhouding bij de RTS zelf, dan nog eens met die bij de
+     * gevonden opslag. Geeft {code} of {s, kapitaalVoor, verhoging}.
+     */
+    function opslagStandaard(geval, kapitaalNa, pensioenVoor, dg) {
+      var r = curveGelijkeRente(geval, 0), o = null, v = 1;
+      for (var i = 0; i < 2; i++) {
+        v = standaard(geval, r, dg).ratio;
+        o = zoekOpslag(function (s) { return v * waardeOpCurve(geval, s, 0); }, kapitaalNa / pensioenVoor);
+        if (o.code) return o;
+        r = curveGelijkeRente(geval, o.s);
+      }
+      return {s: o.s, kapitaalVoor: pensioenVoor * waardeOpCurve(geval, o.s, 0), verhoging: v - 1};
+    }
+
     /**
      * De vlakke rente die voor de betalingen van dit geval dezelfde waarde
      * geeft als de DNB-curve: de curve als een getal, voor deze persoon.
@@ -5002,7 +5067,7 @@ var InvaarRente = (function () {
     return {
       leeftijd: leeftijd, leeftijdMaand: leeftijdMaand, kapitaalPerEuro: kapitaalPerEuro, uitkering: uitkering,
       projectierente: projectierente, band: band, levensduur: levensduur,
-      kostenopslag: kostenopslag, indexatie: indexatie, rekenrente: rekenrente,
+      kostenopslag: kostenopslag, indexatie: indexatie, rekenrente: rekenrente, standaard: standaard,
       verwachteIndexatie: C.indexatiemethode.verwacht,
       grenzen: {min: N_MIN / PER, max: N_MAX / PER},
       /* Het rekenen op de DNB-curve; de functies hierboven rekenen vlak en
@@ -5010,7 +5075,7 @@ var InvaarRente = (function () {
       curve: {
         peildatum: STANDAARD, standen: Object.keys(SETS).sort(), stand: curveVan, renteOp: curveRenteOp, stroom: stroom,
         waarde: waardeOpCurve, waardeVlak: waardeVlak, opslag: opslagProjectie, pensioenBij: pensioenBijOpslag,
-        na: naOpCurve, opslagRekenrente: opslagRekenrente, gelijkeRente: curveGelijkeRente, band: bandOpslag,
+        na: naOpCurve, opslagRekenrente: opslagRekenrente, opslagStandaard: opslagStandaard, gelijkeRente: curveGelijkeRente, band: bandOpslag,
         somBetalingen: somBetalingen, somNa: somNa, grenzen: {min: S_MIN, max: S_MAX},
       },
     };
@@ -5534,37 +5599,76 @@ var InvaarRente = (function () {
      dekkingsgraad en het kapitaal na invaren; berekend zijn het kapitaal voor
      invaren, de verhoging en de rekenrente. Daarmee is de doorlopende
      volgorde van eerder die dag (pensioen voor, kapitaal voor, dekkingsgraad,
-     verhoging, kapitaal na) losgelaten. De verhoging is die van de
-     indexatiemethode; zie rente-reken.js. */
+     verhoging, kapitaal na) losgelaten.
+
+     Sinds 27 november staan onder "Berekend" twee kolommen: de
+     standaardmethode en de indexatiemethode (opdrachtgever: beide tonen,
+     "ruimte genoeg op zelfde regel"). Zie rente-reken.js. De volgorde
+     (standaard links), de kolomkoppen "Standaard" en "Indexatie" en
+     "%-punt" in de naam van de delta zijn keuzes van de bouwer. De RTS staat
+     er een keer: die is voor beide gelijk. De controles op de invoer rekenen
+     met de indexatiemethode, zoals tot nu toe. De ids van de
+     indexatiemethode zijn de oude; die van de standaardmethode eindigen op
+     "-st". */
   function dgTekst(dg) { return String(Math.round(dg * 1000) / 10).replace('.', ',') + '%'; }
+  var GEEN = '\u2013';
+  /** Een regel met twee waarden, standaard en indexatie. */
+  function tweeRegel(klasse, naam, idSt, waardeSt, idIx, waardeIx) {
+    return '<p class="uit-lijn ' + klasse + '"><span' + (klasse === 'uit-groot' ? ' class="uit-naam"' : '') + '>' +
+      esc(naam) + '</span><span class="uit-twee">' +
+      '<span class="uit-waarde" id="' + idSt + '">' + waardeSt + '</span>' +
+      '<span class="uit-waarde" id="' + idIx + '">' + waardeIx + '</span></span></p>';
+  }
   function rekenrentePagina() {
     var r = leesRekenrente();
     if (r.melding) return uitkomstScherm('Rekenrente', melding(r.melding));
     var V = Z.curve;
-    var o = veilig(function () { return V.opslagRekenrente(r.geval, r.kapitaal, r.pensioenVoor, r.dg); });
+    /* Per methode de opslag en de rente als percentage: de ene vaste rente
+       die het pensioen v\u00f3\u00f3r invaren dezelfde waarde geeft als de RTS
+       plus de delta. Met die rente is het pensioen precies het kapitaal
+       v\u00f3\u00f3r invaren waard. */
+    function methode(f) {
+      var o = veilig(f);
+      if (o.code) return o;
+      var p = veilig(function () { return {p: V.gelijkeRente(r.geval, o.s)}; });
+      if (p.code) return p;
+      o.p = p.p;
+      return o;
+    }
+    var st = methode(function () { return V.opslagStandaard(r.geval, r.kapitaal, r.pensioenVoor, r.dg); });
+    var ix = methode(function () { return V.opslagRekenrente(r.geval, r.kapitaal, r.pensioenVoor, r.dg); });
     var band = veilig(function () { return V.band(r.geval); });
     if (band.code) band = null;
-    var regel = o.code === 'MISLUKT' ? null : veilig(function () {
+    var regel = ix.code === 'MISLUKT' ? null : veilig(function () {
       return {naam: controle(r.kapitaal, r.pensioenVoor, V.somNa(r.geval, r.dg), band, function () {
         return V.opslagRekenrente(r.geval, r.kapitaal, 12 * r.pensioenVoor, r.dg);
       })};
     }).naam || null;
-    /* De rekenrente als percentage: de ene vaste rente die het pensioen
-       v\u00f3\u00f3r invaren dezelfde waarde geeft als de RTS plus de delta. Met die
-       rente is het pensioen precies het kapitaal v\u00f3\u00f3r invaren waard. */
-    var rente = o.code ? o : veilig(function () { return {p: V.gelijkeRente(r.geval, o.s)}; });
-    if (rente.code && !o.code) o = rente;
-    return uitkomstScherm('Rekenrente', '<div class="uitkomst" id="uit">' +
-      groep('groep-invoer', 'Invoer') +
+    var invoer = groep('groep-invoer', 'Invoer') +
       kleineRegel('rr-pensioen', 'Pensioen v\u00f3\u00f3r invaren', eur(r.pensioenVoor)) +
       kleineRegel('rr-dg', 'Dekkingsgraad', dgTekst(r.dg)) +
       kleineRegel('rr-na', 'Kapitaal na invaren', eur(r.kapitaal)) +
-      groep('groep-berekend', 'Berekend') +
-      (o.code ? melding(codeTekst(o.code, 'rekenrente')) :
-        kleineRegel('rr-voor', 'Kapitaal v\u00f3\u00f3r invaren', eur(o.kapitaalVoor)) +
-        kleineRegel('rr-verhoging', 'Geschatte verhoging', pct(o.verhoging, 1)) +
-        groteRegel('Rekenrente', rente.p) +
-        (band ? rtsRegel(band) + deltaRegel(band, o.s, false) : '')) + controleMelding(regel) + '</div>');
+      groep('groep-berekend', 'Berekend');
+    if (st.code && ix.code) {
+      return uitkomstScherm('Rekenrente', '<div class="uitkomst" id="uit">' + invoer +
+        melding(codeTekst(ix.code, 'rekenrente')) + controleMelding(regel) + '</div>');
+    }
+    function w(o, f) { return o.code ? GEEN : f(o); }
+    var meldingen = (st.code ? melding('Standaardmethode: ' + codeTekst(st.code, 'rekenrente')) : '') +
+      (ix.code ? melding('Indexatiemethode: ' + codeTekst(ix.code, 'rekenrente')) : '');
+    return uitkomstScherm('Rekenrente', '<div class="uitkomst" id="uit">' + invoer +
+      '<p class="uit-lijn uit-klein uit-kolomkop" id="rr-koppen"><span></span><span class="uit-twee">' +
+      '<span>Standaard</span><span>Indexatie</span></span></p>' +
+      tweeRegel('uit-klein', 'Kapitaal v\u00f3\u00f3r invaren', 'rr-voor-st', w(st, function (o) { return eur(o.kapitaalVoor); }),
+        'rr-voor', w(ix, function (o) { return eur(o.kapitaalVoor); })) +
+      tweeRegel('uit-klein', 'Geschatte verhoging', 'rr-verhoging-st', w(st, function (o) { return pct(o.verhoging, 1); }),
+        'rr-verhoging', w(ix, function (o) { return pct(o.verhoging, 1); })) +
+      tweeRegel('uit-groot', 'Rekenrente', 'uit-kop-st', w(st, function (o) { return pct(o.p); }),
+        'uit-kop', w(ix, function (o) { return pct(o.p); })) +
+      (band ? rtsRegel(band) +
+        tweeRegel('uit-klein', 'Delta t.o.v. RTS (%-punt)', 'uit-delta-st', w(st, function (o) { return ppunt(o.s); }),
+          'uit-delta', w(ix, function (o) { return ppunt(o.s); })) : '') +
+      meldingen + controleMelding(regel) + '</div>');
   }
 
   /**
@@ -5665,6 +5769,18 @@ var InvaarRente = (function () {
       '<p>Hoe ouder u bent, hoe korter de looptijden die meetellen. Bent u jonger, of heeft u een jongere ' +
       'partner? Dan tellen ook lange looptijden mee. Daarom verschilt de rente achter "voor u equivalent" per ' +
       'persoon.</p>' +
+      /* Naar aanleiding van een vraag van een gebruiker (27 november): "mijn
+         levensverwachting is ongeveer nog 20 jaar. Daar staat dan 3.448% in de
+         tabel bij de uitleg." De tekst is van de bouwer; de opdrachtgever
+         vroeg om de aanpassing. De getallen gelden voor een man van 70 bij
+         elke stand van 2026: nog 18,6 jaar te leven, 60-61% van de waarde in
+         de eerste 10 jaar, en de gelijke rente steeds dichter bij de rente
+         voor 10 jaar dan bij die voor 19 jaar. test/browser-rente.mjs rekent
+         dat per stand na. */
+      '<p id="uitleg-levensverwachting">De rente achter "voor u equivalent" is dus niet de rente bij uw ' +
+      'levensverwachting. Een man van 70 leeft naar verwachting nog ongeveer 19 jaar. Toch zit ruim de helft ' +
+      'van de waarde van zijn pensioen in de eerste 10 jaar. Die betalingen krijgt hij vrijwel zeker. Daarom ' +
+      'ligt zijn equivalente rente dichter bij de rente voor 10 jaar dan bij die voor 19 jaar.</p>' +
       '<h4>Wat is risicovrij?</h4>' +
       '<p>Risicovrij betekent: zonder beleggingsrisico. De risicovrije rente is de rente op geld dat u vrijwel ' +
       'zeker terugkrijgt. Wie belegt, bijvoorbeeld in aandelen, verwacht meer dan die rente. Maar dat is niet ' +
@@ -5875,7 +5991,14 @@ var InvaarRente = (function () {
       '<p>De calculator zoekt de rekenrente waarbij dat precies uw kapitaal na invaren is. Eronder staat de ' +
       'delta: het verschil tussen die rekenrente en de RTS van DNB. Onder "Bandbreedte en delta" ' +
       'leest u meer over de delta.</p>' +
-      '<p>Zo is de verhoging berekend. Bij een dekkingsgraad van 125% is de verhoging 70% van de waarde van een ' +
+      /* De twee methodes (opdrachtgever, 27 november: beide tonen). Tekst
+         van de bouwer; de zin over de indexatiemethode is de oude, met een
+         ander begin ("Zo is de verhoging berekend."). Deze pagina noemt geen
+         andere calculator, dus niet dat de InvaarVergelijker ook zo rekent. */
+      '<p id="uitleg-methodes">De calculator berekent de verhoging op twee manieren. Daarom staan er twee kolommen.</p>' +
+      '<p>Standaard is de standaardmethode. Het fonds verdeelt het vermogen boven zijn verplichtingen over alle ' +
+      'deelnemers.</p>' +
+      '<p>Indexatie is de indexatiemethode. Bij een dekkingsgraad van 125% is de verhoging 70% van de waarde van een ' +
       'indexatie van ' + pct(Z.verwachteIndexatie, 1) + ' per jaar. Bij 135% is dat 100%. Daartussen en daarboven ' +
       'loopt dat percentage gelijkmatig mee.</p>' +
       '<h4>Projectierente</h4>' +
