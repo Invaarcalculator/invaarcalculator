@@ -2909,7 +2909,10 @@ function berekenAowCompensatieV353(invoer, deps) {
     const al = invoer.methode === 'sspf' ? aandeelVerwachteIndexatie(invoer.dekkingsgraad) : null;
     const i0 = invoer.indexatieGevoeligheid ?? iv;
     const vB = invoer.methode === 'sspf' ? vf(i0) : null;
-    const b = invoer.methode === 'sspf' ? al * vB : Q.ppkTotal / R.KV - 1;
+    const basisOp = invoer.verhoudingOuderdomspensioen;
+    const b = invoer.methode === 'sspf' ? al * vB
+        : typeof basisOp === 'number' && Number.isFinite(basisOp) && basisOp > 0 ? basisOp - 1
+            : Q.ppkTotal / R.KV - 1;
     let x0 = .01;
     let x1 = .03;
     let f0 = vf(x0) - b;
@@ -3018,7 +3021,8 @@ function berekenResultaatProjectieV4(i, p) {
                 bijstortScenario: i.scenario.bijstort,
                 bijstortReedsVerwerkt: i.scenario.reedsVerwerkteBijstort,
                 methode: i.methode, verwachteIndexatie: i.verwachteIndexatie,
-                extraIndexatieAowc: i.extraIndexatieAow }, deps);
+                extraIndexatieAowc: i.extraIndexatieAow,
+                verhoudingOuderdomspensioen: i.methode === 'sspf' ? null : ratio }, deps);
             if (!aow || !finite(aow.up))
                 return { ok: false, code: 'INVALID_CALCULATION' };
             const n = Math.round(aow.pen), na = Math.round(aow.pen * (1 + aow.up));

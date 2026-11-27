@@ -2656,7 +2656,10 @@ function berekenAowCompensatieV353(invoer, deps) {
     const al = invoer.methode === 'sspf' ? aandeelVerwachteIndexatie(invoer.dekkingsgraad) : null;
     const i0 = invoer.indexatieGevoeligheid ?? iv;
     const vB = invoer.methode === 'sspf' ? vf(i0) : null;
-    const b = invoer.methode === 'sspf' ? al * vB : Q.ppkTotal / R.KV - 1;
+    const basisOp = invoer.verhoudingOuderdomspensioen;
+    const b = invoer.methode === 'sspf' ? al * vB
+        : typeof basisOp === 'number' && Number.isFinite(basisOp) && basisOp > 0 ? basisOp - 1
+            : Q.ppkTotal / R.KV - 1;
     let x0 = .01;
     let x1 = .03;
     let f0 = vf(x0) - b;
@@ -2765,7 +2768,8 @@ function berekenResultaatProjectieV4(i, p) {
                 bijstortScenario: i.scenario.bijstort,
                 bijstortReedsVerwerkt: i.scenario.reedsVerwerkteBijstort,
                 methode: i.methode, verwachteIndexatie: i.verwachteIndexatie,
-                extraIndexatieAowc: i.extraIndexatieAow }, deps);
+                extraIndexatieAowc: i.extraIndexatieAow,
+                verhoudingOuderdomspensioen: i.methode === 'sspf' ? null : ratio }, deps);
             if (!aow || !finite(aow.up))
                 return { ok: false, code: 'INVALID_CALCULATION' };
             const n = Math.round(aow.pen), na = Math.round(aow.pen * (1 + aow.up));
@@ -4720,6 +4724,61 @@ var InvaarRente = (function () {
       return {s: o.s, kapitaalVoor: pensioenVoor * kv, verhoging: naOpCurve(geval, o.s, dg) / kv - 1};
     }
 
+    /* ---- De standaardmethode -----------------------------------------
+       Besluit van de opdrachtgever, 27 november 2026: het scherm Rekenrente
+       toont naast de indexatiemethode ook de standaardmethode, op dezelfde
+       regel. De standaardmethode is die van de InvaarVergelijker: M2 uit de
+       kern (`computeM2`), het surplus van het fonds verdeeld via de
+       cohorten. Zij wordt niet nagebouwd; hieronder staat dezelfde aanroep
+       als in de keten (`berekenResultaatProjectieV4`): M1 met de
+       spreiding, en M2 met het fondsvermogen bij de gekozen dekkingsgraad en
+       zonder bijstort.
+
+       M2 rekent bij een vlakke rente. De verhouding kapitaal na / kapitaal
+       voor hangt daar nauwelijks van af (gemeten, maart 1956 met partner,
+       DG 140%: 26,70% bij 2,5% en 26,67% bij 3,5%). Zij hangt ook niet af
+       van de hoogte van het pensioen: het compensatiedepot in de
+       modelparameters van M2 is 0, dus elk deel van M2 is evenredig met het
+       pensioen (gemeten van 5.000 tot 60.000 per jaar, DG 125% tot 145%). Daarom rekent dit
+       blok per euro pensioen, bij de vlakke rente die de curve plus de
+       opslag voor dit geval gelijk maakt (`curveGelijkeRente`). Dat is een
+       keuze van de bouwer, net als de twee rondes in `opslagStandaard`. */
+    var M2 = K.MODELCONTEXT.m2;
+    if (M2.compensatiedepot !== 0) throw Error('InvaarRentes: het compensatiedepot is niet 0; de standaardmethode per euro klopt dan niet.');
+    var memoStSleutel = null, memoSt = {};
+    /** De standaardmethode van de kern voor 1 euro pensioen bij vlakke rente `rente`: {KV, ppk, ratio}. */
+    function standaard(geval, rente, dg) {
+      var s = sleutel(geval) + '|' + dg;
+      if (s !== memoStSleutel) { memoStSleutel = s; memoSt = {}; }
+      var n = Math.round(rente * PER);
+      if (memoSt[n] !== undefined) return memoSt[n];
+      var d = deelnemer(geval), r = n / PER;
+      K.wisLijfrenteCachesV353();
+      var m = K.computeM1(d, Object.assign({}, P, {r: r}), {spreidingN: M2.spreidingN}, AG);
+      var q = Object.assign({}, M2, {r: r, dekkingsgraad: dg,
+        fondsvermogen: dg * (M2.fondsvermogen / M2.dekkingsgraad), bijstort: 0});
+      var u = K.computeM2(d, {KV: m.KV, KV_OP: m.KV_OP, KV_NP: m.KV_NP,
+        cw_star_op: m.cw_star_op || 0, cw_star_np: m.cw_star_np || 0}, q, AG);
+      memoSt[n] = {KV: m.KV, ppk: u.ppkTotal, ratio: u.ppkTotal / m.KV};
+      return memoSt[n];
+    }
+    /**
+     * De opslag op de DNB-curve waarbij het pensioen voor invaren, verhoogd
+     * volgens de standaardmethode, precies het kapitaal na invaren waard is.
+     * Eerst met de verhouding bij de RTS zelf, dan nog eens met die bij de
+     * gevonden opslag. Geeft {code} of {s, kapitaalVoor, verhoging}.
+     */
+    function opslagStandaard(geval, kapitaalNa, pensioenVoor, dg) {
+      var r = curveGelijkeRente(geval, 0), o = null, v = 1;
+      for (var i = 0; i < 2; i++) {
+        v = standaard(geval, r, dg).ratio;
+        o = zoekOpslag(function (s) { return v * waardeOpCurve(geval, s, 0); }, kapitaalNa / pensioenVoor);
+        if (o.code) return o;
+        r = curveGelijkeRente(geval, o.s);
+      }
+      return {s: o.s, kapitaalVoor: pensioenVoor * waardeOpCurve(geval, o.s, 0), verhoging: v - 1};
+    }
+
     /**
      * De vlakke rente die voor de betalingen van dit geval dezelfde waarde
      * geeft als de DNB-curve: de curve als een getal, voor deze persoon.
@@ -4759,7 +4818,7 @@ var InvaarRente = (function () {
     return {
       leeftijd: leeftijd, leeftijdMaand: leeftijdMaand, kapitaalPerEuro: kapitaalPerEuro, uitkering: uitkering,
       projectierente: projectierente, band: band, levensduur: levensduur,
-      kostenopslag: kostenopslag, indexatie: indexatie, rekenrente: rekenrente,
+      kostenopslag: kostenopslag, indexatie: indexatie, rekenrente: rekenrente, standaard: standaard,
       verwachteIndexatie: C.indexatiemethode.verwacht,
       grenzen: {min: N_MIN / PER, max: N_MAX / PER},
       /* Het rekenen op de DNB-curve; de functies hierboven rekenen vlak en
@@ -4767,7 +4826,7 @@ var InvaarRente = (function () {
       curve: {
         peildatum: STANDAARD, standen: Object.keys(SETS).sort(), stand: curveVan, renteOp: curveRenteOp, stroom: stroom,
         waarde: waardeOpCurve, waardeVlak: waardeVlak, opslag: opslagProjectie, pensioenBij: pensioenBijOpslag,
-        na: naOpCurve, opslagRekenrente: opslagRekenrente, gelijkeRente: curveGelijkeRente, band: bandOpslag,
+        na: naOpCurve, opslagRekenrente: opslagRekenrente, opslagStandaard: opslagStandaard, gelijkeRente: curveGelijkeRente, band: bandOpslag,
         somBetalingen: somBetalingen, somNa: somNa, grenzen: {min: S_MIN, max: S_MAX},
       },
     };
