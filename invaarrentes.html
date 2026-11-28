@@ -2112,7 +2112,7 @@ function computeM2(deelnemer, ketenInput, params, data = getAG2024()) {
     };
     const fractions = getCohortFractions(params.demografie);
     const fondsX = computeFondsXStar(fondsvermogen, vpvTotal, params.vpvAftrekPct, compensatiedepotEur, bufferEur, bijstortEur, fractions, params.N_deelnemers, params.spreidingN, deelnemer.pen, params.r, params.t0, engineOpts);
-    const x_fonds = fondsX.x_star;
+    const x_fonds = fondsX.x_star * (params.ijkfactorOverschot ?? 1);
     const M_beschikbaar = fondsX.M;
     const verdeelbaar = M_beschikbaar - vpvTotal;
     const ppkSurplus_OP = x_fonds * cw_star_op;
@@ -2533,6 +2533,7 @@ const FONDSCONFIGURATIE_SSPF = {
         pi: 0,
         omega: 120,
         spreidingN: 1000,
+        ijkfactorOverschot: 1.1357,
         kostenOpslagPct: null,
         uitvoeringskostenJaarlijks: null,
         compensatieMu: 55,
@@ -2777,6 +2778,7 @@ function bereidVoorV4(invoer, config) {
         overigeReserves: 0,
         operationeleReserveringPct: config.cascade.wettelijkeReservesPct,
         bijstort: 0, N_deelnemers: config.fonds.deelnemers, spreidingN: config.model.spreidingN,
+        ijkfactorOverschot: config.model.ijkfactorOverschot,
         compensatieMu: config.model.compensatieMu, compensatieSigma: config.model.compensatieSigma,
         buffer: config.cascade.rdrBedrag,
         demografie: config.model.demografie,
@@ -2909,10 +2911,7 @@ function berekenAowCompensatieV353(invoer, deps) {
     const al = invoer.methode === 'sspf' ? aandeelVerwachteIndexatie(invoer.dekkingsgraad) : null;
     const i0 = invoer.indexatieGevoeligheid ?? iv;
     const vB = invoer.methode === 'sspf' ? vf(i0) : null;
-    const basisOp = invoer.verhoudingOuderdomspensioen;
-    const b = invoer.methode === 'sspf' ? al * vB
-        : typeof basisOp === 'number' && Number.isFinite(basisOp) && basisOp > 0 ? basisOp - 1
-            : Q.ppkTotal / R.KV - 1;
+    const b = invoer.methode === 'sspf' ? al * vB : Q.ppkTotal / R.KV - 1;
     let x0 = .01;
     let x1 = .03;
     let f0 = vf(x0) - b;
@@ -2994,12 +2993,16 @@ function berekenResultaatProjectieV4(i, p) {
         if (!(capital > 0) || !finite(capital, ppk))
             return { ok: false, code: 'INVALID_CALCULATION' };
         const ratio = ppk / capital;
+        const ratioOP = indexatieUitkomst ? 1 + indexatieUitkomst.al * indexatieUitkomst.vo
+            : m1.KV_OP > 0 ? projected.ppk_OP / m1.KV_OP : ratio;
+        const ratioNP = indexatieUitkomst ? (m1.KV_NP > 0 ? 1 + indexatieUitkomst.al * indexatieUitkomst.vn : ratioOP)
+            : m1.KV_NP > 0 ? projected.ppk_NP / m1.KV_NP : ratioOP;
         const orig = i.deelnemer.pen;
         const now = i.route === 'netto'
             ? { maand: i.pensioenNettoMaand, jaar: i.pensioenNettoMaand * 12 }
             : { maand: round2(Math.round(orig) / 12), jaar: Math.round(orig) };
         const afterYear = i.route === 'netto'
-            ? p.brutoNaarNettoMaand(orig * ratio) * 12 : Math.round(orig * ratio);
+            ? p.brutoNaarNettoMaand(orig * ratioOP) * 12 : Math.round(orig * ratioOP);
         const after = i.route === 'netto'
             ? { maand: afterYear / 12, jaar: afterYear }
             : { maand: round2(afterYear / 12), jaar: afterYear };
@@ -3021,8 +3024,7 @@ function berekenResultaatProjectieV4(i, p) {
                 bijstortScenario: i.scenario.bijstort,
                 bijstortReedsVerwerkt: i.scenario.reedsVerwerkteBijstort,
                 methode: i.methode, verwachteIndexatie: i.verwachteIndexatie,
-                extraIndexatieAowc: i.extraIndexatieAow,
-                verhoudingOuderdomspensioen: i.methode === 'sspf' ? null : ratio }, deps);
+                extraIndexatieAowc: i.extraIndexatieAow }, deps);
             if (!aow || !finite(aow.up))
                 return { ok: false, code: 'INVALID_CALCULATION' };
             const n = Math.round(aow.pen), na = Math.round(aow.pen * (1 + aow.up));
@@ -3038,7 +3040,7 @@ function berekenResultaatProjectieV4(i, p) {
         return { ok: true, result: { sourceRevision: i.sourceRevision, modelFingerprint: i.modelFingerprint,
                 source: 'typed-m1-m2-v3570', model: i.methode, eenheid: i.route === 'netto' ? 'netto' : 'bruto',
                 dekkingsgraad: i.scenario.dekkingsgraad, kapitaalwaarde: capital,
-                pensioenkapitaalNaInvaren: ppk, verhouding: ratio, ouderdomspensioen,
+                pensioenkapitaalNaInvaren: ppk, verhouding: ratio, verhoudingOP: ratioOP, verhoudingNP: ratioNP, ouderdomspensioen,
                 aowCompensatie: aowBedragen, ...(aowPartnerBedragen ? { aowCompensatiePartner: aowPartnerBedragen } : {}), totaal: total, m1, m2: baseM2, m2Scenario: projected, indexatieUitkomst, aowUitkomst: aow } };
     }
     catch {
@@ -3066,11 +3068,11 @@ function berekenHoogLaagFasenV4(i, basis) {
         return null;
     const profiel = d.profiel ?? profielUitHoogLaag(d.pen, d.pen_laag, d.x_knip, true);
     return { sourceRevision: i.sourceRevision, modelFingerprint: i.modelFingerprint,
-        knipLeeftijd: d.x_knip, totKnipBrutoJaar: Math.round(d.pen * basis.verhouding),
-        vanafKnipBrutoJaar: Math.round(d.pen_laag * basis.verhouding),
-        verhogingsfactor: basis.verhouding,
+        knipLeeftijd: d.x_knip, totKnipBrutoJaar: Math.round(d.pen * basis.verhoudingOP),
+        vanafKnipBrutoJaar: Math.round(d.pen_laag * basis.verhoudingOP),
+        verhogingsfactor: basis.verhoudingOP,
         treden: profiel.map(t => ({ tot: t.tot ?? null, nuBrutoJaar: Math.round(t.bedrag),
-            naBrutoJaar: Math.round(t.bedrag * basis.verhouding) })) };
+            naBrutoJaar: Math.round(t.bedrag * basis.verhoudingOP) })) };
 }
 function berekenAanvullendResultaatV4(i, ports, basis) {
     if (basis.sourceRevision !== i.sourceRevision || basis.modelFingerprint !== i.modelFingerprint ||
@@ -3111,7 +3113,7 @@ function berekenAanvullendResultaatV4(i, ports, basis) {
                     verwachteIndexatie: rate }, ports);
                 if (!sub.ok)
                     return { ok: false, code: 'INVALID_CALCULATION' };
-                vals.push(Math.round(d.pen * sub.result.verhouding));
+                vals.push(Math.round(d.pen * sub.result.verhoudingOP));
             }
             cols.push({ dekkingsgraad: dg, gekozen, beschikbaar: true, naJaar: vals });
         }
@@ -3119,7 +3121,7 @@ function berekenAanvullendResultaatV4(i, ports, basis) {
             const sub = berekenResultaatProjectieMatrixV4({ ...i, scenario: { ...i.scenario, dekkingsgraad: dg, bijstort } }, ports);
             if (!sub.ok)
                 return { ok: false, code: 'INVALID_CALCULATION' };
-            const opRatio = sub.result.pensioenkapitaalNaInvaren / basis.kapitaalwaarde;
+            const opRatio = sub.result.verhoudingOP;
             const vals = rows.map((_, j) => Math.round(d.pen * opRatio * scales[j]));
             cols.push({ dekkingsgraad: dg, gekozen, beschikbaar: true, naJaar: vals });
         }
@@ -3477,6 +3479,8 @@ function rapportWeergaveV4(s) {
     const pensionRows = [];
     const aowRows = [];
     const ratio = finite(h.verhouding) ? h.verhouding : pp / kv;
+    const ratioOP = finite(h.verhoudingOP) ? h.verhoudingOP : ratio;
+    const ratioNP = finite(h.verhoudingNP) ? h.verhoudingNP : ratio;
     function rijIn(rows, label, now, after, hint, total = false) {
         rows.push({ label, values: [eur(now), eur(after), signedPct(now > 0 ? after / now - 1 : 0)], hint, total });
     }
@@ -3498,15 +3502,15 @@ function rapportWeergaveV4(s) {
                 : vorige === undefined
                     ? 'Ouderdomspensioen tot ' + leeftijdTekst(t.tot)
                     : 'Ouderdomspensioen van ' + leeftijdTekst(vorige) + ' tot ' + leeftijdTekst(t.tot);
-            annual(label, Math.round(t.bedrag), Math.round(t.bedrag * ratio));
+            annual(label, Math.round(t.bedrag), Math.round(t.bedrag * ratioOP));
         });
     }
     else if (oudeWeg && c.brutoLaagJaar !== null) {
-        annual('Ouderdomspensioen tot de knipdatum', Math.round(c.brutoJaar), Math.round(c.brutoJaar * ratio));
-        annual('Ouderdomspensioen vanaf de knipdatum', Math.round(c.brutoLaagJaar), Math.round(c.brutoLaagJaar * ratio));
+        annual('Ouderdomspensioen tot de knipdatum', Math.round(c.brutoJaar), Math.round(c.brutoJaar * ratioOP));
+        annual('Ouderdomspensioen vanaf de knipdatum', Math.round(c.brutoLaagJaar), Math.round(c.brutoLaagJaar * ratioOP));
     }
     else
-        annual('Ouderdomspensioen', Math.round(c.brutoJaar), Math.round(c.brutoJaar * ratio));
+        annual('Ouderdomspensioen', Math.round(c.brutoJaar), Math.round(c.brutoJaar * ratioOP));
     const profP = c.profielPartner ?? null;
     if (isPartner && profP && profP.length >= 2) {
         profP.forEach((t, k) => {
@@ -3516,11 +3520,11 @@ function rapportWeergaveV4(s) {
                 : vorige === undefined
                     ? 'Partnerpensioen tot zijn/haar leeftijd van ' + leeftijdTekst(t.tot)
                     : 'Partnerpensioen van zijn/haar leeftijd van ' + leeftijdTekst(vorige) + ' tot ' + leeftijdTekst(t.tot);
-            annual(label, Math.round(t.bedrag), Math.round(t.bedrag * ratio), 'na uw overlijden, voor uw partner');
+            annual(label, Math.round(t.bedrag), Math.round(t.bedrag * ratioNP), 'na uw overlijden, voor uw partner');
         });
     }
     else if (isPartner && c.brutoPartnerJaar !== null)
-        annual('Partnerpensioen', Math.round(c.brutoPartnerJaar), Math.round(c.brutoPartnerJaar * ratio), 'na uw overlijden, voor uw partner');
+        annual('Partnerpensioen', Math.round(c.brutoPartnerJaar), Math.round(c.brutoPartnerJaar * ratioNP), 'na uw overlijden, voor uw partner');
     if (aowUsed) {
         rijIn(aowRows, 'AOW-compensatiepensioen', Math.round(aow.pen), Math.round(aow.pen * (1 + aow.up)));
         if (aow.penPartner !== undefined) {
@@ -3717,7 +3721,7 @@ function modelVingerafdrukV4(voorbereid, config) {
         'model-3.57.0', `inv=${config.invaardatum}`, `r=${voorbereid.afgeleid.rente}`,
         `t0=${config.model.t0}`, `m=${config.model.m}`, `omega=${config.model.omega}`,
         `vpv=${m.vpvTotal}`, `aftrek=${m.vpvAftrekPct}`, `buffer=${m.buffer}`,
-        `spreiding=${m.spreidingN}`, `iv=${config.indexatiemethode.verwacht}`,
+        `spreiding=${m.spreidingN}`, `ijk=${config.model.ijkfactorOverschot}`, `iv=${config.indexatiemethode.verwacht}`,
         `eA=${config.indexatiemethode.extraAowc}`, `tafel=${config.model.sterftekansTabelId}`,
     ].join('|');
 }
@@ -3827,6 +3831,8 @@ function maakRekenkernV4(motoren) {
                     kapitaalwaarde: hoofd.kapitaalwaarde,
                     pensioenkapitaalNaInvaren: hoofd.pensioenkapitaalNaInvaren,
                     verhouding: hoofd.verhouding,
+                    verhoudingOP: hoofd.verhoudingOP,
+                    verhoudingNP: hoofd.verhoudingNP,
                     ouderdomspensioen: vergelijking(hoofd.ouderdomspensioen),
                     aowCompensatie: hoofd.aowCompensatie ? vergelijking(hoofd.aowCompensatie) : null,
                     ...(hoofd.aowCompensatiePartner
@@ -4457,6 +4463,7 @@ var M2_PARAMS = Object.assign({}, M1_PARAMS, {
   compensatiedepot: 0, vpvAftrekPct: CONFIG.cascade.vpvAftrekPctInitieel, overigeReserves: 0,
   operationeleReserveringPct: CONFIG.cascade.wettelijkeReservesPct, bijstort: 0,
   N_deelnemers: CONFIG.fonds.deelnemers, spreidingN: CONFIG.model.spreidingN,
+  ijkfactorOverschot: CONFIG.model.ijkfactorOverschot,
   compensatieMu: CONFIG.model.compensatieMu, compensatieSigma: CONFIG.model.compensatieSigma,
   buffer: 0, demografie: CONFIG.model.demografie, cohortMixWorstCase: CONFIG.model.cohortMixWorstCase,
   alternatieveInvaarmethode: CONFIG.model.alternatieveInvaarmethode});

@@ -1859,7 +1859,7 @@ function computeM2(deelnemer, ketenInput, params, data = getAG2024()) {
     };
     const fractions = getCohortFractions(params.demografie);
     const fondsX = computeFondsXStar(fondsvermogen, vpvTotal, params.vpvAftrekPct, compensatiedepotEur, bufferEur, bijstortEur, fractions, params.N_deelnemers, params.spreidingN, deelnemer.pen, params.r, params.t0, engineOpts);
-    const x_fonds = fondsX.x_star;
+    const x_fonds = fondsX.x_star * (params.ijkfactorOverschot ?? 1);
     const M_beschikbaar = fondsX.M;
     const verdeelbaar = M_beschikbaar - vpvTotal;
     const ppkSurplus_OP = x_fonds * cw_star_op;
@@ -2280,6 +2280,7 @@ const FONDSCONFIGURATIE_SSPF = {
         pi: 0,
         omega: 120,
         spreidingN: 1000,
+        ijkfactorOverschot: 1.1357,
         kostenOpslagPct: null,
         uitvoeringskostenJaarlijks: null,
         compensatieMu: 55,
@@ -2524,6 +2525,7 @@ function bereidVoorV4(invoer, config) {
         overigeReserves: 0,
         operationeleReserveringPct: config.cascade.wettelijkeReservesPct,
         bijstort: 0, N_deelnemers: config.fonds.deelnemers, spreidingN: config.model.spreidingN,
+        ijkfactorOverschot: config.model.ijkfactorOverschot,
         compensatieMu: config.model.compensatieMu, compensatieSigma: config.model.compensatieSigma,
         buffer: config.cascade.rdrBedrag,
         demografie: config.model.demografie,
@@ -2656,10 +2658,7 @@ function berekenAowCompensatieV353(invoer, deps) {
     const al = invoer.methode === 'sspf' ? aandeelVerwachteIndexatie(invoer.dekkingsgraad) : null;
     const i0 = invoer.indexatieGevoeligheid ?? iv;
     const vB = invoer.methode === 'sspf' ? vf(i0) : null;
-    const basisOp = invoer.verhoudingOuderdomspensioen;
-    const b = invoer.methode === 'sspf' ? al * vB
-        : typeof basisOp === 'number' && Number.isFinite(basisOp) && basisOp > 0 ? basisOp - 1
-            : Q.ppkTotal / R.KV - 1;
+    const b = invoer.methode === 'sspf' ? al * vB : Q.ppkTotal / R.KV - 1;
     let x0 = .01;
     let x1 = .03;
     let f0 = vf(x0) - b;
@@ -2741,12 +2740,16 @@ function berekenResultaatProjectieV4(i, p) {
         if (!(capital > 0) || !finite(capital, ppk))
             return { ok: false, code: 'INVALID_CALCULATION' };
         const ratio = ppk / capital;
+        const ratioOP = indexatieUitkomst ? 1 + indexatieUitkomst.al * indexatieUitkomst.vo
+            : m1.KV_OP > 0 ? projected.ppk_OP / m1.KV_OP : ratio;
+        const ratioNP = indexatieUitkomst ? (m1.KV_NP > 0 ? 1 + indexatieUitkomst.al * indexatieUitkomst.vn : ratioOP)
+            : m1.KV_NP > 0 ? projected.ppk_NP / m1.KV_NP : ratioOP;
         const orig = i.deelnemer.pen;
         const now = i.route === 'netto'
             ? { maand: i.pensioenNettoMaand, jaar: i.pensioenNettoMaand * 12 }
             : { maand: round2(Math.round(orig) / 12), jaar: Math.round(orig) };
         const afterYear = i.route === 'netto'
-            ? p.brutoNaarNettoMaand(orig * ratio) * 12 : Math.round(orig * ratio);
+            ? p.brutoNaarNettoMaand(orig * ratioOP) * 12 : Math.round(orig * ratioOP);
         const after = i.route === 'netto'
             ? { maand: afterYear / 12, jaar: afterYear }
             : { maand: round2(afterYear / 12), jaar: afterYear };
@@ -2768,8 +2771,7 @@ function berekenResultaatProjectieV4(i, p) {
                 bijstortScenario: i.scenario.bijstort,
                 bijstortReedsVerwerkt: i.scenario.reedsVerwerkteBijstort,
                 methode: i.methode, verwachteIndexatie: i.verwachteIndexatie,
-                extraIndexatieAowc: i.extraIndexatieAow,
-                verhoudingOuderdomspensioen: i.methode === 'sspf' ? null : ratio }, deps);
+                extraIndexatieAowc: i.extraIndexatieAow }, deps);
             if (!aow || !finite(aow.up))
                 return { ok: false, code: 'INVALID_CALCULATION' };
             const n = Math.round(aow.pen), na = Math.round(aow.pen * (1 + aow.up));
@@ -2785,7 +2787,7 @@ function berekenResultaatProjectieV4(i, p) {
         return { ok: true, result: { sourceRevision: i.sourceRevision, modelFingerprint: i.modelFingerprint,
                 source: 'typed-m1-m2-v3570', model: i.methode, eenheid: i.route === 'netto' ? 'netto' : 'bruto',
                 dekkingsgraad: i.scenario.dekkingsgraad, kapitaalwaarde: capital,
-                pensioenkapitaalNaInvaren: ppk, verhouding: ratio, ouderdomspensioen,
+                pensioenkapitaalNaInvaren: ppk, verhouding: ratio, verhoudingOP: ratioOP, verhoudingNP: ratioNP, ouderdomspensioen,
                 aowCompensatie: aowBedragen, ...(aowPartnerBedragen ? { aowCompensatiePartner: aowPartnerBedragen } : {}), totaal: total, m1, m2: baseM2, m2Scenario: projected, indexatieUitkomst, aowUitkomst: aow } };
     }
     catch {
@@ -2813,11 +2815,11 @@ function berekenHoogLaagFasenV4(i, basis) {
         return null;
     const profiel = d.profiel ?? profielUitHoogLaag(d.pen, d.pen_laag, d.x_knip, true);
     return { sourceRevision: i.sourceRevision, modelFingerprint: i.modelFingerprint,
-        knipLeeftijd: d.x_knip, totKnipBrutoJaar: Math.round(d.pen * basis.verhouding),
-        vanafKnipBrutoJaar: Math.round(d.pen_laag * basis.verhouding),
-        verhogingsfactor: basis.verhouding,
+        knipLeeftijd: d.x_knip, totKnipBrutoJaar: Math.round(d.pen * basis.verhoudingOP),
+        vanafKnipBrutoJaar: Math.round(d.pen_laag * basis.verhoudingOP),
+        verhogingsfactor: basis.verhoudingOP,
         treden: profiel.map(t => ({ tot: t.tot ?? null, nuBrutoJaar: Math.round(t.bedrag),
-            naBrutoJaar: Math.round(t.bedrag * basis.verhouding) })) };
+            naBrutoJaar: Math.round(t.bedrag * basis.verhoudingOP) })) };
 }
 function berekenAanvullendResultaatV4(i, ports, basis) {
     if (basis.sourceRevision !== i.sourceRevision || basis.modelFingerprint !== i.modelFingerprint ||
@@ -2858,7 +2860,7 @@ function berekenAanvullendResultaatV4(i, ports, basis) {
                     verwachteIndexatie: rate }, ports);
                 if (!sub.ok)
                     return { ok: false, code: 'INVALID_CALCULATION' };
-                vals.push(Math.round(d.pen * sub.result.verhouding));
+                vals.push(Math.round(d.pen * sub.result.verhoudingOP));
             }
             cols.push({ dekkingsgraad: dg, gekozen, beschikbaar: true, naJaar: vals });
         }
@@ -2866,7 +2868,7 @@ function berekenAanvullendResultaatV4(i, ports, basis) {
             const sub = berekenResultaatProjectieMatrixV4({ ...i, scenario: { ...i.scenario, dekkingsgraad: dg, bijstort } }, ports);
             if (!sub.ok)
                 return { ok: false, code: 'INVALID_CALCULATION' };
-            const opRatio = sub.result.pensioenkapitaalNaInvaren / basis.kapitaalwaarde;
+            const opRatio = sub.result.verhoudingOP;
             const vals = rows.map((_, j) => Math.round(d.pen * opRatio * scales[j]));
             cols.push({ dekkingsgraad: dg, gekozen, beschikbaar: true, naJaar: vals });
         }
@@ -3224,6 +3226,8 @@ function rapportWeergaveV4(s) {
     const pensionRows = [];
     const aowRows = [];
     const ratio = finite(h.verhouding) ? h.verhouding : pp / kv;
+    const ratioOP = finite(h.verhoudingOP) ? h.verhoudingOP : ratio;
+    const ratioNP = finite(h.verhoudingNP) ? h.verhoudingNP : ratio;
     function rijIn(rows, label, now, after, hint, total = false) {
         rows.push({ label, values: [eur(now), eur(after), signedPct(now > 0 ? after / now - 1 : 0)], hint, total });
     }
@@ -3245,15 +3249,15 @@ function rapportWeergaveV4(s) {
                 : vorige === undefined
                     ? 'Ouderdomspensioen tot ' + leeftijdTekst(t.tot)
                     : 'Ouderdomspensioen van ' + leeftijdTekst(vorige) + ' tot ' + leeftijdTekst(t.tot);
-            annual(label, Math.round(t.bedrag), Math.round(t.bedrag * ratio));
+            annual(label, Math.round(t.bedrag), Math.round(t.bedrag * ratioOP));
         });
     }
     else if (oudeWeg && c.brutoLaagJaar !== null) {
-        annual('Ouderdomspensioen tot de knipdatum', Math.round(c.brutoJaar), Math.round(c.brutoJaar * ratio));
-        annual('Ouderdomspensioen vanaf de knipdatum', Math.round(c.brutoLaagJaar), Math.round(c.brutoLaagJaar * ratio));
+        annual('Ouderdomspensioen tot de knipdatum', Math.round(c.brutoJaar), Math.round(c.brutoJaar * ratioOP));
+        annual('Ouderdomspensioen vanaf de knipdatum', Math.round(c.brutoLaagJaar), Math.round(c.brutoLaagJaar * ratioOP));
     }
     else
-        annual('Ouderdomspensioen', Math.round(c.brutoJaar), Math.round(c.brutoJaar * ratio));
+        annual('Ouderdomspensioen', Math.round(c.brutoJaar), Math.round(c.brutoJaar * ratioOP));
     const profP = c.profielPartner ?? null;
     if (isPartner && profP && profP.length >= 2) {
         profP.forEach((t, k) => {
@@ -3263,11 +3267,11 @@ function rapportWeergaveV4(s) {
                 : vorige === undefined
                     ? 'Partnerpensioen tot zijn/haar leeftijd van ' + leeftijdTekst(t.tot)
                     : 'Partnerpensioen van zijn/haar leeftijd van ' + leeftijdTekst(vorige) + ' tot ' + leeftijdTekst(t.tot);
-            annual(label, Math.round(t.bedrag), Math.round(t.bedrag * ratio), 'na uw overlijden, voor uw partner');
+            annual(label, Math.round(t.bedrag), Math.round(t.bedrag * ratioNP), 'na uw overlijden, voor uw partner');
         });
     }
     else if (isPartner && c.brutoPartnerJaar !== null)
-        annual('Partnerpensioen', Math.round(c.brutoPartnerJaar), Math.round(c.brutoPartnerJaar * ratio), 'na uw overlijden, voor uw partner');
+        annual('Partnerpensioen', Math.round(c.brutoPartnerJaar), Math.round(c.brutoPartnerJaar * ratioNP), 'na uw overlijden, voor uw partner');
     if (aowUsed) {
         rijIn(aowRows, 'AOW-compensatiepensioen', Math.round(aow.pen), Math.round(aow.pen * (1 + aow.up)));
         if (aow.penPartner !== undefined) {
@@ -3464,7 +3468,7 @@ function modelVingerafdrukV4(voorbereid, config) {
         'model-3.57.0', `inv=${config.invaardatum}`, `r=${voorbereid.afgeleid.rente}`,
         `t0=${config.model.t0}`, `m=${config.model.m}`, `omega=${config.model.omega}`,
         `vpv=${m.vpvTotal}`, `aftrek=${m.vpvAftrekPct}`, `buffer=${m.buffer}`,
-        `spreiding=${m.spreidingN}`, `iv=${config.indexatiemethode.verwacht}`,
+        `spreiding=${m.spreidingN}`, `ijk=${config.model.ijkfactorOverschot}`, `iv=${config.indexatiemethode.verwacht}`,
         `eA=${config.indexatiemethode.extraAowc}`, `tafel=${config.model.sterftekansTabelId}`,
     ].join('|');
 }
@@ -3574,6 +3578,8 @@ function maakRekenkernV4(motoren) {
                     kapitaalwaarde: hoofd.kapitaalwaarde,
                     pensioenkapitaalNaInvaren: hoofd.pensioenkapitaalNaInvaren,
                     verhouding: hoofd.verhouding,
+                    verhoudingOP: hoofd.verhoudingOP,
+                    verhoudingNP: hoofd.verhoudingNP,
                     ouderdomspensioen: vergelijking(hoofd.ouderdomspensioen),
                     aowCompensatie: hoofd.aowCompensatie ? vergelijking(hoofd.aowCompensatie) : null,
                     ...(hoofd.aowCompensatiePartner
@@ -4204,6 +4210,7 @@ var M2_PARAMS = Object.assign({}, M1_PARAMS, {
   compensatiedepot: 0, vpvAftrekPct: CONFIG.cascade.vpvAftrekPctInitieel, overigeReserves: 0,
   operationeleReserveringPct: CONFIG.cascade.wettelijkeReservesPct, bijstort: 0,
   N_deelnemers: CONFIG.fonds.deelnemers, spreidingN: CONFIG.model.spreidingN,
+  ijkfactorOverschot: CONFIG.model.ijkfactorOverschot,
   compensatieMu: CONFIG.model.compensatieMu, compensatieSigma: CONFIG.model.compensatieSigma,
   buffer: 0, demografie: CONFIG.model.demografie, cohortMixWorstCase: CONFIG.model.cohortMixWorstCase,
   alternatieveInvaarmethode: CONFIG.model.alternatieveInvaarmethode});
@@ -5011,6 +5018,7 @@ var InvaarRente = (function () {
         });
       }
     }
+    if (alleenAow()) r += rij('Brieven voor uw pensioen', 'geen; alleen AOW-compensatiepensioen');
     if (v.aowAan) {
       r += rij('AOW-compensatiepensioen', v.aowJaar === null
         ? 'niet ingevuld' : eur(v.aowJaar) + ' per jaar');
@@ -5300,6 +5308,8 @@ var InvaarRente = (function () {
        staat; zie `aowPartnerActief()`. */
     aowPartnerAan: false,
     aowPartnerJaar: null,
+    /* Had de deelnemer een partner toen hij 0 brieven koos? Zie `zetAantalUpo`. */
+    partnerVoorNul: false,
     /* Eén regel per UPO. De kern kent één bruto bedrag en één
        partnerpensioen; deze regels worden daarvoor opgeteld. Dat mag:
        de kapitaalwaarde is lineair in het pensioenbedrag, dus drie pensioenen
@@ -5964,6 +5974,13 @@ var InvaarRente = (function () {
     /* De woorden van de brief: "Uw pensioen in de huidige pensioenregeling".
        De intro noemt het bedrag zoals de brief het noemt, zodat duidelijk is
        welk van de twee bedragen hier hoort. */
+    /* Bij 0 brieven alleen de AOW-compensatie (tekst van de bouwer). */
+    if (alleenAow()) {
+      return '<h2 id="staptitel" tabindex="-1">Uw pensioen in de huidige regeling</h2>' +
+        '<p class="kaart-intro">Neem uit uw brief over het AOW-compensatiepensioen het ' +
+        'bruto bedrag per jaar over dat bij de huidige pensioenregeling staat.</p>' +
+        foutenBlok() + extra + totaalBlok(i);
+    }
     return '<h2 id="staptitel" tabindex="-1">Uw pensioen in de huidige regeling</h2>' +
       '<p class="kaart-intro">Neem uit uw brief het bruto bedrag per jaar over dat ' +
       'bij de huidige pensioenregeling staat' +
@@ -5997,9 +6014,31 @@ var InvaarRente = (function () {
    * stond, nu op de plek waar het bedrag wordt ingetikt \u2014 daar valt het op
    * als hij niet klopt, en dat is dezelfde regel als "Dat is 30 november 2022".
    */
+  /**
+   * Alleen een AOW-compensatiepensioen, zonder brief voor het pensioen zelf
+   * (0 brieven, 27-11-2026). De kern krijgt dan de compensatie ook als
+   * pensioen, zonder partner; dat pensioen is er alleen omdat de kern niet
+   * zonder pensioen rekent, en blijft van elk scherm weg. De compensatie
+   * krijgt haar verhoging van de standaardregel op haar eigen betalingen.
+   * Van 27 tot 28-11-2026 kreeg dat pensioen bij een partner een
+   * partnerpensioen van 70%, omdat de basis toen dat gemiddelde was; zie
+   * `ijkfactorOverschot` in de kern voor waarom dat is teruggedraaid.
+   */
+  function alleenAow() { return v.aantalUpo === 0; }
+
+
+  /** De kapitaalwaarde en het kapitaal na invaren van het pensioen zelf; 0 bij alleen AOW. */
+  function kvPensioen(sc) { return alleenAow() ? 0 : sc.kapitaalwaarde; }
+  function ppkPensioen(sc) { return alleenAow() ? 0 : sc.pensioenkapitaalNaInvaren; }
+
   /** Telt het partnerpensioen van de AOW-compensatie mee? */
+  /* NOOIT MEER (27-11-2026, opdrachtgever). Het AOW-compensatiepensioen
+     niet verzekerde jaren heeft geen partnerpensioen; het deel voor de
+     partner staat in de brief van het pensioen zelf, in het
+     nabestaandenpensioen. De vraag op stap 1 is weg; de code die het
+     partnerdeel tekent en doorrekent blijft, maar wordt niet meer bereikt. */
   function aowPartnerActief() {
-    return v.aowAan && v.aowPartnerAan && ctrl.status().inputs.hasPartner;
+    return false;
   }
 
   /**
@@ -6098,6 +6137,7 @@ var InvaarRente = (function () {
       rij('', eersteId, labelVoorBedrag(n, 0, reeks), '',
         geldInvoer(eersteId, 'data-upo="' + n + '" data-soort="' + (np ? 'np' : 'bruto') + '"',
           np ? r.np : r.bruto, undefined, np), '');
+    var aowHint = np && v.aowAan;
     for (var k = 0; k < treden.length; k++) {
       var t = treden[k];
       var bedragId = idTredeBedrag(reeks, n, k);
@@ -6115,6 +6155,15 @@ var InvaarRente = (function () {
           '" data-reeks="' + reeks + '">Verwijder<span class="sr-only"> dit bedrag</span></button>');
     }
     uit += '</div>';
+    /* Het AOW-deel van de partner zit in het nabestaandenpensioen
+       (27-11-2026). Tekst van de bouwer. Het rekent als gewoon
+       partnerpensioen; dat deel gaat in werkelijkheid pas in als de partner
+       65 is. Bij een partner die dat al is, scheelt het niets. */
+    if (aowHint) {
+      uit += '<p class="hint" id="hint-np-aow-' + n + '">Hoort bij uw partnerpensioen ook een deel ' +
+        'AOW-compensatie niet verzekerde jaren voor uw partner? Tel dat mee in dit bedrag. ' +
+        'Uw eigen AOW-compensatiepensioen heeft geen partnerpensioen.</p>';
+    }
     if (!netto) {
       var vol = treden.length + 1 >= MAX_TREDEN_SCHERM;
       uit += vol
@@ -6199,7 +6248,9 @@ var InvaarRente = (function () {
 
   function werkKapitaalwaardeBij() {
     toonReden();
-    var el = document.getElementById('kv-op');
+    /* `kv-totaal` en niet `kv-op`: bij alleen de AOW-compensatie is er geen
+       regel voor het pensioen zelf. */
+    var el = document.getElementById('kv-totaal');
     if (!el) return;
     var zet = function (id, waarde) {
       var cel = document.getElementById(id);
@@ -6256,7 +6307,7 @@ var InvaarRente = (function () {
        twee delen, elk op zijn eigen regel. */
     zet('kv-aowc', aow ? (aow.KV_OP !== undefined ? aow.KV_OP : aow.KV) : null);
     zet('kv-aowc-np', aow && aow.KV_NP !== undefined ? aow.KV_NP : null);
-    zet('kv-totaal', sc.kapitaalwaarde + (aow ? aow.KV : 0));
+    zet('kv-totaal', kvPensioen(sc) + (aow ? aow.KV : 0));
   }
 
   function upoVeld(id, n, soort, label, waarde, hint, eenheid, metNul) {
@@ -6381,7 +6432,7 @@ var InvaarRente = (function () {
    * en het herbouwen in `werkOpRijenBij()` dezelfde tabel opleveren.
    */
   function overzichtRijen() {
-    var rijen = opRijen() + npRijen();
+    var rijen = alleenAow() ? '' : opRijen() + npRijen();
     if (v.aowAan) {
       rijen += overzichtRij('AOW-compensatiepensioen', v.aowJaar, 'tot-aow', 'kv-aowc');
       if (aowPartnerActief()) {
@@ -6638,7 +6689,8 @@ var InvaarRente = (function () {
    * Per brief staat er geen uitkomst van de kern klaar: die telt de polissen op
    * stap 2 op. Het pensioen wordt daarom toegerekend naar rato van wat er op
    * stap 2 stond (`verdeelOverUpo`); dat is exact op de afronding na, want de
-   * verhoging is één percentage. Voor het startkapitaal geldt dat niet: twee
+   * verhoging is per soort (pensioen, partnerpensioen) één percentage; sinds
+   * 28-11-2026 elk een eigen. Voor het startkapitaal geldt dat niet: twee
    * polissen met verschillende perioden hebben per euro pensioen een ander
    * kapitaal. Bij meer dan één brief staat het berekende startkapitaal daarom
    * één keer, voor alle brieven samen, en niet per brief.
@@ -6695,6 +6747,14 @@ var InvaarRente = (function () {
         '</div>';
     }
 
+    if (alleenAow()) {
+      /* Tekst van de bouwer, naar de zin hieronder. */
+      return '<h2 id="staptitel" tabindex="-1">Uw pensioen in de nieuwe regeling</h2>' +
+        '<p class="kaart-intro">Neem uit uw brief over het AOW-compensatiepensioen over wat ' +
+        esc(K.CONFIG.shortLabel) + ' verwacht voor de nieuwe pensioenregeling: het bruto ' +
+        'pensioen in het eerste jaar en het startkapitaal. Onder elk vak staat waarmee het ' +
+        'straks wordt vergeleken.</p>' + foutenBlok() + regels;
+    }
     return '<h2 id="staptitel" tabindex="-1">Uw pensioen in de nieuwe regeling</h2>' +
       '<p class="kaart-intro">Neem uit uw brief over wat ' + esc(K.CONFIG.shortLabel) +
       ' verwacht voor de nieuwe pensioenregeling: het bruto pensioen in het eerste jaar' +
@@ -6717,9 +6777,32 @@ var InvaarRente = (function () {
        deze lijst hetzelfde als het openingsscherm. */
     var inhoud =
       datumVelden('dob', v.dob, 'Uw geboortemaand en -jaar', MAX_JAAR - 110, JONGSTE_JAAR, false, true) +
-      geslachtVeld('in-g', 'geslacht', 'Uw geslacht', s.geslacht) +
-      jaNee('in-partner', 'partner',
+      geslachtVeld('in-g', 'geslacht', 'Uw geslacht', s.geslacht);
+    /* SINDS 26-11-2026 TELT DE BRIEF. SSPF stuurt \u00e9\u00e9n brief per polis ("U
+       heeft bij ons pensioen opgebouwd op meerdere polissen. Daarom ontvangt
+       u meerdere overzichten."). Het id blijft `in-aantal-upo`.
+
+       0 BRIEVEN (27-11-2026, opdrachtgever: "met antwoord 0 om AOW te kunnen
+       berekenen zonder partner"). Wie alleen een brief over zijn
+       AOW-compensatiepensioen heeft, rekent die alleen door. Zie
+       `alleenAow()`. De vraag staat sinds die dag v\u00f3\u00f3r de
+       partnervraag, want bij 0 vervalt die: de compensatie heeft geen
+       partnerpensioen en haar verhoging hangt niet van de partner af (zo
+       weer sinds 28-11-2026). De hint bij 0 is tekst van de bouwer. */
+    inhoud += keuzeKnoppen('in-aantal-upo', 'data-aantal', 'aantalUpo',
+      'Hoeveel brieven met een eerste berekening heeft u ontvangen voor uw pensioen?',
+      [['0', '0'], ['1', '1'], ['2', '2'], ['3', '3']], String(v.aantalUpo),
+      alleenAow()
+        ? 'U heeft alleen een brief over uw AOW-compensatiepensioen niet verzekerde jaren. ' +
+          'De calculator rekent dan alleen dat pensioen door, zonder partnerpensioen.'
+        : 'Bouwde u bij ' + K.CONFIG.shortLabel + ' pensioen op meerdere polissen op, dan ' +
+          'ontvangt u voor elke polis een aparte brief. Een aparte brief voor een ' +
+          'AOW-compensatiepensioen telt hier niet mee; daar is de vraag hieronder voor. ' +
+          'Heeft u alleen die brief, kies dan 0.');
+    if (!alleenAow()) {
+      inhoud += jaNee('in-partner', 'partner',
         'Heeft uw partner recht op partnerpensioen na uw overlijden?', i.hasPartner);
+    }
     if (i.hasPartner) {
       inhoud += '<div class="vervolg">' +
         datumVelden('dobPartner', v.dobPartner, 'Geboortemaand en -jaar van uw partner',
@@ -6750,15 +6833,6 @@ var InvaarRente = (function () {
        `highLow` bestaat nog wel in de besturing — het gate't de validatie en
        sluit de nettoroute uit — maar wordt in `tredenNaarKern()` afgeleid uit
        het aantal perioden. */
-    /* SINDS 26-11-2026 TELT DE BRIEF. SSPF stuurt \u00e9\u00e9n brief per polis ("U
-       heeft bij ons pensioen opgebouwd op meerdere polissen. Daarom ontvangt
-       u meerdere overzichten."). Het id blijft `in-aantal-upo`. */
-    inhoud += keuzeKnoppen('in-aantal-upo', 'data-aantal', 'aantalUpo',
-      'Hoeveel brieven met een eerste berekening heeft u ontvangen voor uw pensioen?',
-      [['1', '1'], ['2', '2'], ['3', '3']], String(v.aantalUpo),
-      'Bouwde u bij ' + K.CONFIG.shortLabel + ' pensioen op meerdere polissen op, dan ' +
-      'ontvangt u voor elke polis een aparte brief. Een aparte brief voor een ' +
-      'AOW-compensatiepensioen telt hier niet mee; daar is de vraag hieronder voor.');
     /* De naam "AOW-compensatiepensioen" wordt gelezen als een overbrugging tot
        de AOW-leeftijd, en dat is het niet: het compenseert jaren waarin de
        deelnemer niet AOW-verzekerd was, en dat tekort blijft levenslang. De
@@ -6770,23 +6844,16 @@ var InvaarRente = (function () {
        tussen reglementen zou verschillen. De berekening rekent al sinds
        09-11-2026 met 65 (`AOWC_INGANGSLEEFTIJD_V4`); de tekst zegt nu
        hetzelfde als de berekening. */
-    inhoud += jaNee('in-aow', 'aow',
+    if (!alleenAow()) inhoud += jaNee('in-aow', 'aow',
       'Heeft u een AOW-compensatiepensioen niet verzekerde jaren met een eigen brief?', v.aowAan,
       'Dit is de compensatie voor jaren waarin u niet AOW-verzekerd was. Het is geen ' +
       'overbrugging tot uw AOW-leeftijd: de compensatie gaat in als u ' +
       K.AOWC_INGANGSLEEFTIJD_V4 + ' jaar wordt en loopt daarna levenslang door.');
-    /* Dezelfde vraag voor de partner. Zij staat onder de vraag over de
-       compensatie zelf en verschijnt alleen als die Ja is en er een partner
-       is: het partnerpensioen staat op hetzelfde UPO. */
-    if (v.aowAan && i.hasPartner) {
-      inhoud += '<div class="vervolg">' +
-        jaNee('in-aow-partner', 'aowPartner',
-          'Heeft uw partner een AOW-compensatiepensioen niet verzekerde jaren in die brief?',
-          v.aowPartnerAan,
-          'Dit partnerpensioen gaat in na uw overlijden, maar niet eerder dan wanneer uw ' +
-          'partner ' + K.AOWC_INGANGSLEEFTIJD_V4 + ' jaar wordt. Daarna loopt het levenslang door.') +
-        '</div>';
-    }
+    /* Hier stond tot 27-11-2026 dezelfde vraag voor de partner ("Heeft uw
+       partner een AOW-compensatiepensioen niet verzekerde jaren in die
+       brief?"). Weg op last van de opdrachtgever: dat deel staat in het
+       nabestaandenpensioen van de brief van het pensioen zelf. Zie de hint
+       bij het partnerpensioen op stap 2 en `aowPartnerActief()`. */
     return '<h2 id="staptitel" tabindex="-1">Uw gegevens</h2>' +
       foutenBlok() + inhoud;
   }
@@ -7426,8 +7493,8 @@ var InvaarRente = (function () {
    *
    * De kern telt de UPO's op stap 2 op en rekent met één bedrag; er ís dus
    * geen uitkomst per UPO. Naar rato toerekenen mag wel: de verhoging is één
-   * percentage over het hele ouderdoms- en partnerpensioen, dus elk UPO
-   * krijgt hetzelfde percentage. Gemeten met de kern: € 24.000 in één keer
+   * percentage per soort — sinds 28-11-2026 een eigen voor het pensioen en
+   * voor het partnerpensioen — dus elk UPO krijgt per soort hetzelfde. Gemeten met de kern: € 24.000 in één keer
    * geeft factor 1,279375, en € 10.000 en € 14.000 los geven 1,27940 en
    * 1,279357 — gelijk op de afronding op hele euro's na.
    *
@@ -7476,6 +7543,9 @@ var InvaarRente = (function () {
     if (!tabel) return [];
     var uit = [];
     tabel.rijen.forEach(function (r) {
+      /* Bij alleen de AOW-compensatie zijn de andere regels van de kern die
+         van het pensioen dat alleen de basis geeft; zie `alleenAow()`. */
+      if (alleenAow() && r.label !== 'AOW-compensatiepensioen') return;
       var briefNa = briefWaardeVoor(r.label, v.briefUpo, v.briefAowJaar);
       if (briefNa === undefined) return;
       uit.push({label: metKnipdatum(r.label), briefNa: briefNa,
@@ -7504,7 +7574,7 @@ var InvaarRente = (function () {
       kapitaal: true,
       briefNa: compleet ? som : null,
       eigenVoor: null,
-      eigenNa: sc.pensioenkapitaalNaInvaren + (aowU ? aowU.ppk : 0)
+      eigenNa: ppkPensioen(sc) + (aowU ? aowU.ppk : 0)
     });
     return uit;
   }
@@ -7556,6 +7626,13 @@ var InvaarRente = (function () {
    * van de rij wat er staat, en staat de afwijking er met zoveel woorden bij.
    */
   function dekkingsgraadBand(sc, heeftAow) {
+    /* De gevoeligheidsmatrix van de kern telt het pensioen mee dat bij 0
+       brieven alleen de basis geeft. Zij zegt dan niets over de compensatie
+       alleen; de tabel vervalt (keuze en tekst van de bouwer). */
+    if (alleenAow()) {
+      return '<p class="noot">Bij alleen een AOW-compensatiepensioen toont deze calculator ' +
+        'niet wat een andere dekkingsgraad doet.</p>';
+    }
     if (!sc.tabel) {
       return '<p class="noot">Bij een netto maandbedrag berekent de kern de gevoeligheidstabel niet. ' +
         'De bandbreedte rond de dekkingsgraad is daarom niet beschikbaar.</p>';
@@ -7853,8 +7930,11 @@ var InvaarRente = (function () {
             'bovenop. Die wordt in één keer meegegeven; de koppeling ' +
             'aan de AOW vervalt na invaren.';
         }
+        /* Bij 0 brieven is er geen ouderdomspensioen om naar te wijzen
+           (tekst van de bouwer, 27-11-2026). */
         return 'Het AOW-compensatiepensioen krijgt uit de buffer hetzelfde ' +
-          'percentage als uw ouderdomspensioen. Omdat de stijging ervan ' +
+          'percentage als ' + (alleenAow() ? 'een ouderdomspensioen zonder partnerpensioen'
+            : 'uw ouderdomspensioen') + '. Omdat de stijging ervan ' +
           'onvoorwaardelijk was toegezegd, komt daar een extra verhoging ' +
           'bovenop. Die wordt in één keer meegegeven; de koppeling ' +
           'aan de AOW vervalt na invaren.';
@@ -8017,6 +8097,34 @@ var InvaarRente = (function () {
    * "4." begint. Hernummert de kern haar secties, dan valt dat hier om en
    * toont dit scherm het hele rapport — zichtbaar mis, niet stilletjes fout.
    */
+  /**
+   * Het rapport zonder het pensioen dat bij 0 brieven alleen de basis geeft
+   * (`alleenAow()`, 27-11-2026). Weg gaan: de kolommen "UPO 1" en "Totaal",
+   * de noten over het ouderdomspensioen en over de twee UPO's, sectie 5
+   * (het pensioen per jaar) en de noot die naar het totaal daarvan verwijst.
+   * Herkend aan de letterlijke teksten van `rapportage.v4.ts`; wijzigen die,
+   * dan staan die delen weer zichtbaar in beeld, niet stil verkeerd.
+   */
+  function zonderPensioen(blokken) {
+    var uit = [], weg = false;
+    blokken.forEach(function (b) {
+      if (b.soort === 'kop') weg = b.tekst.indexOf('5.') === 0;
+      if (weg) return;
+      if (b.soort === 'noot' && (b.tekst.indexOf('Uit de buffer:') === 0 ||
+          b.tekst.indexOf('UPO 1:') === 0 || b.tekst.indexOf('Dit pensioen staat op een eigen UPO') === 0)) return;
+      if (b.soort === 'kolomtabel' && b.kolommen && b.kolommen.indexOf('UPO 2') > 0) {
+        var k = b.kolommen.indexOf('UPO 2');
+        uit.push(Object.assign({}, b, {kolommen: [b.kolommen[0], b.kolommen[k]],
+          rijen: b.rijen.map(function (r) {
+            return Object.assign({}, r, {waarden: [r.waarden[k - 1]]});
+          })}));
+        return;
+      }
+      uit.push(b);
+    });
+    return uit;
+  }
+
   function schermVerdeling() {
     var sc = huidigScenario();
     if (!sc) {
@@ -8024,6 +8132,7 @@ var InvaarRente = (function () {
         '<p>Er is nog geen berekening beschikbaar.</p>';
     }
     var blokken = K.rapportWeergaveV4(sc.gebruikteGegevens).blokken;
+    if (alleenAow()) blokken = zonderPensioen(blokken);
     var vanaf = 0;
     for (var i = 0; i < blokken.length; i++) {
       if (blokken[i].soort === 'kop' && blokken[i].tekst.indexOf('4.') === 0) { vanaf = i; break; }
@@ -8503,7 +8612,7 @@ var InvaarRente = (function () {
     if (!lijf) return;
     var i = ctrl.status().inputs;
     var samen = samengevoegdProfiel('op');
-    var aantal = samen === null ? 1 : samen.length;
+    var aantal = alleenAow() ? 0 : samen === null ? 1 : samen.length;
     /* Het partnerpensioen volgt dezelfde regel, met zijn eigen aantal. */
     var samenNp = i.hasPartner && npActief() ? samengevoegdProfiel('np') : null;
     var aantalNp = !i.hasPartner ? 0 : (samenNp === null ? 1 : samenNp.length);
@@ -8523,7 +8632,8 @@ var InvaarRente = (function () {
        partner, bij een AOW-compensatie, of bij meerdere perioden. */
     var totaalRij = lijf.querySelector('tr[data-samen]');
     if (totaalRij) {
-      totaalRij.hidden = !(i.hasPartner || v.aowAan || aantal > 1);
+      /* Bij alleen de AOW-compensatie is er niets op te tellen. */
+      totaalRij.hidden = alleenAow() || !(i.hasPartner || v.aowAan || aantal > 1);
     }
   }
 
@@ -8600,7 +8710,11 @@ var InvaarRente = (function () {
       }
       return leeg ? null : t;
     };
-    dispatch('brutoJaar', som('bruto'));
+    /* Bij 0 brieven gaat de AOW-compensatie ook als pensioen naar de kern:
+       de kern rekent niet zonder pensioen. Dit pensioen zonder partner is
+       alleen de basis van de verhoging (`verhoudingOuderdomspensioen` in
+       `berekenAowCompensatieV353`); op de schermen staat het nergens. */
+    dispatch('brutoJaar', alleenAow() ? v.aowJaar : som('bruto'));
     tredenNaarKern();
     partnerNaarKern(som('np'));
     werkTotaalBij();
@@ -8725,8 +8839,22 @@ var InvaarRente = (function () {
 
   /** Het aantal regels wijzigen; ingevulde bedragen blijven staan. */
   function zetAantalUpo(aantal) {
+    var vanNul = v.aantalUpo === 0;
     v.aantalUpo = aantal;
     while (v.upo.length < aantal) v.upo.push({bruto: null, np: null, laag: null, treden: [], npTreden: []});
+    /* Bij 0 is er alleen de AOW-compensatie: die gaat aan en de partner uit.
+       De partner wordt onthouden: terug naar 1 of meer zet hem weer aan, met
+       de geboortedatum die op het scherm bleef staan (`jaNeeNaarKern`). */
+    if (aantal !== 0 && vanNul && v.partnerVoorNul) {
+      v.partnerVoorNul = false;
+      jaNeeNaarKern('partner', true);
+    }
+    if (aantal === 0) {
+      v.partnerVoorNul = v.partnerVoorNul || ctrl.status().inputs.hasPartner;
+      if (ctrl.status().inputs.hasPartner) dispatch('partner', false);
+      v.aowAan = true;
+      aowNaarKern();
+    }
     upoNaarKern();
   }
 
@@ -8914,6 +9042,7 @@ var InvaarRente = (function () {
     if (naam === 'aowJaar' || naam === 'aowPartnerJaar') {
       v[naam] = waarde;
       aowNaarKern();
+      if (alleenAow()) { upoNaarKern(); return; }
       werkTotaalBij();
       planKapitaalwaarde();
       return;
